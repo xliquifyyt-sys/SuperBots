@@ -31,7 +31,9 @@ Headless (Node, no browser):
 
 - `test/headless.mjs`: 40–60 mixed matches (2–8 players, FFA and teams, all maps, all difficulties) complete with no errors or stalls.
 - `test/features.mjs`: across 90 matches every special, every power-up, every hazard event, Sudden Death, teleporters, reflections, wall breaks, splits and turn-cap wins occur at least once.
-- `test/balance.mjs`: 1v1 round-robin of all 56 bot pairings × 3 seeds on Elite.
+- `test/balance.mjs`: 1v1 round-robin of all 56 bot pairings × 4 seeds on Elite.
+- `test/stress.mjs`: 250 matches with fully randomised host settings, sizes and modes. No errors, every match reaches a winner.
+- `test/browser.mjs`: Playwright script for the browser checks below.
 
 Browser (headless Chromium via Playwright): menu, lobby, quick 1v1 with drag-aim and specials, 8-player teams match on Nimbus Reach, pause/quit, info popup. No console errors.
 

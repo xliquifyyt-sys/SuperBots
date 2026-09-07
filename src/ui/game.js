@@ -67,7 +67,7 @@ export class GameController {
         const avail = w.availableActions(this.me);
         if (!avail[this.selected]) this.selected = avail.missile ? 'missile' : (avail.jump ? 'jump' : 'missile');
         if (this.aim) this._submit(false);
-        this.r.fitMap();
+        this.r.fitForPlan(this.me.x, this.me.y);
       } else {
         this.el.plan.classList.add('hidden');
         if (this.me && !this.me.alive && !this.spectMsg) { this.spectMsg = true; this.showCenter('ELIMINATED · SPECTATING', 2); }

@@ -44,12 +44,34 @@ export class Renderer {
   }
 
   // ----- camera -----
+  // Height of the playable area: sky down to just below the kill floor.
+  playHeight() { const w = this.world; return Math.min(w.map.height, w.lavaY + 1.2); }
+
+  // Vertical camera centre that keeps the kill floor near the bottom of the viewport when there is spare height.
+  centreY(zoom) {
+    const visible = (this.h - 140) / zoom;
+    const ph = this.playHeight();
+    return Math.min(ph / 2, ph + 0.6 - visible / 2) + 0.4;
+  }
+
   fitMap(snap = false) {
     const m = this.world.map;
     const pad = 1.5;
-    const zoom = Math.min(this.w / (m.width + pad * 2), (this.h - 140) / (m.height + pad));
-    this.camTarget = { x: m.width / 2, y: m.height / 2 - 0.5, zoom };
+    const zoom = Math.min(this.w / (m.width + pad * 2), (this.h - 140) / (this.playHeight() + pad));
+    this.camTarget = { x: m.width / 2, y: this.centreY(zoom), zoom };
     if (snap) this.cam = { ...this.camTarget };
+  }
+
+  isPortrait() { return this.h > this.w * 1.1; }
+
+  // Plan-phase camera: whole map on wide screens, a window around (x, y) on portrait phones.
+  fitForPlan(x, y) {
+    if (!this.isPortrait()) return this.fitMap();
+    const m = this.world.map;
+    const zoom = Math.max(this.w / 22, Math.min(this.w / (m.width + 3), (this.h - 140) / (this.playHeight() + 1.5)));
+    const visW = this.w / zoom;
+    const cx = Math.max(visW / 2 - 1, Math.min(m.width - visW / 2 + 1, x));
+    this.camTarget = { x: cx, y: Math.min(this.centreY(zoom), y + 2), zoom };
   }
 
   frameAction(points) {
@@ -58,9 +80,12 @@ export class Renderer {
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (const [x, y] of points) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
     minX -= 4; maxX += 4; minY -= 4; maxY += 3;
-    const zoomFit = Math.min(this.w / (m.width + 3), (this.h - 140) / (m.height + 1.5));
-    const zoom = Math.max(zoomFit, Math.min(zoomFit * 2.2, this.w / (maxX - minX), (this.h - 140) / (maxY - minY)));
-    this.camTarget = { x: Math.max(m.width * 0.25, Math.min(m.width * 0.75, (minX + maxX) / 2)), y: Math.max(m.height * 0.3, Math.min(m.height * 0.7, (minY + maxY) / 2)), zoom };
+    const zoomFit = Math.min(this.w / (m.width + 3), (this.h - 140) / (this.playHeight() + 1.5));
+    const maxZoom = this.isPortrait() ? this.w / 18 : zoomFit * 2.2;
+    const zoom = Math.max(zoomFit, Math.min(maxZoom, this.w / (maxX - minX), (this.h - 140) / (maxY - minY)));
+    const visW = this.w / zoom;
+    const cx = Math.max(Math.min(visW / 2 - 1, m.width / 2), Math.min(m.width - visW / 2 + 1, (minX + maxX) / 2));
+    this.camTarget = { x: cx, y: Math.min(this.centreY(zoom), Math.max(m.height * 0.3, (minY + maxY) / 2)), zoom };
   }
 
   focusOn(x, y, zoomMul = 1.6) {
