@@ -68,7 +68,7 @@ export const BOTS = {
     id: 'warden', name: 'Warden', cls: 'Medium defender', hp: 120, weight: 'medium', accuracy: 'medium',
     color: '#3ddc97', shape: 'shield', desc: 'Turns enemy shots around and pins targets down.',
     passive: 'Takes 20% less damage from projectiles that hit from above.',
-    s1: { id: 'deflector', name: 'Deflector', cd: 3, desc: 'Dome shield for 1 turn that reflects projectiles back along their path.' },
+    s1: { id: 'deflector', name: 'Deflector', cd: 4, desc: 'Dome shield for 1 turn that reflects projectiles back along their path.' },
     s2: { id: 'anchorBolt', name: 'Anchor Bolt', cd: 3, desc: 'Projectile that Roots the target for 1 turn (no jump) and deals 20.', dmg: 20, radius: 0.9 },
   },
   skyla: {

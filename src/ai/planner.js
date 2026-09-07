@@ -21,7 +21,7 @@ export class AIPlanner {
     const allEnemies = w.enemiesOf(b);
     const candidates = [];
     // Accuracy stat scales AI aim noise the same way it shortens the player's guide.
-    const noise = this.diff.aimNoise * ({ low: 1.9, medium: 1.2, high: 0.75 }[b.def.accuracy] || 1);
+    const noise = this.diff.aimNoise * ({ low: 1.55, medium: 1.15, high: 0.75 }[b.def.accuracy] || 1);
 
     // ---- Danger assessment ----
     let danger = this.dangerAt(b, b.x, b.y);
