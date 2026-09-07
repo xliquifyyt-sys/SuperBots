@@ -2,176 +2,143 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Super Bots — 1v1 Arena</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1119" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Super Bots</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <canvas id="game"></canvas>
 
-  <!-- ===== HUD ===== -->
+  <!-- ================= In-game HUD ================= -->
   <div id="hud" class="hidden">
-    <div id="damage-vignette"></div>
-    <div id="crosshair"><div class="dot"></div></div>
-    <div id="hitmarker"></div>
-
-    <div class="top-bar">
-      <div class="score-box">
-        <span class="score-name" id="p-name">YOU</span>
-        <span class="score" id="score-p">0</span>
-        <span class="score-sep">·</span>
-        <span class="score" id="score-e">0</span>
-        <span class="score-name" id="e-name">AI</span>
-      </div>
-      <div id="timer">1:30</div>
-    </div>
-
-    <div id="enemy-bar" class="bar-block">
-      <div class="bar hp enemy"><div class="fill" id="e-hp"></div><span class="bar-text" id="e-hp-text"></span></div>
-    </div>
-
-    <div id="status-line"></div>
-    <div id="center-msg" class="center-msg hidden"></div>
-    <div id="feed"></div>
-
-    <div class="bottom-left">
-      <div class="bar hp"><div class="fill" id="p-hp"></div><span class="bar-text" id="p-hp-text"></span></div>
-      <div class="bar energy"><div class="fill" id="p-energy"></div></div>
-      <div class="abilities">
-        <div class="ability" id="p-ab">
-          <div class="cd" id="p-ab-cd"></div>
-          <span class="key" id="p-ab-key">SPACE</span>
-          <span class="ab-name" id="p-ab-name">Dash</span>
-        </div>
-        <div class="ability" id="p-sp">
-          <div class="cd" id="p-sp-cd"></div>
-          <span class="key" id="p-sp-key">E</span>
-          <span class="ab-name" id="p-sp-name">Special</span>
-        </div>
+    <div id="vignette"></div>
+    <div class="hud-top">
+      <button class="icon-btn" id="btn-pause" title="Menu">☰</button>
+      <div class="turn-box"><span id="turn-label">TURN 1</span><span id="phase-label">PLAN</span></div>
+      <div id="phase-timer">15</div>
+      <div class="hud-top-right">
+        <button class="icon-btn" id="btn-sound" title="Sound">🔊</button>
+        <button class="icon-btn" id="btn-recenter" title="Recenter">⌖</button>
       </div>
     </div>
+    <div id="announce"></div>
+    <div id="sd-banner" class="hidden">SUDDEN DEATH</div>
+    <div id="center-msg" class="hidden"></div>
+    <div id="roster"></div>
+    <div id="bot-info" class="hidden"></div>
 
-    <canvas id="minimap" width="160" height="160"></canvas>
+    <div id="playback-bar" class="hidden">
+      <button class="btn small" id="btn-speed">1×</button>
+      <button class="btn small primary" id="btn-skip">SKIP ▶▶</button>
+    </div>
+
+    <div id="plan-bar">
+      <div id="aim-readout">Drag to aim</div>
+      <div id="param-box" class="hidden"><span id="param-name"></span><button class="btn small" id="param-btn">4</button></div>
+      <div class="action-bar">
+        <button class="act" id="act-jump" data-act="jump"><span class="act-name">Jump</span><span class="cd hidden"></span></button>
+        <button class="act" id="act-missile" data-act="missile"><span class="act-name">Missile</span><span class="cd hidden"></span></button>
+        <button class="act special" id="act-s1" data-act="s1"><span class="act-name">Special 1</span><span class="cd hidden"></span></button>
+        <button class="act special" id="act-s2" data-act="s2"><span class="act-name">Special 2</span><span class="cd hidden"></span></button>
+      </div>
+      <button class="btn primary fire" id="btn-fire">FIRE</button>
+    </div>
   </div>
 
-  <!-- ===== MENUS ===== -->
+  <!-- ================= Menus ================= -->
   <div id="ui">
-    <!-- Main menu -->
     <section id="menu-main" class="screen">
       <h1 class="logo"><span>SUPER</span><span class="accent">BOTS</span></h1>
-      <p class="subtitle">3D 1v1 arena combat against an adaptive AI</p>
+      <p class="subtitle">Simultaneous-turn artillery brawler · 2 to 8 bots</p>
       <div class="menu-buttons">
-        <button class="btn primary" data-go="menu-select">PLAY 1v1</button>
+        <button class="btn primary big" id="btn-quick">QUICK 1v1</button>
+        <button class="btn big" data-go="menu-lobby">CUSTOM GAME</button>
+        <button class="btn" data-go="menu-botpedia">BOTPEDIA</button>
         <button class="btn" data-go="menu-help">HOW TO PLAY</button>
-        <button class="btn" data-go="menu-settings">SETTINGS</button>
       </div>
-      <div id="record" class="record"></div>
-      <p class="footer">Built with Three.js · WASD + mouse · Best of 3</p>
+      <p id="record" class="record"></p>
+      <p class="footer">Local play against AI · v0.1 prototype of the Super Bots GDD</p>
     </section>
 
-    <!-- Bot select -->
-    <section id="menu-select" class="screen hidden">
-      <h2>CHOOSE YOUR BOT</h2>
-      <div id="bot-cards" class="cards"></div>
-      <div class="row">
-        <div class="field">
-          <label>Opponent</label>
-          <div class="seg" id="enemy-seg">
-            <button data-enemy="random" class="on">Random</button>
-            <button data-enemy="striker">Striker</button>
-            <button data-enemy="titan">Titan</button>
-            <button data-enemy="phantom">Phantom</button>
+    <section id="menu-lobby" class="screen hidden wide">
+      <div class="lobby">
+        <div class="lobby-col">
+          <h2>PLAYERS</h2>
+          <div id="slots"></div>
+          <div class="row gap">
+            <button class="btn small" id="btn-add-ai">+ ADD BOT</button>
+            <button class="btn small" id="btn-fill">FILL TO 8</button>
           </div>
+          <h3>YOUR BOT</h3>
+          <div id="bot-cards" class="cards small-cards"></div>
         </div>
-        <div class="field">
-          <label>AI Difficulty</label>
-          <div class="seg" id="diff-seg">
-            <button data-diff="easy">Rookie</button>
-            <button data-diff="normal" class="on">Veteran</button>
-            <button data-diff="hard">Elite</button>
-          </div>
+        <div class="lobby-col settings-col">
+          <h2>HOST SETTINGS</h2>
+          <div class="row gap wrap" id="presets"></div>
+          <div id="settings-grid" class="settings-grid"></div>
+          <h3>MAP</h3>
+          <div id="map-list" class="map-list"></div>
+          <p id="map-blurb" class="hint"></p>
+          <details><summary>Power-up pool</summary><div id="pool-grid" class="pool-grid"></div></details>
         </div>
       </div>
       <div class="menu-buttons horizontal">
         <button class="btn" data-go="menu-main">BACK</button>
-        <button class="btn primary" id="btn-start">ENTER ARENA</button>
+        <button class="btn primary big" id="btn-start">START MATCH</button>
       </div>
     </section>
 
-    <!-- Help -->
-    <section id="menu-help" class="screen hidden">
+    <section id="menu-botpedia" class="screen hidden wide">
+      <h2>BOTPEDIA</h2>
+      <div id="botpedia" class="cards"></div>
+      <h3>POWER-UPS</h3>
+      <div id="powerpedia" class="pu-list"></div>
+      <div class="menu-buttons"><button class="btn" data-go="menu-main">BACK</button></div>
+    </section>
+
+    <section id="menu-help" class="screen hidden wide">
       <h2>HOW TO PLAY</h2>
-      <div class="help-grid">
-        <div><b>Move</b><span>W A S D / Arrows</span></div>
-        <div><b>Aim / Turn</b><span>Mouse</span></div>
-        <div><b>Fire</b><span>Left Click</span></div>
-        <div><b>Ability</b><span>Space / Shift / Right Click</span></div>
-        <div><b>Special</b><span>E / Q / Middle Click</span></div>
-        <div><b>Pause</b><span>Esc</span></div>
+      <div class="help">
+        <p><b>Everyone acts at once.</b> Each turn every bot picks one action, then all actions resolve together and you watch the playback.</p>
+        <ul>
+          <li><b>Aim:</b> drag anywhere on the arena. The dotted line previews your trajectory. Its length depends on your bot's accuracy.</li>
+          <li><b>Actions:</b> Jump and Missile are always available. Your two Specials have multi-turn cooldowns.</li>
+          <li><b>Fire:</b> tap FIRE to lock your action. When the timer runs out, your current aim is used (or you skip if you never aimed).</li>
+          <li><b>Camera:</b> mouse wheel or pinch to zoom, two-finger drag or right-drag to pan, ⌖ to recenter.</li>
+          <li><b>Elimination:</b> reach 0 HP, fall into the kill floor, or leave the map. Bots self-destruct on death and damage nearby enemies.</li>
+          <li><b>Power-ups</b> spawn on marked points. Stand on one at the end of a turn to grab it.</li>
+          <li><b>Hazards</b> are announced one turn ahead: air strikes, crushers, geysers, rising lava, gusts, reactor pulses.</li>
+          <li><b>Sudden Death:</b> if everyone left dies in the same turn, they respawn with 50 HP, no specials, and must alternate Jump and Missile.</li>
+          <li><b>Win:</b> last bot (or team) standing. Optional turn cap: highest HP wins.</li>
+        </ul>
       </div>
-      <ul class="help-list">
-        <li>Win 2 rounds to take the match. Each round lasts 90 seconds; if time runs out, the bot with more health wins.</li>
-        <li>Abilities cost <b class="yellow">energy</b>. Energy regenerates over time; grab <b class="yellow">energy cells</b> for a boost.</li>
-        <li><b class="green">Repair kits</b> restore health. The AI wants them too.</li>
-        <li>Use cover: projectiles are blocked by walls and pillars. The AI loses track of you without line of sight.</li>
-      </ul>
-      <div class="menu-buttons">
-        <button class="btn" data-go="menu-main">BACK</button>
-      </div>
+      <div class="menu-buttons"><button class="btn" data-go="menu-main">BACK</button></div>
     </section>
 
-    <!-- Settings -->
-    <section id="menu-settings" class="screen hidden">
-      <h2>SETTINGS</h2>
-      <div class="settings">
-        <label>Mouse sensitivity <span id="sens-val">1.0</span>
-          <input type="range" id="sens" min="0.2" max="3" step="0.1" value="1" />
-        </label>
-        <label>Volume <span id="vol-val">70%</span>
-          <input type="range" id="vol" min="0" max="1" step="0.05" value="0.7" />
-        </label>
-        <label class="check"><input type="checkbox" id="music" checked /> Ambient music</label>
-        <label class="check"><input type="checkbox" id="shadows" checked /> Shadows (turn off for performance)</label>
-        <button class="btn small" id="btn-reset-record">Reset win/loss record</button>
-      </div>
-      <div class="menu-buttons">
-        <button class="btn" data-go="menu-main">BACK</button>
-      </div>
-    </section>
-
-    <!-- Pause -->
     <section id="menu-pause" class="screen hidden">
       <h2>PAUSED</h2>
       <div class="menu-buttons">
         <button class="btn primary" id="btn-resume">RESUME</button>
         <button class="btn" id="btn-quit">QUIT TO MENU</button>
       </div>
-      <p class="hint">Click RESUME to re-capture the mouse.</p>
     </section>
 
-    <!-- Match result -->
-    <section id="menu-result" class="screen hidden">
+    <section id="menu-result" class="screen hidden wide">
       <h2 id="result-title">VICTORY</h2>
       <p id="result-sub"></p>
-      <div id="result-stats" class="stats"></div>
+      <div id="result-table"></div>
       <div class="menu-buttons horizontal">
         <button class="btn primary" id="btn-rematch">REMATCH</button>
-        <button class="btn" data-go="menu-select">CHANGE BOT</button>
+        <button class="btn" data-go="menu-lobby">LOBBY</button>
         <button class="btn" data-go="menu-main">MENU</button>
       </div>
     </section>
-
-    <!-- Click-to-capture overlay shown when pointer lock is lost mid-game -->
-    <section id="menu-capture" class="screen hidden translucent">
-      <h2>CLICK TO PLAY</h2>
-      <p class="hint">Mouse capture is required to aim.</p>
-    </section>
-  </div>
-
-  <div id="webgl-error" class="hidden">
-    <h2>WebGL is not available</h2>
-    <p>Super Bots needs a browser with WebGL enabled.</p>
   </div>
 
   <script type="module" src="src/main.js"></script>

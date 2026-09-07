@@ -1,12 +1,13 @@
 {
   "name": "super-bots",
-  "version": "1.0.0",
-  "description": "3D 1v1 arena combat against an adaptive AI, built with Three.js",
+  "version": "0.1.0",
+  "description": "Simultaneous-turn 2D artillery brawler for 2-8 bots (Brawlbots genre), single-player vs AI",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "python3 -m http.server 8000",
-    "test": "node test/smoke.mjs"
+    "test": "node test/headless.mjs 40 && node test/features.mjs",
+    "balance": "node test/balance.mjs 3"
   },
   "license": "MIT"
 }

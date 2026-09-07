@@ -1,0 +1,13 @@
+{
+  "name": "Super Bots",
+  "short_name": "Super Bots",
+  "description": "Simultaneous-turn artillery brawler for 2-8 bots.",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0d1119",
+  "theme_color": "#0d1119",
+  "icons": [
+    { "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230d1119'/><text x='50' y='68' font-size='56' text-anchor='middle'>🤖</text></svg>", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

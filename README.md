@@ -1,94 +1,91 @@
 # Super Bots
 
-A 3D 1v1 arena combat game in the browser. Pick a combat bot, drop into a neon arena, and fight an adaptive AI in a best-of-three match.
+A simultaneous-turn 2D artillery brawler for 2 to 8 bots, in the Brawlbots genre. Everyone aims and fires at the same time, the deterministic sim resolves every action at once, and the last bot (or team) standing wins.
 
-Built with Three.js and vanilla JavaScript. No build step, no framework, no asset downloads: open `index.html` from any static web server and play.
+This is the v0.1 single-player prototype of the [Super Bots design document](docs/GDD-v0.1.md): every rule, bot, power-up, map and host setting from the GDD is implemented, and the other players are AI. It runs in the browser with no build step and installs as a PWA.
 
 ## Play
 
 ```bash
 git clone https://github.com/xliquifyyt-sys/SuperBots.git
 cd SuperBots
-python3 -m http.server 8000      # or: npx serve .
+python3 -m http.server 8000      # any static server works
 ```
 
-Then open <http://localhost:8000>. A static server is required because the game uses ES modules; opening the file directly from disk will not work in most browsers.
+Open <http://localhost:8000>. A static server is required because the game uses ES modules.
 
-The repository also ships a GitHub Pages workflow. Enable Pages with the **GitHub Actions** source in the repo settings and every push to `main` deploys the game.
+- **Quick 1v1** drops you on a Standard map against a random bot.
+- **Custom Game** is the host lobby: up to 8 players, teams, map choice, and every host setting from the GDD (plan timer, turn cap, power-up level and pool, air strikes, hazards, starting HP, damage, cooldowns, bot restrictions, friendly fire) plus the Classic / Chaos / Tactical / Mirror presets.
 
-## Controls
+### Controls
 
-| Action | Keys |
-| --- | --- |
-| Move | W A S D or arrow keys |
-| Aim / turn | Mouse (pointer lock) |
-| Fire | Left click |
-| Ability | Space, Shift, or right click |
-| Special | E, Q, or middle click |
-| Pause | Esc |
+| Action | Desktop | Touch |
+| --- | --- | --- |
+| Aim | drag anywhere on the arena | drag anywhere |
+| Choose action | Jump / Missile / Special buttons | same |
+| Lock in | FIRE | FIRE |
+| Camera | wheel to zoom, right-drag to pan, double-click to recenter | pinch to zoom, two-finger drag to pan, ⌖ to recenter |
+| Bot info | click a bot | tap a bot |
+| Playback | SKIP, 1×/2×/4× | same |
 
-## Bots
+The dotted trajectory shows 30 / 55 / 85 % of the flight for low / medium / high accuracy bots. If the plan timer runs out, your current aim is used; if you never aimed, you skip.
 
-| Bot | Role | Weapon | Ability | Special |
-| --- | --- | --- | --- | --- |
-| **Striker** | Fast skirmisher, 100 HP | Twin Blasters, rapid fire | Dash: burst forward, briefly invulnerable | Overdrive: double fire rate and +50% speed for 4s |
-| **Titan** | Tank, 170 HP | Siege Cannon, slow shells with splash damage | Barrier: absorb all damage for 1.6s | Ground Slam: 45 damage shockwave with knockback |
-| **Phantom** | Glass cannon, 80 HP | Rail Lance, piercing high-damage shots | Blink: teleport 9m | EMP Pulse: stun the enemy for 1.8s and drain energy |
+## What is implemented
 
-Abilities cost energy. Energy regenerates over time and can be topped up with energy cells in the arena. Repair kits restore health. Both pickups respawn.
+**Turn loop.** Announce → Plan (10/15/20/30 s) → Resolve (deterministic fixed-step sim) → Playback with auto-framing camera, damage numbers and eliminations → Cleanup.
 
-## Rules
+**Bots.** All eight from the GDD with both specials and their passives:
 
-- First to win two rounds takes the match.
-- Each round lasts 90 seconds. If time runs out, the bot with the higher health fraction wins the round.
-- Bots swap spawn sides every round.
+| Bot | Special 1 | Special 2 | Passive |
+| --- | --- | --- | --- |
+| Bulwark | Bastion Wall | Siege Shell | knockback immune while the wall stands |
+| Magmaw | Molten Slam | Ember Spit | survives the first lava contact each turn |
+| Volt | Chain Arc | Static Field | +15 % missile speed |
+| Warden | Deflector | Anchor Bolt | 20 % less damage from above |
+| Skyla | Updraft | Gale Shot | ignores wind |
+| Phantom | Blink Strike | Smoke Bomb | kill shortens next cooldown |
+| Ricochet | Pinball (bounce count parameter) | Split Shot | jump bounces once |
+| Gravitas | Singularity | Shockwave | heavy knockback resistance |
 
-## The AI
+**Rules.** Jump and Missile every turn, cooldown specials, elimination by HP, kill floor or leaving the map, self-destruct blasts with chain kills, ten power-ups with the GDD stacking rules, Sudden Death (respawn at 50 HP, no specials, alternating Jump/Missile), turn cap with highest-HP or Sudden Death tiebreak, teams with friendly-fire toggle and Rally Beacon.
 
-The opponent is a state-driven controller with three difficulty tiers (Rookie, Veteran, Elite). It:
+**Maps.** Scrapyard (crusher), Caldera (rising lava), Stratos (wind), Foundry (geysers), Nimbus Reach (gusts, teleporter edges), Reactor Core (reactor pulse, teleporter edges), plus random air strikes announced a turn ahead.
 
-- navigates the arena with A* over a coarse grid and steers around obstacles with feelers,
-- tracks the player only while it has line of sight and hunts the last-known position otherwise,
-- keeps the preferred range for its class and strafes unpredictably,
-- leads its shots against a moving target, with aim error and reaction time scaled by difficulty,
-- dodges incoming projectiles sideways,
-- retreats to repair kits when losing, and grabs energy cells when low,
-- uses its ability and special situationally (Barrier when taking damage, Blink to dodge, Slam at close range, EMP when in range, and so on).
-
-Elite difficulty also gives the AI extra health and damage.
+**AI.** Each AI bot samples aims through the same trajectory preview the player sees, refines the best one, weighs specials situationally (walls when under fire, Chain Arc through cover, Singularity on clusters, Gale Shot toward ledges, contact power-ups by body-slamming), dodges when enemies have a line on it, retreats from announced hazards and grabs power-ups. Three difficulty tiers change aim noise, sample count and special usage.
 
 ## Project layout
 
 ```
-index.html          Page shell, HUD markup, and menu screens
-style.css           HUD and menu styling
-src/main.js         Menus, settings, persistence, match flow wiring
-src/game.js         Renderer, scene, match/round state machine, abilities, camera
-src/bot.js          Bot entity: mesh, movement, health/energy, status effects
-src/ai.js           NavGrid (A*) and the AI controller
-src/arena.js        Arena geometry, obstacle collision, line-of-sight tests
-src/projectiles.js  Projectile simulation and hit detection
-src/particles.js    GPU point-sprite particle system
-src/hud.js          DOM HUD, kill feed, minimap
-src/audio.js        Procedural WebAudio sound effects and ambient drone
-src/config.js       All tuning: bot classes, weapons, difficulty, round rules
-vendor/             Pinned Three.js build (MIT)
+index.html, style.css     Shell, HUD and menus
+src/main.js               Menus, lobby, settings persistence, match lifecycle
+src/core/defs.js          Every tunable number: bots, power-ups, physics, settings, presets
+src/core/maps.js          Six maps and three theme kits
+src/core/sim.js           Deterministic World: physics, actions, specials, damage, hazards
+src/core/match.js         Turn-loop state machine, win checks, Sudden Death, turn cap
+src/core/rng.js           Seeded PRNG
+src/ai/planner.js         AI action planner
+src/render/renderer.js    Canvas renderer, camera, particles, aim guide
+src/ui/game.js            In-game controller: input, HUD, playback
+src/audio.js              Procedural WebAudio sound
+test/                     Headless simulation tests (Node, no browser needed)
+docs/GDD-v0.1.md          The design document this build implements
 ```
 
-Settings (sensitivity, volume, music, shadows) and your win/loss record are stored in `localStorage`.
+The sim has no DOM dependencies, so the whole game logic runs headless in Node. That is how the tests work and how a server build would run it.
 
-## Testing
-
-A headless smoke test drives the game through a full match with Playwright and asserts there are no runtime errors. Run it locally with:
+## Tests
 
 ```bash
-npm install --no-save playwright-core
-python3 -m http.server 8123 &
-node test/smoke.mjs
+node test/headless.mjs 40    # batch of AI matches with mixed sizes/modes/maps; prints win rates
+node test/features.mjs       # asserts every special, power-up, hazard and rule fires at least once
+node test/balance.mjs 3      # 1v1 round-robin balance report
+node test/trace.mjs phantom volt scrapyard 7 hard   # turn-by-turn trace of one duel
 ```
 
-The test needs a Chromium binary. Set `CHROMIUM_PATH` if it is not on the default Playwright path.
+## Deploy
+
+Enable GitHub Pages with the "GitHub Actions" source and the included workflow publishes the game on every push to `main`.
 
 ## License
 
-MIT. Three.js is included under its own MIT license; see `vendor/THREE-LICENSE`.
+MIT.
