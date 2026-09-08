@@ -56,7 +56,6 @@ export class World {
     this.pendingAirStrike = null;
     this.hazardAnnounce = [];
     this.pendingHazards = [];
-    this.pendingPowerup = null;
     this.suddenDeath = false;
     this.sdRound = 0;
     this.stepping = false;
@@ -88,6 +87,9 @@ export class World {
   sameTeam(a, b) { return this.teamsMode && a.team === b.team; }
   solids() { return this.map.terrain.concat(this.walls.map((w) => w.rect)); }
   hasEffect(b, k) { return (b.effects[k] || 0) > 0; }
+  // True when a terrain rect sits above (x, y): a bot there is sheltered from things falling from the sky.
+  hasCoverAbove(x, y) { return this.map.terrain.some((rc) => x > rc.x - 0.2 && x < rc.x + rc.w + 0.2 && rc.y + rc.h <= y - 0.4); }
+  airStrikePending() { return this.pendingAirStrike ? 'now' : (this.airStrike ? 'next' : null); }
   addEffect(b, k, turns) { b.effects[k] = Math.max(b.effects[k] || 0, turns); this.emit('effect', { bot: b.id, effect: k }); }
   cooldownMul() { return this.settings.cooldowns === 'fast' ? -1 : 0; }
 
@@ -183,28 +185,23 @@ export class World {
       this.windX = 0;
     }
 
-    // 3. Air strikes
+    // 3. Air strikes: a heads-up one turn ahead, then missiles rain over the whole map. No location is revealed.
     this.pendingAirStrike = null;
     if (this.airStrike && this.airStrike.turn === this.turn) {
       this.pendingAirStrike = this.airStrike; this.airStrike = null;
-      this.hazardAnnounce.push({ type: 'danger', text: 'AIR STRIKE INCOMING', strike: this.pendingAirStrike.x });
+      this.hazardAnnounce.push({ type: 'danger', text: 'AIR STRIKE INCOMING — TAKE COVER', airstrike: 'now' });
     } else if (this.settings.airStrikes !== 'off' && !this.suddenDeath && this.turn >= 2) {
       const p = this.settings.airStrikes === 'rare' ? 0.08 : 0.18;
       if (this.rng.next() < p) {
-        this.airStrike = { x: Math.round(this.rng.range(2, m.width - 2) * 2) / 2, turn: this.turn + 1 };
-        this.hazardAnnounce.push({ type: 'warn', text: 'Air strike next turn', strike: this.airStrike.x });
+        this.airStrike = { turn: this.turn + 1 };
+        this.hazardAnnounce.push({ type: 'warn', text: 'Air strike next turn', airstrike: 'next' });
       }
     }
 
     // 4. Power-ups: expire, spawn
     for (const p of this.powerups) p.turns--;
     this.powerups = this.powerups.filter((p) => p.turns > 0);
-    if (this.pendingPowerup && !this.suddenDeath) {
-      this.powerups.push({ ...this.pendingPowerup, turns: TURN.powerupExpire });
-      this.emit('powerupSpawn', { x: this.pendingPowerup.x, y: this.pendingPowerup.y, id: this.pendingPowerup.id });
-    }
-    this.pendingPowerup = null;
-    if (this.settings.powerups !== 'off' && !this.suddenDeath) {
+    if (this.settings.powerups !== 'off' && !this.suddenDeath && this.turn >= 2) {
       const battle = m.size === 'battle';
       const rate = { low: battle ? 0.35 : 0.25, normal: battle ? 1 : 0.5, high: 1 }[this.settings.powerups];
       const max = battle ? 5 : 3;
@@ -214,8 +211,8 @@ export class World {
         if (free.length && pool.length) {
           const [x, y] = this.rng.pick(free);
           const id = this.rng.weighted(pool, (k) => POWERUPS[k].weight);
-          this.pendingPowerup = { x, y, id };
-          this.hazardAnnounce.push({ type: 'powerup', text: `${POWERUPS[id].name} spawning`, x, y, id });
+          this.powerups.push({ x, y, id, turns: TURN.powerupExpire });
+          this.emit('powerupSpawn', { x, y, id });
         }
       }
     }
@@ -287,14 +284,16 @@ export class World {
       }
     }
     if (this.pendingAirStrike) {
-      const x0 = this.pendingAirStrike.x;
-      for (let i = 0; i < DMG.airStrikeBombs; i++) {
+      // Standard missiles fall from the sky across the whole map, staggered so they land over a couple of seconds.
+      const n = Math.max(6, Math.round(this.map.width / 3));
+      for (let i = 0; i < n; i++) {
+        const x = (i + 0.5) * (this.map.width / n) + this.rng.range(-1.2, 1.2);
         this.projectiles.push({
-          x: x0 + (i - 1) * 1.3, y: -2 - i * 0.8, vx: 0, vy: 6, owner: null, kind: 'bomb', dmg: DMG.airStrikeBomb, radius: DMG.airStrikeRadius,
-          bounces: 0, bounced: 0, life: 6, r: 0.28, gravity: 1, wind: 0, color: '#ff4d4d', trail: [],
+          x, y: -2 - this.rng.range(0, 9), vx: this.rng.range(-2.5, 2.5), vy: 4, owner: null, kind: 'missile', dmg: DMG.missile, radius: DMG.missileRadius,
+          bounces: 0, bounced: 0, life: 7, r: PROJ_R, gravity: 1, wind: 1, color: '#ff7a2f', trail: [], knock: 1, effect: null, splitAt: false, onImpact: null, reflected: 0,
         });
       }
-      this.emit('airstrike', { x: x0 });
+      this.emit('airstrike', { x: this.map.width / 2, count: n });
       this.pendingAirStrike = null;
     }
 
@@ -784,7 +783,7 @@ export class World {
   enterSuddenDeath(diedThisTurn) {
     this.suddenDeath = true; this.sdRound++;
     this.lavaY = this.map.killFloor.y; // rising lava resets so spawn pads are safe
-    this.powerups = []; this.pendingPowerup = null; this.airStrike = null; this.pendingAirStrike = null;
+    this.powerups = []; this.airStrike = null; this.pendingAirStrike = null;
     this.walls = []; this.fields = []; this.patches = []; this.projectiles = [];
     for (const b of diedThisTurn) {
       b.alive = true; b.hp = TURN.suddenDeathHp; b.effects = {}; b.contact = null; b.deflector = 0;

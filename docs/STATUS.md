@@ -15,7 +15,7 @@ Everything in GDD sections 3 to 8 that can exist without a server is implemented
 | §3.4 Win conditions | Done. FFA, teams, turn cap with highest-HP or Sudden Death tiebreak. |
 | §3.5 Sudden Death | Done. Respawn at 50 HP on original pads, specials/power-ups/air strikes off, alternating Jump/Missile cooldown with badge, banner and red vignette. |
 | §4 Bots | All 8 with both specials, passives, weight/accuracy behaviour, Pinball bounce parameter. |
-| §5 Power-ups | All 10 with spawn rates by map size, max on map, 6-turn expiry, weighted RNG, next-spawn preview, stacking rules, Rally Beacon teams-only. |
+| §5 Power-ups | All 10 with spawn rates by map size, max on map, 6-turn expiry, weighted RNG, stacking rules, Rally Beacon teams-only. |
 | §6 Maps | 6 maps (3 Standard, 3 Battle) with all signature hazards, 3 theme kits with parallax, kill-floor visuals and particles. |
 | §7 Custom games | Host settings, presets, teams up to 4, bot restrictions, friendly fire, power-up pool toggles. Room codes / networking are out of scope for local play. |
 | §8 Controls | Drag-to-aim with accuracy-scaled guide, action bar, secondary parameter button, pinch/wheel zoom and pan, tap-for-info, playback skip, landscape and portrait, PWA manifest. |

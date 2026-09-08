@@ -88,7 +88,7 @@ export class AIPlanner {
       if (a.zone && x > a.zone.x - 0.5 && x < a.zone.x + a.zone.w + 0.5 && y > a.zone.y - 0.5 && y < a.zone.y + a.zone.h + 1) d += a.type === 'danger' ? 45 : 25;
       if (a.circle && Math.hypot(x - a.circle.x, y - a.circle.y) < a.circle.r + 0.6) d += a.type === 'danger' ? 30 : 15;
       if (a.points) for (const [px, py] of a.points) if (Math.hypot(x - px, y - py) < (a.radius || 1.4) + 0.6) d += a.type === 'danger' ? 35 : 18;
-      if (a.strike !== undefined && Math.abs(x - a.strike) < 3.2) d += a.type === 'danger' ? 45 : 22;
+      if (a.airstrike && !w.hasCoverAbove(x, y)) d += a.airstrike === 'now' ? 45 : 30; // missiles rain everywhere: get under something
     }
     for (const p of w.patches) if (Math.abs(x - p.x) < p.w / 2 + 0.5 && Math.abs(y - p.y) < 1.3 && b.def.id !== 'magmaw') d += 20;
     for (const f of w.fields) if (f.kind === 'static' && Math.hypot(x - f.x, y - f.y) < f.r + 0.5) d += 15;

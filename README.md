@@ -49,7 +49,7 @@ The dotted trajectory shows 30 / 55 / 85 % of the flight for low / medium / high
 
 **Rules.** Jump and Missile every turn, cooldown specials, elimination by HP, kill floor or leaving the map, self-destruct blasts with chain kills, ten power-ups with the GDD stacking rules, Sudden Death (respawn at 50 HP, no specials, alternating Jump/Missile), turn cap with highest-HP or Sudden Death tiebreak, teams with friendly-fire toggle and Rally Beacon.
 
-**Maps.** Scrapyard (crusher), Caldera (rising lava), Stratos (wind), Foundry (geysers), Nimbus Reach (gusts, teleporter edges), Reactor Core (reactor pulse, teleporter edges), plus random air strikes announced a turn ahead.
+**Maps.** Scrapyard (crusher), Caldera (rising lava), Stratos (wind), Foundry (geysers), Nimbus Reach (gusts, teleporter edges), Reactor Core (reactor pulse, teleporter edges), plus air strikes: a one-turn warning with no location, then standard missiles rain across the whole map, so overhead cover matters.
 
 **AI.** Each AI bot samples aims through the same trajectory preview the player sees, refines the best one, weighs specials situationally (walls when under fire, Chain Arc through cover, Singularity on clusters, Gale Shot toward ledges, contact power-ups by body-slamming), dodges when enemies have a line on it, retreats from announced hazards and grabs power-ups. Three difficulty tiers change aim noise, sample count and special usage.
 
