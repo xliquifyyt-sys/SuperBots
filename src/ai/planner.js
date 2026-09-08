@@ -4,7 +4,7 @@
 import { PHYS, DMG } from '../core/defs.js';
 
 const DEG = Math.PI / 180;
-const PROJECTILE_SPECIALS = ['siegeShell', 'emberSpit', 'staticField', 'anchorBolt', 'pinball', 'splitShot', 'singularity', 'smokeBomb'];
+const PROJECTILE_SPECIALS = ['siegeShell', 'emberSpit', 'staticField', 'anchorBolt', 'pinball', 'splitShot', 'singularity', 'toxicBomb'];
 const JUMP_SPECIALS = ['moltenSlam', 'updraft', 'blinkStrike'];
 
 export class AIPlanner {
@@ -17,7 +17,7 @@ export class AIPlanner {
   plan(b) {
     const w = this.world;
     const avail = w.availableActions(b);
-    const enemies = w.enemiesOf(b).filter((e) => !w.hasEffect(e, 'smoked'));
+    const enemies = w.enemiesOf(b);
     const allEnemies = w.enemiesOf(b);
     const candidates = [];
     // Accuracy stat scales AI aim noise the same way it shortens the player's guide.
@@ -92,7 +92,7 @@ export class AIPlanner {
     }
     for (const p of w.patches) if (Math.abs(x - p.x) < p.w / 2 + 0.5 && Math.abs(y - p.y) < 1.3 && b.def.id !== 'magmaw') d += 20;
     for (const mn of w.mines) if (mn.alive && Math.hypot(x - mn.x, y - mn.y) < 1.9) d += 28;
-    for (const f of w.fields) if (f.kind === 'static' && Math.hypot(x - f.x, y - f.y) < f.r + 0.5) d += 15;
+    for (const f of w.fields) if ((f.kind === 'static' || f.kind === 'toxic') && Math.hypot(x - f.x, y - f.y) < f.r + 0.5) d += f.kind === 'toxic' ? 25 : 15;
     // Being clumped with several enemies is dangerous (self-destructs, AoE)
     let near = 0;
     for (const e of w.enemiesOf(b)) if (Math.hypot(e.x - x, e.y - y) < 2.5) near++;
@@ -147,9 +147,11 @@ export class AIPlanner {
       for (const e of enemies) { const d = Math.hypot(e.x - imp.x, e.y - imp.y); if (d < 7) { n++; if (imp.y > w.lavaY - 2.5) floorPull += 25; } }
       return n >= 2 ? 22 * n : (n === 1 ? 6 + floorPull : -5);
     }
-    if (pt.type === 'smokeBomb') {
-      const dSelf = Math.hypot(b.x - imp.x, b.y - imp.y);
-      return b.hp < b.maxHp * 0.45 && dSelf < 2 ? 22 : -10;
+    if (pt.type === 'toxicBomb') {
+      let n = 0;
+      for (const e of enemies) if (Math.hypot(e.x - imp.x, e.y - imp.y) < 2.6) n++;
+      if (Math.hypot(b.x - imp.x, b.y - imp.y) < 2.8) n -= 2;
+      return n > 0 ? 26 * n : -8;
     }
     if (imp.type === 'split') {
       // Split Shot: score each child impact.

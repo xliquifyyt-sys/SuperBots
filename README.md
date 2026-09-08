@@ -43,7 +43,7 @@ The dotted trajectory shows 30 / 55 / 85 % of the flight for low / medium / high
 | Volt | Chain Arc | Static Field | +15 % missile speed |
 | Warden | Deflector | Anchor Bolt | 20 % less damage from above |
 | Skyla | Updraft | Gale Shot | ignores wind |
-| Phantom | Blink Strike | Smoke Bomb | kill shortens next cooldown |
+| Phantom | Blink Strike | Toxic Bomb | kill shortens next cooldown |
 | Ricochet | Pinball (bounce count parameter) | Split Shot | jump bounces once |
 | Gravitas | Singularity | Shockwave | heavy knockback resistance |
 

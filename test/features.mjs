@@ -29,7 +29,7 @@ for (let i = 0; i < 90; i++) {
 const allSpecials = BOT_IDS.flatMap((id) => [BOTS[id].s1.name, BOTS[id].s2.name]);
 const missingSpecials = allSpecials.filter((s) => !seen.specials.has(s));
 const missingPowerups = POWERUP_IDS.filter((p) => !seen.powerups.has(p));
-const wantEvents = ['explosion', 'damage', 'eliminated', 'pickup', 'jump', 'fire', 'beam', 'blink', 'gale', 'crusher', 'geyser', 'reactorPulse', 'airstrike', 'smoke', 'singularity', 'reflect', 'wallBreak', 'bounce', 'contact', 'suddenDeath', 'split', 'patch', 'teleport', 'deflector', 'wallHit'];
+const wantEvents = ['explosion', 'damage', 'eliminated', 'pickup', 'jump', 'fire', 'beam', 'blink', 'gale', 'crusher', 'geyser', 'reactorPulse', 'airstrike', 'toxic', 'singularity', 'reflect', 'wallBreak', 'bounce', 'contact', 'suddenDeath', 'split', 'patch', 'teleport', 'deflector', 'wallHit'];
 const missingEvents = wantEvents.filter((e) => !seen.events.has(e));
 console.log(`${matches} matches, ${errors} errors, ${Date.now() - t0}ms`);
 console.log('maps:', [...seen.maps].join(', '));

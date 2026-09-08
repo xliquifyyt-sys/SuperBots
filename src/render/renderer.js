@@ -172,7 +172,7 @@ export class Renderer {
       case 'reactorPulse': this.flashes.push({ x: e.x, y: e.y, r: e.r, t: 0, life: 0.7, color: T.light, ring: true }); this.shake += 0.6; break;
       case 'airstrike': this.numbers.push({ x: e.x, y: 1.5, text: 'AIR STRIKE', color: '#ff4d4d', t: 0, life: 1.2, big: true }); break;
       case 'splash': this.emit(e.x, e.y, 14, { speed: 4, life: 0.6, size: 0.18, color: T.floorColor, gravity: 10, up: true }); break;
-      case 'smoke': for (let i = 0; i < 30; i++) this.emit(e.x + (Math.random() - 0.5) * e.r, e.y + (Math.random() - 0.5) * e.r, 1, { speed: 0.5, life: 2.5, size: 0.7, color: '#c8c8d8', gravity: -0.5 }); break;
+      case 'toxic': for (let i = 0; i < 30; i++) this.emit(e.x + (Math.random() - 0.5) * e.r, e.y + (Math.random() - 0.5) * e.r, 1, { speed: 0.5, life: 2.2, size: 0.7, color: '#9dff2f', gravity: -0.5 }); break;
       case 'singularity': this.flashes.push({ x: e.x, y: e.y, r: e.r, t: 0, life: 2.6, color: '#9aa4b8', ring: true }); break;
       case 'reflect': this.flashes.push({ x: e.x, y: e.y, r: 0.6, t: 0, life: 0.3, color: '#ffffff' }); break;
       case 'wallBreak': this.emit(e.x, e.y, 20, { speed: 4, life: 0.7, size: 0.2, color: '#4f7cff', gravity: 10 }); break;
@@ -322,7 +322,7 @@ export class Renderer {
     }
     for (const f of w.fields) {
       const [x, y] = this.toScreen(f.x, f.y);
-      if (f.kind === 'smoke') { c.fillStyle = 'rgba(200,200,216,0.75)'; for (let i = 0; i < 9; i++) { c.beginPath(); c.arc(x + Math.cos(i * 0.7 + this.time) * f.r * z * 0.5, y + Math.sin(i * 1.3 + this.time * 0.7) * f.r * z * 0.5, f.r * z * 0.55, 0, Math.PI * 2); c.fill(); } }
+      if (f.kind === 'toxic') { for (let i = 0; i < 10; i++) { c.fillStyle = i % 2 ? 'rgba(125,210,30,0.4)' : 'rgba(60,120,20,0.45)'; c.beginPath(); c.arc(x + Math.cos(i * 0.7 + this.time) * f.r * z * 0.55, y + Math.sin(i * 1.3 + this.time * 0.7) * f.r * z * 0.5, f.r * z * 0.5, 0, Math.PI * 2); c.fill(); } c.fillStyle = 'rgba(180,255,90,0.8)'; for (let i = 0; i < 6; i++) { const a = this.time * 2 + i * 1.05; c.beginPath(); c.arc(x + Math.cos(a) * f.r * z * 0.6, y + Math.sin(a * 1.4) * f.r * z * 0.5, z * 0.06, 0, Math.PI * 2); c.fill(); } }
       else { c.strokeStyle = '#ffe23a'; c.lineWidth = 2; c.setLineDash([4, 4]); c.beginPath(); c.arc(x, y, f.r * z, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); c.fillStyle = 'rgba(255,226,58,0.15)'; c.fill(); for (let i = 0; i < 5; i++) { const a = this.time * 9 + i * 1.3; c.strokeStyle = '#ffe23a'; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * f.r * z, y + Math.sin(a) * f.r * z * 0.8); c.stroke(); } }
     }
     if (w.singularity && w.singularity.t > 0) {
@@ -372,7 +372,7 @@ export class Renderer {
       const wasGrounded = this._grounded ? this._grounded.get(b.id) : undefined;
       if (wasGrounded === false && b.grounded && st.anim === 'idle') { this.playAnim(b.id, 'land'); }
       (this._grounded || (this._grounded = new Map())).set(b.id, b.grounded);
-      drawBot(c, b.def, r * 1.45, { ...this.animState(b), facing, vx: b.vx, vy: b.vy, grounded: b.grounded, color: b.color, hp: b.hp / b.maxHp, id: b.id }, this.time);
+      drawBot(c, b.def, r * 1.67, { ...this.animState(b), facing, vx: b.vx, vy: b.vy, grounded: b.grounded, color: b.color, hp: b.hp / b.maxHp, id: b.id }, this.time);
       c.restore();
 
       if (!b.alive) continue;
@@ -380,7 +380,7 @@ export class Renderer {
       if (isSel) { c.strokeStyle = '#ffffff'; c.lineWidth = 2; c.setLineDash([5, 4]); c.beginPath(); c.arc(x, y, r * 1.6 + Math.sin(this.time * 5) * 2, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); }
       // name + hp bar
       const bw = Math.max(34, r * 2.6), bh = Math.max(5, z * 0.16);
-      const by = y - r * 1.55 - z * 0.45;
+      const by = y - r * 1.75 - z * 0.45;
       c.fillStyle = '#0d1018'; c.fillRect(x - bw / 2 - 1, by - 1, bw + 2, bh + 2);
       const frac = Math.max(0, b.hp / b.maxHp);
       c.fillStyle = frac > 0.5 ? '#5cff7a' : (frac > 0.25 ? '#ffd84f' : '#ff4d4d');
@@ -394,7 +394,7 @@ export class Renderer {
       const keys = Object.keys(b.effects).filter((k) => b.effects[k] > 0);
       if (b.contact) keys.push(b.contact);
       keys.forEach((k, i) => {
-        const ex = x - (keys.length - 1) * z * 0.24 + i * z * 0.48, ey = y + r * 1.4 + z * 0.3;
+        const ex = x - (keys.length - 1) * z * 0.24 + i * z * 0.48, ey = y + r * 1.6 + z * 0.3;
         if (POWERUPS[k]) { drawPowerupIcon(c, k, ex, ey, z * 0.2, { flat: true }); return; }
         c.fillStyle = EFFECT_COLORS[k] || '#fff';
         c.beginPath(); c.arc(ex, ey, z * 0.19, 0, Math.PI * 2); c.fill();

@@ -224,7 +224,7 @@ export class GameController {
   renderInfo() {
     const b = this.infoBot, w = this.match.world;
     if (!b || !b.alive) { this.el.info.classList.add('hidden'); return; }
-    const STATUS = { poison: 'Poisoned: 10 damage per turn', burn: 'Burning: 8 damage per turn', frozen: 'Frozen: cannot jump', rooted: 'Rooted: cannot jump', shocked: 'Shocked: specials disabled', smoked: 'In smoke: hidden aim' };
+    const STATUS = { poison: 'Poisoned: 10 damage per turn', burn: 'Burning: 8 damage per turn', frozen: 'Frozen: cannot jump', rooted: 'Rooted: cannot jump', shocked: 'Shocked: specials disabled' };
     const key = `${b.id}|${b.hp}|${b.cd1}|${b.cd2}|${JSON.stringify(b.effects)}|${b.contact}|${b.contactTurns}`;
     if (this._infoKey === key) return;
     this._infoKey = key;

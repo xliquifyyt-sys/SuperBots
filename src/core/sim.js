@@ -91,7 +91,7 @@ export class World {
   // True when a terrain rect sits above (x, y): a bot there is sheltered from things falling from the sky.
   hasCoverAbove(x, y) { return this.map.terrain.some((rc) => x > rc.x - 0.2 && x < rc.x + rc.w + 0.2 && rc.y + rc.h <= y - 0.4); }
   airStrikePending() { return this.pendingAirStrike ? 'now' : (this.airStrike ? 'next' : null); }
-  addEffect(b, k, turns) { b.effects[k] = Math.max(b.effects[k] || 0, turns); this.emit('effect', { bot: b.id, effect: k }); }
+  addEffect(b, k, turns) { if (k === 'burn' && b.def.id === 'magmaw') return; b.effects[k] = Math.max(b.effects[k] || 0, turns); this.emit('effect', { bot: b.id, effect: k }); }
   cooldownMul() { return this.settings.cooldowns === 'fast' ? -1 : 0; }
 
   // Drop every bot onto the ground below its position before the match begins.
@@ -136,13 +136,7 @@ export class World {
     // 1. Pre-turn status effects
     for (const b of this.alive()) {
       if (this.hasEffect(b, 'poison')) this.applyDamage(b, DMG.poison, { type: 'status', label: 'Poison' });
-      if (b.alive && this.hasEffect(b, 'burn') && !(b.lavaImmune > 0)) this.applyDamage(b, DMG.burn, { type: 'status', label: 'Burn' });
-      // burning patches
-      if (b.alive) for (const p of this.patches) {
-        if (Math.abs(b.x - p.x) < p.w / 2 + PHYS.botRadius && Math.abs(b.y - p.y) < 1.2 && !(b.lavaImmune > 0)) {
-          this.applyDamage(b, p.dmg, { type: 'status', label: 'Burning ground' }); this.addEffect(b, 'burn', 1);
-        }
-      }
+      if (b.alive && this.hasEffect(b, 'burn') && b.def.id !== 'magmaw') this.applyDamage(b, DMG.burn, { type: 'status', label: 'Burn' });
       if (b.overheal > 0) { const d = Math.min(10, b.overheal); b.overheal -= d; b.hp = Math.max(b.maxHp, b.hp - d); }
     }
 
@@ -388,11 +382,11 @@ export class World {
       case 'updraft': this.doJump(b, aim, 1, 2); b.updraftPending = { aim }; break;
       case 'galeShot': this.galeShot(b, aim, sp); break;
       case 'blinkStrike': this.blinkStrike(b, aim, sp); break;
-      case 'smokeBomb': this.spawnProjectile(b, aim, { kind: 'smoke', dmg: 0, radius: 0, color: '#c8c8d8', onImpact: 'smoke' }); break;
+      case 'toxicBomb': this.spawnProjectile(b, aim, { kind: 'toxic', dmg: 0, radius: 0, color: '#9dff2f', onImpact: 'toxic' }); break;
       case 'pinball': this.spawnProjectile(b, aim, { kind: 'pinball', dmg: sp.dmg, radius: sp.radius, bounces: param ?? 4, color: '#ff4fa3', r: 0.22 }); break;
       case 'splitShot': this.spawnProjectile(b, aim, { kind: 'split', dmg: sp.dmg, radius: sp.radius, splitAt: true, color: '#ff4fa3' }); break;
       case 'singularity': this.spawnProjectile(b, aim, { kind: 'singularity', dmg: 0, radius: 0, color: '#9aa4b8', onImpact: 'singularity', r: 0.26 }); break;
-      case 'shockwave': this.explode(b.x, b.y, sp.radius, sp.dmg, b, { knock: 1.4, excludeSelf: true, label: 'Shockwave', color: b.color }); break;
+      case 'shockwave': this.explode(b.x, b.y, sp.radius, sp.dmg, b, { knock: 2.3, excludeSelf: true, label: 'Shockwave', color: b.color }); break;
     }
   }
 
@@ -427,7 +421,7 @@ export class World {
   }
 
   galeShot(b, aim, sp) {
-    const len = 8, half = Math.cos(32 * DEG);
+    const len = 13, half = Math.cos(30 * DEG);
     this.emit('gale', { x: b.x, y: b.y, dx: aim.dx, dy: aim.dy, len });
     const inCone = (x, y) => {
       const dx = x - b.x, dy = y - b.y, d = Math.hypot(dx, dy);
@@ -437,11 +431,15 @@ export class World {
     for (const o of this.alive()) {
       if (o === b || !inCone(o.x, o.y)) continue;
       this.applyDamage(o, sp.dmg, { type: 'blast', bot: b, label: 'Gale' });
-      const k = 11 * this.knockMul(o);
-      o.vx += aim.dx * k; o.vy += aim.dy * k - 3; o.grounded = false;
+      if (!o.alive) continue;
+      // Momentum matters: velocity against the wind cancels part of the shove.
+      const opposing = -(o.vx * aim.dx + o.vy * aim.dy);           // >0 when moving into the wind
+      const brace = Math.max(0.25, 1 - Math.max(0, opposing) / 16);
+      const k = 17 * this.knockMul(o) * brace;
+      o.vx += aim.dx * k; o.vy += aim.dy * k - 2.5; o.grounded = false;
     }
-    for (const p of this.projectiles) if (inCone(p.x, p.y)) { p.vx += aim.dx * 14; p.vy += aim.dy * 14; }
-    for (const pu of this.powerups) if (inCone(pu.x, pu.y)) { pu.x = Math.max(1, Math.min(this.map.width - 1, pu.x + aim.dx * 2.5)); this.dropToGround(pu); }
+    for (const p of this.projectiles) if (inCone(p.x, p.y)) { p.vx += aim.dx * 20; p.vy += aim.dy * 20; }
+    for (const pu of this.powerups) if (inCone(pu.x, pu.y)) { pu.x = Math.max(1, Math.min(this.map.width - 1, pu.x + aim.dx * 3.5)); this.dropToGround(pu); }
   }
 
   dropToGround(obj) {
@@ -470,7 +468,7 @@ export class World {
     let nearest = null, nd = 9;
     for (const o of this.enemiesOf(b)) { const d = Math.hypot(o.x - tx, o.y - ty); if (d < nd) { nd = d; nearest = o; } }
     if (nearest) { const dx = nearest.x - tx, dy = nearest.y - ty, d = Math.hypot(dx, dy) || 1; shardAim = { dx: dx / d, dy: dy / d - 0.15, power: Math.min(1, 0.35 + d / 12) }; }
-    for (const off of [-14, 0, 14]) this.spawnProjectile(b, shardAim, { kind: 'shard', dmg: sp.dmg, radius: sp.radius, speedMul: 0.85, angleOffset: off, color: '#e0a8ff', r: 0.14 });
+    for (const off of [-21, -7, 7, 21]) this.spawnProjectile(b, shardAim, { kind: 'shard', dmg: sp.dmg, radius: sp.radius, speedMul: 0.85, angleOffset: off, color: '#e0a8ff', r: 0.14 });
   }
 
   // ----- Damage -----
@@ -572,14 +570,17 @@ export class World {
           b.slamPending = false;
           const sp = b.def.s1;
           this.explode(b.x, b.y + 0.2, sp.radius, sp.dmg, b, { excludeSelf: true, label: 'Molten Slam', knock: 1.3, color: '#ff6a1f' });
-          this.patches.push({ x: b.x, y: b.y + 0.4, w: 3, turns: 3, dmg: 10 });
+          this.patches.push({ x: b.x, y: b.y + 0.4, w: 4, turns: 3, dmg: 15, touched: {} });
           this.emit('patch', { x: b.x, y: b.y + 0.4, w: 3 });
         }
         if (Math.abs(b.vy) < 1 && Math.abs(b.vx) < 1) b.airborne = false;
       }
       if (b.updraftPending && b.vy >= 0) {
-        const aim = b.updraftPending.aim; b.updraftPending = false;
-        this.spawnProjectile(b, { ...aim, power: 1 }, { kind: 'missile' });
+        b.updraftPending = false;
+        const sp = b.def.s1;
+        for (const dx of [-0.28, 0, 0.28]) {
+          this.spawnProjectile(b, { dx, dy: 1, power: 0.75 }, { kind: 'rain', dmg: sp.dmg, radius: sp.radius, color: b.color, r: 0.16 });
+        }
         this.emit('fire', { bot: b.id, x: b.x, y: b.y });
       }
       // kill floor
@@ -592,6 +593,33 @@ export class World {
         }
       }
       if (b.y > this.map.height + 3 || b.y < -12) this.kill(b, null, 'fell', 0);
+    }
+    // Toxic clouds tick while the turn resolves: 5 damage every 0.4s, at most 7 ticks per bot.
+    for (const f of this.fields) {
+      if (f.kind !== 'toxic') continue;
+      f.tickTimer += dt;
+      if (f.tickTimer >= 0.4) {
+        f.tickTimer -= 0.4;
+        const fOwner = f.owner !== null && f.owner !== undefined ? this.bots[f.owner] : null;
+        for (const b of this.alive()) {
+          if (Math.hypot(b.x - f.x, b.y - f.y) > f.r + PHYS.botRadius) continue;
+          if ((f.hits[b.id] || 0) >= 7) continue;
+          f.hits[b.id] = (f.hits[b.id] || 0) + 1;
+          this.applyDamage(b, 5, { type: 'status', bot: fOwner && fOwner !== b ? fOwner : null, label: 'Toxic' });
+        }
+      }
+    }
+    // Burning patches scorch on contact: 15 damage the moment a bot touches one (once per turn each).
+    for (const pch of this.patches) {
+      for (const b of this.alive()) {
+        if (b.def.id === 'magmaw') continue;
+        if (Math.abs(b.x - pch.x) < pch.w / 2 + PHYS.botRadius && Math.abs(b.y - pch.y) < 1.1 && b.grounded) {
+          pch.touched = pch.touched || {};
+          if (pch.touched[b.id]) continue;
+          pch.touched[b.id] = true;
+          this.applyDamage(b, pch.dmg, { type: 'status', label: 'Burning ground' });
+        }
+      }
     }
     // Power-ups are grabbed the moment a bot touches them (buffs apply immediately, mid-turn)
     for (const b of this.alive()) {
@@ -724,9 +752,9 @@ export class World {
     }
     const fromAbove = p.vy > 2;
     switch (p.onImpact) {
-      case 'smoke':
-        this.fields.push({ x: p.x, y: p.y, r: 2.2, turns: 2, kind: 'smoke' });
-        this.emit('smoke', { x: p.x, y: p.y, r: 2.2 });
+      case 'toxic':
+        this.fields.push({ x: p.x, y: p.y, r: BOTS.phantom.s2.radius, turns: 1, kind: 'toxic', owner: p.owner, tickTimer: 0, hits: {} });
+        this.emit('toxic', { x: p.x, y: p.y, r: BOTS.phantom.s2.radius });
         return;
       case 'singularity':
         this.singularity = { x: p.x, y: p.y, r: BOTS.gravitas.s1.radius, t: 2.6 };
@@ -776,12 +804,10 @@ export class World {
       if (b.contact) { b.contactTurns--; if (b.contactTurns <= 0) b.contact = null; }
       if (b.deflector > 0) b.deflector--;
       if (b.lavaImmune > 0) b.lavaImmune--;
-      b.effects.smoked = this.fields.some((f) => f.kind === 'smoke' && f.turns > 1 && Math.hypot(b.x - f.x, b.y - f.y) < f.r) ? 1 : 0;
-      if (!b.effects.smoked) delete b.effects.smoked;
     }
     for (const f of this.fields) f.turns--;
     this.fields = this.fields.filter((f) => f.turns > 0);
-    for (const p of this.patches) p.turns--;
+    for (const p of this.patches) { p.turns--; p.touched = {}; }
     this.patches = this.patches.filter((p) => p.turns > 0);
   }
 
@@ -916,7 +942,7 @@ export class World {
       case 'emberSpit': return { kind: 'ember', dmg: sp2.dmg, radius: sp2.radius, speedMul: 0.6, r: 0.14 };
       case 'staticField': return { kind: 'static', dmg: sp2.dmg, radius: sp2.radius };
       case 'anchorBolt': return { kind: 'anchor', dmg: sp2.dmg, radius: sp2.radius, speedMul: 1.05 };
-      case 'smokeBomb': return { kind: 'smoke', dmg: 0, radius: 2.2 };
+      case 'toxicBomb': return { kind: 'toxic', dmg: 0, radius: BOTS.phantom.s2.radius };
       case 'pinball': return { kind: 'pinball', dmg: sp1.dmg, radius: sp1.radius, bounces: param ?? 4, r: 0.22 };
       case 'splitShot': return { kind: 'split', dmg: sp2.dmg, radius: sp2.radius, splitAt: true };
       case 'singularity': return { kind: 'singularity', dmg: 0, radius: sp1.radius, r: 0.26 };
