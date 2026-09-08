@@ -403,7 +403,7 @@ export class Renderer {
       const wasGrounded = this._grounded ? this._grounded.get(b.id) : undefined;
       if (wasGrounded === false && b.grounded && st.anim === 'idle') { this.playAnim(b.id, 'land'); }
       (this._grounded || (this._grounded = new Map())).set(b.id, b.grounded);
-      drawBot(c, b.def, r, { ...this.animState(b), facing, vx: b.vx, vy: b.vy, grounded: b.grounded, color: b.color, hp: b.hp / b.maxHp, id: b.id }, this.time);
+      drawBot(c, b.def, r * 1.45, { ...this.animState(b), facing, vx: b.vx, vy: b.vy, grounded: b.grounded, color: b.color, hp: b.hp / b.maxHp, id: b.id }, this.time);
       c.restore();
 
       if (!b.alive) continue;
@@ -411,7 +411,7 @@ export class Renderer {
       if (isSel) { c.strokeStyle = '#ffffff'; c.lineWidth = 2; c.setLineDash([5, 4]); c.beginPath(); c.arc(x, y, r * 1.6 + Math.sin(this.time * 5) * 2, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); }
       // name + hp bar
       const bw = Math.max(34, r * 2.6), bh = Math.max(5, z * 0.16);
-      const by = y - r - z * 0.55;
+      const by = y - r * 1.55 - z * 0.45;
       c.fillStyle = '#0d1018'; c.fillRect(x - bw / 2 - 1, by - 1, bw + 2, bh + 2);
       const frac = Math.max(0, b.hp / b.maxHp);
       c.fillStyle = frac > 0.5 ? '#5cff7a' : (frac > 0.25 ? '#ffd84f' : '#ff4d4d');

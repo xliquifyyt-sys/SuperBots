@@ -74,9 +74,9 @@ function frame(now) {
     let t = (time - card.start) / (ANIM_LENGTH[card.anim] || 0.5);
     if (t >= 1 && card.anim !== 'idle') { if (card.anim === 'death') { if (t > 1.6) card.play('idle'); } else card.play(card.anim === 'jump' ? 'land' : 'idle'); t = 0; }
     if (cycle && time > card.nextAt && card.anim === 'idle') { card.seqI = (card.seqI + 1) % SEQ.length; card.play(SEQ[card.seqI]); card.nextAt = time + 1.6; }
-    const r = Math.min(W, H) * 0.19;
+    const r = Math.min(W, H) * 0.24;
     const st = { anim: card.anim, t: Math.min(1, t), facing, grounded: card.anim !== 'jump', vx: 0, vy: card.anim === 'jump' ? -8 * (1 - t) : 0, color: def.color, hp: 1, id: 0 };
-    ctx.save(); ctx.translate(W / 2, H * 0.78 - r - (card.anim === 'jump' ? Math.sin(t * Math.PI) * H * 0.3 : 0));
+    ctx.save(); ctx.translate(W / 2, H * 0.78 - r * 0.85 - (card.anim === 'jump' ? Math.sin(t * Math.PI) * H * 0.3 : 0));
     drawBot(ctx, def, r, st, time);
     ctx.restore();
   }
