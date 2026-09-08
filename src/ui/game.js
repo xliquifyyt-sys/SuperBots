@@ -295,7 +295,7 @@ export class GameController {
       const radius = type === 'missile' ? 1 : (this.me.def[this.selected]?.radius || 0);
       const style = this.selected === 'jump' ? 'jump' : (this.selected === 's1' || this.selected === 's2' ? 'special' : 'missile');
       const accent = style === 'special' ? ACTION_ACCENT(type) : (style === 'missile' ? ACTION_ACCENT('missile') : '#ffffff');
-      aimInfo = { points: pv.points, fraction: type === 'jump' || type === 'blinkStrike' ? Math.max(frac, 0.7) : frac, color: this.me.color, impact: pv.impact, radius, origin: [this.me.x, this.me.y], dx: this.aim.dx, dy: this.aim.dy, power: this.aim.power, style, accent };
+      aimInfo = { points: pv.points, fraction: 1, color: this.me.color, impact: pv.impact, radius, origin: [this.me.x, this.me.y], dx: this.aim.dx, dy: this.aim.dy, power: this.aim.power, style, accent, iconKind: style === 'jump' ? 'jump' : (style === 'missile' ? 'missile' : type) };
       facing[this.me.id] = this.aim.dx < 0 ? -1 : 1;
       const ang = Math.round(-Math.atan2(this.aim.dy, this.aim.dx) * 180 / Math.PI);
       this.el.readout.textContent = `${type} · angle ${ang}° · power ${Math.round(this.aim.power * 100)}%${this.locked ? ' · LOCKED' : ''}`;

@@ -5,7 +5,7 @@ import { THEMES } from '../core/maps.js';
 import { PHYS, POWERUPS, TEAM_COLORS } from '../core/defs.js';
 import { drawBot, ANIM_LENGTH } from './bots.js';
 import { paintBackdrop, paintTerrain, paintFloor, paintMine, paintCrusher } from './themes.js';
-import { drawPowerupIcon } from './icons.js';
+import { drawPowerupIcon, drawActionIcon } from './icons.js';
 
 function rgbaHex(h, a) { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
 const EFFECT_ICONS = { poison: '☠', burn: '🔥', frozen: '❄', rooted: '⚓', shocked: '⚡', smoked: '☁', amp: '▲', plating: '◆', thrusters: '⇈', reflector: '◐', rally: '★' };
@@ -561,8 +561,8 @@ export class Renderer {
     for (let i = 0; i < n; i += step) {
       const [x, y] = this.toScreen(points[i][0], points[i][1]);
       const f = i / n;
-      const dr = Math.max(2.5, z * (style === 'jump' ? 0.1 : 0.115) * (1 - f * 0.45));
-      c.globalAlpha = 1 - f * 0.35;
+      const dr = Math.max(3, z * (style === 'jump' ? 0.105 : 0.115) * (1 - f * 0.2));
+      c.globalAlpha = 1 - f * 0.15;
       if (style === 'jump') {
         c.fillStyle = '#ffffff'; c.strokeStyle = 'rgba(13,16,24,0.8)'; c.lineWidth = 1.5;
         c.beginPath(); c.arc(x, y, dr, 0, Math.PI * 2); c.fill(); c.stroke();
@@ -585,8 +585,14 @@ export class Renderer {
       }
     }
     c.globalAlpha = 1;
+    // the move's icon rides at the end of the arc (like Brawlbots)
+    { const last = points[Math.max(0, n - 1)];
+      const end = impact ? [impact.x, impact.y] : last;
+      const [ex, ey] = this.toScreen(end[0], end[1]);
+      const bob = Math.sin(this.time * 5) * z * 0.05;
+      drawActionIcon(c, aim.iconKind || style, ex, ey - z * 0.55 + bob, Math.max(9, z * 0.3)); }
     // landing / impact marker
-    if (impact && fraction >= 0.99) {
+    if (impact) {
       const [x, y] = this.toScreen(impact.x, impact.y);
       if (style === 'jump') {
         // landing marker: bouncing down-chevron over a ground tick

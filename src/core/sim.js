@@ -294,13 +294,14 @@ export class World {
       }
     }
     if (this.pendingAirStrike) {
-      // Standard missiles fall from the sky across the whole map, staggered so they land over a couple of seconds.
-      const n = Math.max(6, Math.round(this.map.width / 3));
+      // Standard missiles fall from the sky across the whole map. They are held
+      // until the end of the turn: player actions resolve first, then the rain lands.
+      const n = Math.max(4, Math.round((this.map.width / 3) * 0.7));
       for (let i = 0; i < n; i++) {
         const x = (i + 0.5) * (this.map.width / n) + this.rng.range(-1.2, 1.2);
         this.projectiles.push({
-          x, y: -2 - this.rng.range(0, 9), vx: this.rng.range(-2.5, 2.5), vy: 4, owner: null, kind: 'missile', dmg: DMG.missile, radius: DMG.missileRadius,
-          bounces: 0, bounced: 0, life: 7, r: PROJ_R, gravity: 1, wind: 1, color: '#ff7a2f', trail: [], knock: 1, effect: null, splitAt: false, onImpact: null, reflected: 0,
+          x, y: -2 - this.rng.range(0, 6), vx: this.rng.range(-2.5, 2.5), vy: 4, owner: null, kind: 'missile', dmg: DMG.missile, radius: DMG.missileRadius,
+          delay: 2.2 + this.rng.range(0, 1.2), bounces: 0, bounced: 0, life: 9, r: PROJ_R, gravity: 1, wind: 1, color: '#ff7a2f', trail: [], knock: 1, effect: null, splitAt: false, onImpact: null, reflected: 0,
         });
       }
       this.emit('airstrike', { x: this.map.width / 2, count: n });
@@ -705,6 +706,7 @@ export class World {
 
   // Advance one projectile. Returns null or an impact descriptor. ghost=true skips bot deflection side effects.
   stepProjectile(p, dt, ghost) {
+    if (p.delay && p.delay > 0) { p.delay -= dt; return null; }
     const spd = Math.hypot(p.vx, p.vy);
     const sub = Math.min(5, Math.max(1, Math.ceil((spd * dt) / 0.25)));
     if (sub > 1) {
