@@ -4,6 +4,7 @@
 import { THEMES } from '../core/maps.js';
 import { PHYS, POWERUPS, TEAM_COLORS } from '../core/defs.js';
 import { drawBot, ANIM_LENGTH } from './bots.js';
+import { paintBackdrop, paintTerrain, paintFloor, paintMine, paintCrusher } from './themes.js';
 
 const EFFECT_ICONS = { poison: '☠', burn: '🔥', frozen: '❄', rooted: '⚓', shocked: '⚡', smoked: '☁', amp: '▲', plating: '◆', thrusters: '⇈', reflector: '◐', rally: '★' };
 const EFFECT_COLORS = { poison: '#9dff2f', burn: '#ff8a2f', frozen: '#b5f4ff', rooted: '#3ddc97', shocked: '#ffe23a', smoked: '#c8c8d8', amp: '#ff7a2f', plating: '#c0c8d8', thrusters: '#ffd84f', reflector: '#e8f0ff', rally: '#ff9cf0' };
@@ -13,7 +14,7 @@ export class Renderer {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.world = null;
-    this.theme = THEMES.industrial;
+    this.theme = THEMES.neo;
     this.cam = { x: 0, y: 0, zoom: 30 };     // zoom = pixels per unit
     this.camTarget = { x: 0, y: 0, zoom: 30 };
     this.userZoom = 1; this.userPan = { x: 0, y: 0 };
@@ -177,6 +178,8 @@ export class Renderer {
       case 'bounce': this.emit(e.x, e.y, 6, { speed: 2, life: 0.3, size: 0.12, color: e.color || '#fff' }); break;
       case 'contact': this.numbers.push({ x: this.world.bots[e.to].x, y: this.world.bots[e.to].y - 1, text: e.kind.toUpperCase() + '!', color: POWERUPS[e.kind].color, t: 0, life: 1 }); break;
       case 'suddenDeath': this.shake += 1; break;
+      case 'mine': this.emit(e.x, e.y, 30, { speed: 7, life: 0.6, size: 0.2, color: '#ff4d4d', gravity: 8 }); this.flashes.push({ x: e.x, y: e.y, r: 1.2, t: 0, life: 0.35, color: '#ff8a2f' }); this.shake += 0.5; break;
+      case 'mineSpawn': this.emit(e.x, e.y, 10, { speed: 2, life: 0.5, size: 0.15, color: '#fff' }); break;
       case 'lavaSurf': this.emit(e.x, e.y, 20, { speed: 5, life: 0.6, size: 0.2, color: '#ff5a1f', gravity: 12, up: true }); break;
       case 'teleport': break;
     }
@@ -213,16 +216,14 @@ export class Renderer {
     const c = this.ctx, T = this.theme, w = this.world;
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     // sky
-    const g = c.createLinearGradient(0, 0, 0, this.h);
-    g.addColorStop(0, T.sky[0]); g.addColorStop(1, T.sky[1]);
-    c.fillStyle = g; c.fillRect(0, 0, this.w, this.h);
-    if (!w) return;
-    this.drawParallax();
+    if (!w) { const g = c.createLinearGradient(0, 0, 0, this.h); g.addColorStop(0, T.sky[0]); g.addColorStop(1, T.sky[1]); c.fillStyle = g; c.fillRect(0, 0, this.w, this.h); return; }
+    paintBackdrop(c, T, w.map, { w: this.w, h: this.h }, { x: this.cam.x + this.userPan.x, y: this.cam.y + this.userPan.y, zoom: this.cam.zoom * this.userZoom }, this.time);
     const sx = (Math.random() - 0.5) * this.shake * 6, sy = (Math.random() - 0.5) * this.shake * 6;
     c.save(); c.translate(sx, sy);
     this.drawKillFloor();
     this.drawHazardOverlays(info);
     this.drawTerrain();
+    this.drawMines();
     this.drawPatchesFields();
     this.drawPowerups();
     this.drawWalls();
@@ -264,51 +265,22 @@ export class Renderer {
   }
 
   drawTerrain() {
-    const c = this.ctx, T = this.theme, z = this.cam.zoom * this.userZoom;
-    for (const r of this.world.map.terrain) {
-      const [x, y, W, H] = this.rectScreen(r);
-      c.fillStyle = T.ground; c.fillRect(x, y, W, H);
-      // texture stripes
-      c.fillStyle = 'rgba(0,0,0,0.12)';
-      for (let yy = y + z * 0.9; yy < y + H; yy += z * 0.9) c.fillRect(x, yy, W, z * 0.12);
-      c.fillStyle = T.groundEdge; c.fillRect(x, y, W, Math.max(3, z * 0.22));
-      c.lineWidth = Math.max(2, z * 0.08); c.strokeStyle = '#0d1018'; c.strokeRect(x, y, W, H);
-    }
+    const z = this.cam.zoom * this.userZoom;
+    const rects = this.world.map.terrain.map((r) => { const [x, y, W, H] = this.rectScreen(r); return { x, y, w: W, h: H, world: r }; });
+    paintTerrain(this.ctx, this.theme, rects, z, this.time);
   }
 
-  drawKillFloorSurface() {
-    const c = this.ctx, T = this.theme, w = this.world, z = this.cam.zoom * this.userZoom;
-    if (T.floor === 'void') return;
-    const [, y0] = this.toScreen(0, w.lavaY);
-    c.globalAlpha = 0.55; c.fillStyle = T.floorColor;
-    c.beginPath(); c.moveTo(0, y0 + z * 0.6);
-    for (let x = 0; x <= this.w; x += 8) { const wx = this.toWorld(x, 0)[0]; c.lineTo(x, y0 + Math.sin(wx * 1.7 + this.time * 2.2) * z * 0.12 + Math.sin(wx * 0.6 - this.time * 1.1) * z * 0.08); }
-    c.lineTo(this.w, y0 + z * 0.6); c.closePath(); c.fill();
-    c.globalAlpha = 1;
-    const g = c.createLinearGradient(0, y0 - z * 1.5, 0, y0);
-    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, T.floorColor + '66');
-    c.fillStyle = g; c.fillRect(0, y0 - z * 1.5, this.w, z * 1.5);
+  drawMines() {
+    const z = this.cam.zoom * this.userZoom;
+    for (const mn of this.world.mines) { const [x, y] = this.toScreen(mn.x, mn.y); paintMine(this.ctx, x, y, z, this.time, mn.alive); }
   }
+
+  drawKillFloorSurface() { /* floor is fully painted in drawKillFloor */ }
 
   drawKillFloor() {
-    const c = this.ctx, T = this.theme, w = this.world, z = this.cam.zoom * this.userZoom;
-    const [, y0] = this.toScreen(0, w.lavaY);
-    if (T.floor === 'void') {
-      const g = c.createLinearGradient(0, y0 - z * 3, 0, this.h);
-      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,255,255,0.7)');
-      c.fillStyle = g; c.fillRect(0, y0 - z * 3, this.w, this.h - y0 + z * 3);
-      return;
-    }
-    c.fillStyle = T.floorColor;
-    c.beginPath(); c.moveTo(0, this.h);
-    for (let x = 0; x <= this.w; x += 8) {
-      const wx = this.toWorld(x, 0)[0];
-      c.lineTo(x, y0 + Math.sin(wx * 1.7 + this.time * 2.2) * z * 0.12 + Math.sin(wx * 0.6 - this.time * 1.1) * z * 0.08);
-    }
-    c.lineTo(this.w, this.h); c.closePath(); c.fill();
-    c.fillStyle = T.floorGlow; c.globalAlpha = 0.25;
-    for (let i = 0; i < 12; i++) { const px = ((i * 137 + this.time * 20) % (this.w + 60)) - 30; c.beginPath(); c.arc(px, y0 + 10 + (i % 3) * 8, 3 + (i % 2) * 2, 0, Math.PI * 2); c.fill(); }
-    c.globalAlpha = 1;
+    const z = this.cam.zoom * this.userZoom;
+    const [, y0] = this.toScreen(0, this.world.lavaY);
+    paintFloor(this.ctx, this.theme, y0, { w: this.w, h: this.h }, z, this.time, (sx) => this.toWorld(sx, 0)[0]);
   }
 
   drawHazardOverlays(info) {
@@ -510,7 +482,7 @@ export class Renderer {
       const k = f.t / f.life;
       if (f.beam) { const [x1, y1] = this.toScreen(f.x1, f.y1), [x2, y2] = this.toScreen(f.x2, f.y2); c.strokeStyle = f.color; c.globalAlpha = 1 - k; c.lineWidth = z * 0.35 * (1 - k) + 2; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); c.globalAlpha = 1; continue; }
       if (f.cone) { const [x, y] = this.toScreen(f.x, f.y); const a = Math.atan2(f.dy, f.dx); c.fillStyle = f.color; c.globalAlpha = 0.35 * (1 - k); c.beginPath(); c.moveTo(x, y); c.arc(x, y, f.len * z * Math.min(1, k * 3), a - 0.56, a + 0.56); c.closePath(); c.fill(); c.globalAlpha = 1; continue; }
-      if (f.crusher) { const [x, y, W] = this.rectScreen({ x: f.x, y: f.top, w: f.w, h: 1 }); const drop = Math.min(1, k * 3); const [, yb] = this.toScreen(0, f.bottom); const h = (yb - y) * drop; c.fillStyle = '#5b6577'; c.fillRect(x, y, W, h); c.strokeStyle = '#0d1018'; c.lineWidth = 3; c.strokeRect(x, y, W, h); c.fillStyle = '#ff9d2f'; for (let i = 0; i < 6; i++) c.fillRect(x + i * W / 6, y + h - 8, W / 12, 8); continue; }
+      if (f.crusher) { const [x, y, W] = this.rectScreen({ x: f.x, y: f.top, w: f.w, h: 1 }); const drop = Math.min(1, k * 3); const [, yb] = this.toScreen(0, f.bottom); const h = (yb - y) * drop; paintCrusher(c, this.theme, x, y, W, h, k, z); continue; }
       const [x, y] = this.toScreen(f.x, f.y);
       c.globalAlpha = 1 - k;
       if (f.ring) { c.strokeStyle = f.color; c.lineWidth = 4; c.beginPath(); c.arc(x, y, f.r * z * (0.2 + k * 0.8), 0, Math.PI * 2); c.stroke(); }

@@ -48,6 +48,7 @@ export class World {
     this.fields = [];
     this.powerups = [];
     this.beams = [];
+    this.mines = (map.mines || []).map(([x, y]) => ({ x, y, alive: true, timer: 0 }));
     this.singularity = null;
     this.lavaY = map.killFloor.y;
     this.windX = 0;
@@ -154,31 +155,34 @@ export class World {
         } else if (h.type === 'gusts') {
           if (this.turn % h.every === 0) {
             this.windX = (this.rng.next() < 0.5 ? -1 : 1) * h.strength;
-            this.hazardAnnounce.push({ type: 'wind', text: `GUST ${this.windX > 0 ? '→' : '←'} ${h.strength}` });
+            this.hazardAnnounce.push({ type: 'wind', text: `${(h.label || 'Gust').toUpperCase()} ${this.windX > 0 ? '→' : '←'} ${h.strength}` });
           } else {
             this.windX = 0;
-            if (this.turn % h.every === h.every - 1) this.hazardAnnounce.push({ type: 'warn', text: 'Gust next turn' });
+            if (this.turn % h.every === h.every - 1) this.hazardAnnounce.push({ type: 'warn', text: `${h.label || 'Gust'} next turn` });
           }
         } else if (h.type === 'risingLava') {
           if (this.turn > 1 && this.turn % h.every === 0) { this.lavaY -= h.amount; this.hazardAnnounce.push({ type: 'lava', text: 'The lava rises!' }); }
           else if (this.turn % h.every === h.every - 1) this.hazardAnnounce.push({ type: 'warn', text: 'Lava rises next turn' });
+        } else if (h.type === 'mines') {
+          for (const mn of this.mines) if (!mn.alive) { mn.timer--; if (mn.timer <= 0) { mn.alive = true; this.emit('mineSpawn', { x: mn.x, y: mn.y }); } }
         } else if (h.type === 'crusher') {
-          if (this.turn % h.every === 0) { this.pendingHazards.push({ type: 'crusher', h }); this.hazardAnnounce.push({ type: 'danger', text: 'CRUSHER DROPS THIS TURN', zone: { x: h.x, y: h.top, w: h.w, h: h.bottom - h.top } }); }
-          else if (this.turn % h.every === h.every - 1) this.hazardAnnounce.push({ type: 'warn', text: 'Crusher next turn', zone: { x: h.x, y: h.top, w: h.w, h: h.bottom - h.top } });
+          const lbl = (h.label || 'Crusher').toUpperCase();
+          if (this.turn % h.every === 0) { this.pendingHazards.push({ type: 'crusher', h }); this.hazardAnnounce.push({ type: 'danger', text: `${lbl} THIS TURN`, zone: { x: h.x, y: h.top, w: h.w, h: h.bottom - h.top } }); }
+          else if (this.turn % h.every === h.every - 1) this.hazardAnnounce.push({ type: 'warn', text: `${h.label || 'Crusher'} next turn`, zone: { x: h.x, y: h.top, w: h.w, h: h.bottom - h.top } });
         } else if (h.type === 'geyser') {
           if (this.turn % h.every === 0 && this.pendingGeysers) {
             this.pendingHazards.push({ type: 'geyser', h, points: this.pendingGeysers });
-            this.hazardAnnounce.push({ type: 'danger', text: 'GEYSERS ERUPT', points: this.pendingGeysers, radius: h.radius });
+            this.hazardAnnounce.push({ type: 'danger', text: `${(h.label || 'Geysers').toUpperCase()} ERUPT`, points: this.pendingGeysers, radius: h.radius });
             this.pendingGeysers = null;
           } else if (this.turn % h.every === h.every - 1) {
             const pts = [...h.points]; const chosen = [];
             for (let i = 0; i < h.count && pts.length; i++) chosen.push(pts.splice(this.rng.int(pts.length), 1)[0]);
             this.pendingGeysers = chosen;
-            this.hazardAnnounce.push({ type: 'warn', text: 'Geysers next turn', points: chosen, radius: h.radius });
+            this.hazardAnnounce.push({ type: 'warn', text: `${h.label || 'Geysers'} next turn`, points: chosen, radius: h.radius });
           }
         } else if (h.type === 'reactor') {
-          if (this.turn % h.every === 0) { this.pendingHazards.push({ type: 'reactor', h }); this.hazardAnnounce.push({ type: 'danger', text: 'REACTOR PULSE THIS TURN', circle: { x: h.x, y: h.y, r: h.r } }); }
-          else if (this.turn % h.every === h.every - 1) this.hazardAnnounce.push({ type: 'warn', text: 'Reactor pulse next turn', circle: { x: h.x, y: h.y, r: h.r } });
+          if (this.turn % h.every === 0) { this.pendingHazards.push({ type: 'reactor', h }); this.hazardAnnounce.push({ type: 'danger', text: `${(h.label || 'Reactor pulse').toUpperCase()} THIS TURN`, circle: { x: h.x, y: h.y, r: h.r } }); }
+          else if (this.turn % h.every === h.every - 1) this.hazardAnnounce.push({ type: 'warn', text: `${h.label || 'Reactor pulse'} next turn`, circle: { x: h.x, y: h.y, r: h.r } });
         }
       }
     } else {
@@ -589,6 +593,11 @@ export class World {
       }
       if (b.y > this.map.height + 3 || b.y < -12) this.kill(b, null, 'fell', 0);
     }
+    // Mines: bots that touch one set it off
+    if (this.settings.hazards) for (const mn of this.mines) {
+      if (!mn.alive) continue;
+      for (const b of this.alive()) if (Math.hypot(b.x - mn.x, b.y - mn.y) < PHYS.botRadius + 0.45) { this.detonateMine(mn, null); break; }
+    }
     // Bot-bot collisions and contact effects
     const alive = this.alive();
     for (let i = 0; i < alive.length; i++) for (let j = i + 1; j < alive.length; j++) {
@@ -610,6 +619,15 @@ export class World {
     if (this.singularity) { this.singularity.t -= dt; }
     for (const b of this.bots) if (b.alive && b.lavaImmune > 0) { /* turn-based; decremented in endTurn */ }
     return this.done();
+  }
+
+  mineDef() { return this.map.hazards.find((h) => h.type === 'mines') || { dmg: 20, radius: 1.2, respawn: 4 }; }
+  detonateMine(mn, source) {
+    if (!mn.alive) return;
+    const h = this.mineDef();
+    mn.alive = false; mn.timer = h.respawn || 4;
+    this.emit('mine', { x: mn.x, y: mn.y });
+    this.explode(mn.x, mn.y, h.radius, h.dmg, source || null, { label: 'Spike mine', knock: 1.3, color: '#ff4d4d' });
   }
 
   transferContact(from, to) {
@@ -644,6 +662,8 @@ export class World {
       const h = circleRectPush(p.x, p.y, p.r, w.rect);
       if (h) return { type: 'wall', wall: w, nx: h.nx, ny: h.ny };
     }
+    // mines
+    if (this.settings.hazards) for (const mn of this.mines) if (mn.alive && Math.hypot(mn.x - p.x, mn.y - p.y) < p.r + 0.45) return { type: 'mine', mine: mn };
     // bots
     for (const b of this.bots) {
       if (!b.alive) continue;
@@ -689,6 +709,7 @@ export class World {
       this.emit('bounce', { x: p.x, y: p.y, color: p.color });
       return;
     }
+    if (res.type === 'mine') { this.detonateMine(res.mine, owner); }
     if (res.type === 'wall') {
       res.wall.hp -= p.dmg || 10;
       if (res.wall.hp <= 0) { this.walls = this.walls.filter((w) => w !== res.wall); this.emit('wallBreak', { x: res.wall.rect.x, y: res.wall.rect.y }); }

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Super Bots Map Gallery</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&family=Rubik+Mono+One&display=swap" />
+<style>
+  :root { --bg: #101522; --panel: #171d2c; --line: #2a3346; --text: #eef2f8; --muted: #8a97ad; --accent: #5ff2ff; font-family: Rubik, "Segoe UI", sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); }
+  header { padding: 22px 24px 8px; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  h1 { font-family: "Rubik Mono One", Rubik, sans-serif; font-size: 26px; margin: 0; letter-spacing: 2px; }
+  header p { color: var(--muted); margin: 0; font-size: 14px; }
+  .theme { padding: 6px 24px 0; }
+  .theme h2 { font-family: "Rubik Mono One", Rubik, sans-serif; font-size: 16px; letter-spacing: 4px; margin: 14px 0 8px; color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); gap: 14px; }
+  .map { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .map canvas { display: block; width: 100%; aspect-ratio: 16 / 8; }
+  .map .meta { padding: 10px 14px 12px; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+  .map h3 { margin: 0; font-size: 16px; letter-spacing: 2px; }
+  .map .tag { font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .map p { margin: 0; font-size: 12.5px; color: #c9d2e0; flex-basis: 100%; }
+  .legend { color: var(--muted); font-size: 12px; padding: 0 24px 30px; }
+</style>
+</head>
+<body>
+<header><h1>SUPER BOTS MAPS</h1><p>Ten maps across five themes. Bots stand on the spawn pads; power-up points, mines and hazard zones are shown.</p></header>
+<div id="root"></div>
+<p class="legend">Each map is rendered live with the in-game renderer: backgrounds, platforms and kill floors are painted per theme. Hazard zones (dashed) show where icicles, logs, geysers or pulses land.</p>
+<script type="module">
+import { MAPS, MAP_IDS, THEMES, THEME_IDS } from './src/core/maps.js';
+import { BOT_IDS, POWERUPS } from './src/core/defs.js';
+import { Match } from './src/core/match.js';
+import { Renderer } from './src/render/renderer.js';
+
+const root = document.getElementById('root');
+const views = [];
+for (const tid of THEME_IDS) {
+  const sec = document.createElement('section'); sec.className = 'theme';
+  sec.innerHTML = `<h2>${THEMES[tid].name.toUpperCase()}</h2><div class="grid"></div>`;
+  const grid = sec.querySelector('.grid');
+  for (const id of MAP_IDS.filter((m) => MAPS[m].theme === tid)) {
+    const m = MAPS[id];
+    const el = document.createElement('div'); el.className = 'map';
+    el.innerHTML = `<canvas></canvas><div class="meta"><h3>${m.name.toUpperCase()}</h3><span class="tag">${m.size} · ${m.width}×${m.height} · ${m.minPlayers}-${m.maxPlayers} players</span><p>${m.blurb}</p></div>`;
+    grid.appendChild(el);
+    const n = m.size === 'battle' ? 8 : 4;
+    const players = Array.from({ length: n }, (_, k) => ({ name: ['Rex', 'Nova', 'Juno', 'Kilo', 'Mira', 'Ozzy', 'Pax', 'Quill'][k], botId: BOT_IDS[(k * 3 + MAP_IDS.indexOf(id)) % BOT_IDS.length], team: k % 2, isAI: true }));
+    const match = new Match(players, { map: id, mode: 'ffa' }, 42);
+    match.world.startTurn();
+    // show every hazard zone for the gallery
+    for (const h of m.hazards) {
+      if (h.type === 'crusher') match.world.hazardAnnounce.push({ type: 'warn', text: h.label, zone: { x: h.x, y: h.top, w: h.w, h: h.bottom - h.top } });
+      if (h.type === 'reactor') match.world.hazardAnnounce.push({ type: 'warn', text: h.label, circle: { x: h.x, y: h.y, r: h.r } });
+      if (h.type === 'geyser') match.world.hazardAnnounce.push({ type: 'warn', text: h.label, points: h.points, radius: h.radius });
+    }
+    const canvas = el.querySelector('canvas');
+    const r = new Renderer(canvas);
+    views.push({ r, canvas, match });
+  }
+  root.appendChild(sec);
+}
+function fit(v) {
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  const W = v.canvas.clientWidth, H = v.canvas.clientHeight;
+  v.r.dpr = dpr; v.r.w = W; v.r.h = H;
+  if (v.canvas.width !== Math.floor(W * dpr)) { v.canvas.width = Math.floor(W * dpr); v.canvas.height = Math.floor(H * dpr); }
+  if (!v.set) { v.r.setWorld(v.match.world); v.set = true; }
+  // fit the whole map into this small canvas (renderer reserves 140px for HUD; undo that here)
+  const m = v.match.world.map;
+  const zoom = Math.min(W / (m.width + 1), H / (v.r.playHeight() + 0.5));
+  v.r.cam = { x: m.width / 2, y: v.r.playHeight() / 2, zoom }; v.r.camTarget = { ...v.r.cam };
+}
+let last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  for (const v of views) { fit(v); v.r.update(dt, { facing: {} }); v.r.camTarget = { ...v.r.cam }; }
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -49,7 +49,7 @@ The dotted trajectory shows 30 / 55 / 85 % of the flight for low / medium / high
 
 **Rules.** Jump and Missile every turn, cooldown specials, elimination by HP, kill floor or leaving the map, self-destruct blasts with chain kills, ten power-ups with the GDD stacking rules, Sudden Death (respawn at 50 HP, no specials, alternating Jump/Missile), turn cap with highest-HP or Sudden Death tiebreak, teams with friendly-fire toggle and Rally Beacon.
 
-**Maps.** Scrapyard (crusher), Caldera (rising lava), Stratos (wind), Foundry (geysers), Nimbus Reach (gusts, teleporter edges), Reactor Core (reactor pulse, teleporter edges), plus air strikes: a one-turn warning with no location, then standard missiles rain across the whole map, so overhead cover matters.
+**Maps.** Ten maps across five theme kits, one Standard and one Battle map each: Lava (Ember Pit, Magma Works), Ice (Frost Hollow, Glacier Fortress), Jungle (Canopy Ruins, Temple Crossing), Sky (Cloud Steps, Nimbus Reach) and Neo City (Neon Alley, Skyline Grid). Hazards: rising lava, geysers, falling icicles, blizzard gusts, spike mines, log drops, wind, EMP pulses, teleporter edges. Air strikes give a one-turn warning with no location, then standard missiles rain across the whole map, so overhead cover matters.
 
 **AI.** Each AI bot samples aims through the same trajectory preview the player sees, refines the best one, weighs specials situationally (walls when under fire, Chain Arc through cover, Singularity on clusters, Gale Shot toward ledges, contact power-ups by body-slamming), dodges when enemies have a line on it, retreats from announced hazards and grabs power-ups. Three difficulty tiers change aim noise, sample count and special usage.
 
@@ -59,7 +59,9 @@ The dotted trajectory shows 30 / 55 / 85 % of the flight for low / medium / high
 index.html, style.css     Shell, HUD and menus
 src/main.js               Menus, lobby, settings persistence, match lifecycle
 src/core/defs.js          Every tunable number: bots, power-ups, physics, settings, presets
-src/core/maps.js          Six maps and three theme kits
+src/core/maps.js          Ten maps and five theme kits
+src/render/themes.js      Painted backgrounds, platforms, kill floors and hazard decor per theme
+src/render/bots.js        Bot rigs and move animations
 src/core/sim.js           Deterministic World: physics, actions, specials, damage, hazards
 src/core/match.js         Turn-loop state machine, win checks, Sudden Death, turn cap
 src/core/rng.js           Seeded PRNG
@@ -81,7 +83,7 @@ node test/features.mjs       # asserts every special, power-up, hazard and rule 
 node test/balance.mjs 3      # 1v1 round-robin balance report
 node test/stress.mjs 250     # randomised host settings, sizes and modes
 node test/browser.mjs        # Playwright browser smoke test (needs playwright-core and a static server on :8123)
-node test/trace.mjs phantom volt scrapyard 7 hard   # turn-by-turn trace of one duel
+node test/trace.mjs phantom volt frosthollow 7 hard   # turn-by-turn trace of one duel
 ```
 
 ## Deploy

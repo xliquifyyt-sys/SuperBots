@@ -91,6 +91,7 @@ export class AIPlanner {
       if (a.airstrike && !w.hasCoverAbove(x, y)) d += a.airstrike === 'now' ? 45 : 30; // missiles rain everywhere: get under something
     }
     for (const p of w.patches) if (Math.abs(x - p.x) < p.w / 2 + 0.5 && Math.abs(y - p.y) < 1.3 && b.def.id !== 'magmaw') d += 20;
+    for (const mn of w.mines) if (mn.alive && Math.hypot(x - mn.x, y - mn.y) < 1.9) d += 28;
     for (const f of w.fields) if (f.kind === 'static' && Math.hypot(x - f.x, y - f.y) < f.r + 0.5) d += 15;
     // Being clumped with several enemies is dangerous (self-destructs, AoE)
     let near = 0;
@@ -159,6 +160,7 @@ export class AIPlanner {
       }
       return total;
     }
+    if (imp.type === 'mine') { let n = 0; for (const e of enemies) if (Math.hypot(e.x - imp.x, e.y - imp.y) < 1.8) n++; if (Math.hypot(b.x - imp.x, b.y - imp.y) < 1.8) n -= 2; return n > 0 ? 22 * n : -6; }
     for (const e of enemies) {
       const d = Math.hypot(e.x - imp.x, e.y - imp.y);
       if (d < radius) {
