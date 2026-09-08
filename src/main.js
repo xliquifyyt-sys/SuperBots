@@ -4,6 +4,7 @@ import { MAPS, MAP_IDS, mapsForPlayers } from './core/maps.js';
 import { Match } from './core/match.js';
 import { Renderer } from './render/renderer.js';
 import { drawBot } from './render/bots.js';
+import { iconCanvas } from './render/icons.js';
 import { GameController } from './ui/game.js';
 import { audio } from './audio.js';
 
@@ -82,7 +83,8 @@ for (const id of BOT_IDS) $('botpedia').appendChild(botCard(BOTS[id]));
 for (const id of POWERUP_IDS) {
   const p = POWERUPS[id];
   const d = document.createElement('div'); d.className = 'pu';
-  d.innerHTML = `<i style="background:${p.color}">${p.icon}</i><div><b>${p.name}${p.teamsOnly ? ' (teams)' : ''}</b>${p.desc}</div>`;
+  d.innerHTML = `<div><b>${p.name}${p.teamsOnly ? ' (teams)' : ''}</b>${p.desc}</div>`;
+  d.insertBefore(iconCanvas(id, 44), d.firstChild);
   $('powerpedia').appendChild(d);
 }
 

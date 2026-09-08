@@ -5,6 +5,7 @@ import { THEMES } from '../core/maps.js';
 import { PHYS, POWERUPS, TEAM_COLORS } from '../core/defs.js';
 import { drawBot, ANIM_LENGTH } from './bots.js';
 import { paintBackdrop, paintTerrain, paintFloor, paintMine, paintCrusher } from './themes.js';
+import { drawPowerupIcon } from './icons.js';
 
 const EFFECT_ICONS = { poison: '☠', burn: '🔥', frozen: '❄', rooted: '⚓', shocked: '⚡', smoked: '☁', amp: '▲', plating: '◆', thrusters: '⇈', reflector: '◐', rally: '★' };
 const EFFECT_COLORS = { poison: '#9dff2f', burn: '#ff8a2f', frozen: '#b5f4ff', rooted: '#3ddc97', shocked: '#ffe23a', smoked: '#c8c8d8', amp: '#ff7a2f', plating: '#c0c8d8', thrusters: '#ffd84f', reflector: '#e8f0ff', rally: '#ff9cf0' };
@@ -335,14 +336,9 @@ export class Renderer {
   drawPowerups() {
     const c = this.ctx, z = this.cam.zoom * this.userZoom;
     for (const p of this.world.powerups) {
-      const def = POWERUPS[p.id];
-      const [x, y] = this.toScreen(p.x, p.y - 0.15 + Math.sin(this.time * 3 + p.x) * 0.1);
-      const r = 0.42 * z;
-      c.fillStyle = def.color; c.strokeStyle = '#0d1018'; c.lineWidth = Math.max(2, z * 0.08);
-      c.beginPath(); c.moveTo(x, y - r); c.lineTo(x + r, y); c.lineTo(x, y + r); c.lineTo(x - r, y); c.closePath(); c.fill(); c.stroke();
-      c.fillStyle = '#0d1018'; c.font = `bold ${Math.round(z * 0.45)}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.fillText(def.icon, x, y + 1);
-      if (p.turns <= 2) { c.fillStyle = '#fff'; c.font = `${Math.round(z * 0.3)}px sans-serif`; c.fillText(String(p.turns), x, y - r - z * 0.25); }
+      const [x, y] = this.toScreen(p.x, p.y - 0.15);
+      drawPowerupIcon(c, p.id, x, y, Math.max(8, z * 0.46), { float: true, time: this.time });
+      if (p.turns <= 2) { c.fillStyle = '#fff'; c.strokeStyle = '#0b0e14'; c.lineWidth = 3; c.font = `bold ${Math.round(z * 0.3)}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.strokeText(String(p.turns), x, y - z * 0.75); c.fillText(String(p.turns), x, y - z * 0.75); }
     }
   }
 
@@ -398,11 +394,12 @@ export class Renderer {
       const keys = Object.keys(b.effects).filter((k) => b.effects[k] > 0);
       if (b.contact) keys.push(b.contact);
       keys.forEach((k, i) => {
-        const ex = x - (keys.length - 1) * z * 0.22 + i * z * 0.44, ey = y + r + z * 0.35;
-        c.fillStyle = EFFECT_COLORS[k] || POWERUPS[k]?.color || '#fff';
+        const ex = x - (keys.length - 1) * z * 0.24 + i * z * 0.48, ey = y + r * 1.4 + z * 0.3;
+        if (POWERUPS[k]) { drawPowerupIcon(c, k, ex, ey, z * 0.2, { flat: true }); return; }
+        c.fillStyle = EFFECT_COLORS[k] || '#fff';
         c.beginPath(); c.arc(ex, ey, z * 0.19, 0, Math.PI * 2); c.fill();
         c.fillStyle = '#0d1018'; c.font = `bold ${Math.round(z * 0.22)}px sans-serif`;
-        c.fillText(EFFECT_ICONS[k] || POWERUPS[k]?.icon || '?', ex, ey + 1);
+        c.fillText(EFFECT_ICONS[k] || '?', ex, ey + 1);
       });
       // team badge
       if (w.teamsMode) { c.fillStyle = TEAM_COLORS[b.team % 4]; c.beginPath(); c.arc(x + bw / 2 + z * 0.2, by + bh / 2, z * 0.14, 0, Math.PI * 2); c.fill(); }

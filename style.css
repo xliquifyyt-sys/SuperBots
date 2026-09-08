@@ -64,6 +64,11 @@ h3 { font-size: 14px; letter-spacing: 3px; margin: 14px 0 6px; color: var(--mute
 #bot-info { position: absolute; left: 8px; top: 70px; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; max-width: 260px; pointer-events: auto; }
 #bot-info b { color: var(--cyan); }
 #bot-info .close { float: right; cursor: pointer; color: var(--muted); }
+#bot-info .pu-held { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+#bot-info .pu-row { display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 4px 6px; }
+#bot-info .pu-row canvas { flex: 0 0 auto; }
+#bot-info .turns { color: var(--yellow); font-size: 11px; }
+#bot-info .d { color: var(--muted); font-size: 12px; }
 
 #plan-bar { position: absolute; left: 0; right: 0; bottom: max(8px, env(safe-area-inset-bottom)); display: flex; align-items: flex-end; justify-content: center; gap: 10px; padding: 0 8px; }
 #plan-bar > * { pointer-events: auto; }

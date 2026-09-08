@@ -593,6 +593,13 @@ export class World {
       }
       if (b.y > this.map.height + 3 || b.y < -12) this.kill(b, null, 'fell', 0);
     }
+    // Power-ups are grabbed the moment a bot touches them (buffs apply immediately, mid-turn)
+    for (const b of this.alive()) {
+      for (let i = this.powerups.length - 1; i >= 0; i--) {
+        const pu = this.powerups[i];
+        if (Math.hypot(b.x - pu.x, b.y - pu.y) < PHYS.botRadius + 0.6) { this.powerups.splice(i, 1); this.applyPowerup(b, pu.id); }
+      }
+    }
     // Mines: bots that touch one set it off
     if (this.settings.hazards) for (const mn of this.mines) {
       if (!mn.alive) continue;
@@ -754,13 +761,6 @@ export class World {
   runToEnd() { while (!this.step(PHYS.dt)) { /* spin */ } }
 
   endTurn() {
-    // Pickups
-    for (const b of this.alive()) {
-      for (let i = this.powerups.length - 1; i >= 0; i--) {
-        const pu = this.powerups[i];
-        if (Math.hypot(b.x - pu.x, b.y - pu.y) < PHYS.botRadius + 0.55) { this.powerups.splice(i, 1); this.applyPowerup(b, pu.id); }
-      }
-    }
     // Static fields resolve at end of turn
     for (const f of this.fields) {
       if (f.kind === 'static' && !f.applied) {
@@ -791,9 +791,9 @@ export class World {
     switch (id) {
       case 'repair': b.hp = Math.min(b.maxHp, b.hp + 40); delete b.effects.poison; delete b.effects.burn; break;
       case 'overclock': b.cd1 = 0; b.cd2 = 0; delete b.effects.shocked; break;
-      case 'amp': case 'plating': case 'thrusters': this.addEffect(b, id, pu.turns + 1); break;
-      case 'reflector': this.addEffect(b, 'reflector', 2); break;
-      case 'toxin': case 'frost': case 'shockwire': b.contact = id; b.contactTurns = 3; break;
+      case 'amp': case 'plating': case 'thrusters': this.addEffect(b, id, pu.turns); break;   // counts down at end of each turn; pickup turn is the first
+      case 'reflector': this.addEffect(b, 'reflector', pu.turns); break;
+      case 'toxin': case 'frost': case 'shockwire': b.contact = id; b.contactTurns = pu.turns; break;
       case 'rally':
         for (const o of this.alive()) if (this.sameTeam(o, b) || o === b) { o.hp += 20; if (o.hp > o.maxHp) { o.overheal = Math.min(20, o.hp - o.maxHp); o.hp = o.maxHp + o.overheal; } this.addEffect(o, 'rally', 3); }
         break;

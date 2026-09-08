@@ -2,6 +2,7 @@
 // gestures and the HUD.
 
 import { PHYS, POWERUPS } from '../core/defs.js';
+import { iconCanvas } from '../render/icons.js';
 import { audio } from '../audio.js';
 
 const $ = (id) => document.getElementById(id);
@@ -216,19 +217,41 @@ export class GameController {
     if (!this.match) return;
     const [wx, wy] = this.r.toWorld(sx, sy);
     const hit = this.match.world.bots.find((b) => b.alive && Math.hypot(b.x - wx, b.y - wy) < PHYS.botRadius * 1.6);
-    if (hit) { this.infoBot = hit; this.renderInfo(); audio.ui(); }
-    else { this.infoBot = null; this.el.info.classList.add('hidden'); }
+    if (hit) { this.infoBot = hit; this._infoKey = null; this.renderInfo(); audio.ui(); }
+    else { this.infoBot = null; this._infoKey = null; this.el.info.classList.add('hidden'); }
   }
 
   renderInfo() {
     const b = this.infoBot, w = this.match.world;
     if (!b || !b.alive) { this.el.info.classList.add('hidden'); return; }
-    const fx = Object.keys(b.effects).filter((k) => b.effects[k] > 0).map((k) => `${k} (${b.effects[k]})`).join(', ') || 'none';
-    this.el.info.innerHTML = `<span class="close">✕</span><b>${b.name}</b> · ${b.def.name}<br>HP ${Math.ceil(b.hp)} / ${b.maxHp} · ${b.def.weight} · ${b.def.accuracy} accuracy<br>` +
-      `${b.def.s1.name}: ${b.cd1 > 0 ? b.cd1 + ' turns' : 'ready'} · ${b.def.s2.name}: ${b.cd2 > 0 ? b.cd2 + ' turns' : 'ready'}<br>Effects: ${fx}${b.contact ? ' · holding ' + POWERUPS[b.contact].name : ''}` +
-      (w.teamsMode ? `<br>Team ${b.team + 1}` : '') + `<br><i>${b.def.passive}</i>`;
-    this.el.info.classList.remove('hidden');
-    this.el.info.querySelector('.close').onclick = () => { this.infoBot = null; this.el.info.classList.add('hidden'); };
+    const STATUS = { poison: 'Poisoned: 10 damage per turn', burn: 'Burning: 8 damage per turn', frozen: 'Frozen: cannot jump', rooted: 'Rooted: cannot jump', shocked: 'Shocked: specials disabled', smoked: 'In smoke: hidden aim' };
+    const key = `${b.id}|${b.hp}|${b.cd1}|${b.cd2}|${JSON.stringify(b.effects)}|${b.contact}|${b.contactTurns}`;
+    if (this._infoKey === key) return;
+    this._infoKey = key;
+    const el = this.el.info;
+    el.innerHTML = '';
+    const head = document.createElement('div');
+    head.innerHTML = `<span class="close">✕</span><b>${b.name}</b> · ${b.def.name}<br>HP ${Math.ceil(b.hp)} / ${b.maxHp} · ${b.def.weight} · ${b.def.accuracy} accuracy<br>` +
+      `${b.def.s1.name}: ${b.cd1 > 0 ? b.cd1 + ' turns' : 'ready'} · ${b.def.s2.name}: ${b.cd2 > 0 ? b.cd2 + ' turns' : 'ready'}` + (w.teamsMode ? `<br>Team ${b.team + 1}` : '');
+    el.appendChild(head);
+    const list = document.createElement('div'); list.className = 'pu-held';
+    const addRow = (id, title, desc, turns) => {
+      const row = document.createElement('div'); row.className = 'pu-row';
+      if (id) row.appendChild(iconCanvas(id, 34));
+      const t = document.createElement('div'); t.innerHTML = `<b>${title}</b> <span class="turns">${turns}</span><br><span class="d">${desc}</span>`;
+      row.appendChild(t); list.appendChild(row);
+    };
+    for (const [k, n] of Object.entries(b.effects)) {
+      if (n <= 0) continue;
+      if (POWERUPS[k]) addRow(k, POWERUPS[k].name, POWERUPS[k].desc, `${n} turn${n === 1 ? '' : 's'} left`);
+      else if (STATUS[k]) addRow(null, k.charAt(0).toUpperCase() + k.slice(1), STATUS[k], `${n} turn${n === 1 ? '' : 's'} left`);
+    }
+    if (b.contact) addRow(b.contact, POWERUPS[b.contact].name, POWERUPS[b.contact].desc, `${b.contactTurns} turn${b.contactTurns === 1 ? '' : 's'} left`);
+    if (!list.children.length) { const none = document.createElement('div'); none.className = 'd'; none.textContent = 'No power-ups or effects.'; list.appendChild(none); }
+    el.appendChild(list);
+    const pas = document.createElement('div'); pas.className = 'd'; pas.innerHTML = `<i>${b.def.passive}</i>`; el.appendChild(pas);
+    el.classList.remove('hidden');
+    el.querySelector('.close').onclick = () => { this.infoBot = null; this._infoKey = null; el.classList.add('hidden'); };
   }
 
   // ----- per frame -----
