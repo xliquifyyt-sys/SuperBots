@@ -1,8 +1,11 @@
 // Map definitions. Units are bot widths; y grows downward; (0,0) is the top-left.
-// Each terrain entry is a solid rectangle. Spawns are listed left to right.
-// Five theme kits, two maps each: one Standard (2-4 players) and one Battle (4-8).
+// terrain: solid rectangles. slopes: right triangles { x, y, w, h, dir } where the
+// surface rises toward +x when dir = 1 and toward -x when dir = -1; (x, y) is the
+// top-left of the bounding box. Slopes become stair-step rects for collision.
+// Each map is built around ONE structural idea so it plays differently.
 
 const R = (x, y, w, h) => ({ x, y, w, h });
+const S = (x, y, w, h, dir) => ({ x, y, w, h, dir });
 
 export const THEMES = {
   lava: {
@@ -29,205 +32,240 @@ export const THEMES = {
 
 export const MAPS = {
   // ===================== LAVA =====================
+  // Idea: a volcano in the middle. Continuous ground, but the lava rises every few turns
+  // and eventually floods the low ground, so the fight climbs the mountain.
   emberpit: {
     id: 'emberpit', name: 'Ember Pit', theme: 'lava', size: 'standard', width: 30, height: 17,
     minPlayers: 2, maxPlayers: 4, recommended: 2,
     terrain: [
-      R(0, 13, 9, 4), R(21, 13, 9, 4),                 // shore slabs
-      R(11.5, 13.8, 7, 3.2),                            // centre island (lower)
-      R(2.5, 8.5, 5, 1), R(22.5, 8.5, 5, 1),            // side ledges
-      R(12, 8, 6, 1),                                   // centre ledge (cover for the island)
-      R(7.5, 4, 1, 6), R(21.5, 4, 1, 6),                // hanging basalt columns (pass beneath)
-      R(13.5, 3.5, 3, 0.8),                             // top perch
+      R(0, 13, 30, 4),                                  // continuous ground
+      R(12, 7.5, 6, 5.5),                               // volcano summit block
+      R(13.5, 3.5, 3, 0.8),                             // rim perch above the crater (cover)
+      R(2, 9, 4, 0.8), R(24, 9, 4, 0.8),                // side ledges
     ],
-    spawns: [[1.5, 12.5], [4.5, 12.5], [7, 12.5], [13, 13.3], [17, 13.3], [23, 12.5], [25.5, 12.5], [28.5, 12.5]],
-    powerups: [[15, 7.5], [5, 8], [25, 8], [15, 3], [1, 12.5], [29, 12.5], [15, 13.3]],
-    killFloor: { type: 'lava', y: 15.6 },
+    slopes: [S(6, 7.5, 6, 5.5, 1), S(18, 7.5, 6, 5.5, -1)],  // mountain flanks
+    spawns: [[1.5, 12.5], [4.5, 12.5], [9, 12.5], [13.5, 7], [16.5, 7], [21, 12.5], [25.5, 12.5], [28.5, 12.5]],
+    powerups: [[15, 3], [4, 8.5], [26, 8.5], [10, 12.5], [20, 12.5], [15, 7]],
+    killFloor: { type: 'lava', y: 15.4 },
     teleporters: false,
-    hazards: [{ type: 'risingLava', every: 6, amount: 1, label: 'The lava rises!' }, { type: 'geyser', every: 4, points: [[10, 13.8], [20, 13.8], [15, 13.8]], count: 1, dmg: 20, radius: 1.3, label: 'Geyser' }],
-    blurb: 'Shore slabs around a sinking island. The lava rises every 6 turns and geysers erupt at announced spots.',
+    hazards: [{ type: 'risingLava', every: 4, amount: 0.8, label: 'The lava rises!' }, { type: 'geyser', every: 4, points: [[9, 12.5], [21, 12.5], [4, 12.5], [26, 12.5]], count: 1, dmg: 20, radius: 1.3, label: 'Geyser' }],
+    blurb: 'A volcano on solid ground. The lava rises every 4 turns and will flood the lowlands, so the fight climbs the mountain.',
   },
+  // Idea: a stepped foundry. Long flat floor, a chain of ascending furnace tiers on the
+  // right with hanging chimneys, one narrow lava channel on the left to punish careless jumps.
   magmaworks: {
     id: 'magmaworks', name: 'Magma Works', theme: 'lava', size: 'battle', width: 46, height: 21,
     minPlayers: 2, maxPlayers: 8, recommended: 6,
     terrain: [
-      R(0, 15, 14, 6), R(32, 15, 14, 6),                // two foundry floors
-      R(17, 16.5, 12, 1),                               // low bridge
-      R(3, 10.5, 5, 1), R(38, 10.5, 5, 1),              // side ledges
-      R(10, 12, 3, 0.9), R(33, 12, 3, 0.9),             // step ledges
-      R(19, 11.5, 8, 1),                                // catwalk over the bridge (cover)
-      R(21, 6.5, 4, 0.9),                               // crane perch
-      R(6, 13, 1, 2), R(39, 13, 1, 2),                  // pipes / pillars
-      R(14.5, 7, 1, 5), R(30.5, 7, 1, 5),               // hanging chimneys (pass beneath)
-      R(0, 9, 1, 6), R(45, 9, 1, 6),                    // side walls
+      R(0, 15, 9, 6), R(12, 15, 34, 6),                 // floor with one lava channel (9..12)
+      R(9, 13, 3, 0.8),                                 // grate over the channel (cover for the channel)
+      R(24, 12, 8, 3), R(32, 9, 8, 6), R(40, 6, 6, 9),  // furnace tiers stepping up to the right
+      R(3, 10.5, 5, 0.9), R(14, 10, 5, 0.9),            // catwalks on the low side
+      R(20, 6.5, 6, 0.9),                               // crane arm (cover over the first tier)
+      R(28, 4, 1, 4), R(36.5, 2, 1, 4),                 // hanging chimneys
+      R(0, 9, 1, 6),                                    // left wall
     ],
-    spawns: [[2, 14.5], [6.5, 14.5], [10, 14.5], [12.5, 14.5], [33.5, 14.5], [36, 14.5], [40, 14.5], [44, 14.5]],
-    powerups: [[23, 10.5], [23, 5.5], [5, 9.5], [40.5, 9.5], [23, 15.5], [11.5, 11], [34.5, 11], [1.5, 14.5], [44.5, 14.5]],
+    slopes: [S(20, 12, 4, 3, 1)],                       // ramp onto the first tier
+    spawns: [[2, 14.5], [6, 14.5], [15, 14.5], [19, 14.5], [27, 11.5], [35, 8.5], [43, 5.5], [22, 14.5]],
+    powerups: [[23, 6], [43, 5.5], [5, 10], [16.5, 9.5], [28, 11.5], [36, 8.5], [10.5, 12.5], [2, 14.5]],
     killFloor: { type: 'lava', y: 18.6 },
     teleporters: false,
-    hazards: [{ type: 'geyser', every: 3, points: [[18.5, 16.5], [23, 16.5], [27.5, 16.5], [15.5, 15], [30.5, 15]], count: 2, dmg: 20, radius: 1.4, label: 'Geysers' }],
-    blurb: 'Two foundry floors joined by a bridge over the lava river. Geysers erupt every 3 turns at announced points.',
+    hazards: [{ type: 'geyser', every: 3, points: [[10.5, 15], [16, 15], [22, 15], [30, 12], [38, 9]], count: 2, dmg: 20, radius: 1.4, label: 'Geysers' }],
+    blurb: 'A foundry floor that steps up into furnace tiers on the right. High ground has the view; the low floor has cover. Geysers every 3 turns.',
   },
 
   // ===================== ICE =====================
+  // Idea: a frozen slide. Continuous floor, one long ramp up to a high plateau on the left,
+  // a low ceiling of hanging ice over the middle. Icicles crash onto the plateau.
   frosthollow: {
     id: 'frosthollow', name: 'Frost Hollow', theme: 'ice', size: 'standard', width: 30, height: 17,
     minPlayers: 2, maxPlayers: 4, recommended: 2,
     terrain: [
-      R(0, 13.5, 11, 3.5), R(19, 13.5, 11, 3.5),        // frozen shores
-      R(12.5, 8, 5, 1.4),                               // floating ice block
-      R(2, 9, 6, 0.9), R(22, 9, 6, 0.9),                // ice shelves
-      R(4, 3, 0.8, 7.5), R(25.2, 3, 0.8, 7.5),          // hanging ice pillars (pass beneath)
-      R(13.5, 4, 3, 0.8),                               // high perch
-      R(9.5, 11.5, 1.2, 2), R(19.3, 11.5, 1.2, 2),      // shore posts
+      R(0, 13.5, 30, 3.5),                              // frozen floor
+      R(0, 7.5, 8, 6),                                  // high plateau (left)
+      R(13, 3, 6, 0.9),                                 // hanging ice ceiling shelf (cover)
+      R(16, 3.9, 0.8, 4),                               // icicle pillar hanging from the shelf
+      R(21, 9.5, 5, 0.9),                               // right shelf
+      R(26, 11, 4, 2.5),                                // low step at the right edge
     ],
-    spawns: [[1.5, 13], [5.5, 13], [8.5, 13], [13, 7.5], [17, 7.5], [21.5, 13], [24.5, 13], [28.5, 13]],
-    powerups: [[15, 3.5], [5, 8.5], [25, 8.5], [15, 7.5], [1, 13], [29, 13], [10, 13]],
-    killFloor: { type: 'water', y: 15.4 },
+    slopes: [S(8, 7.5, 6, 6, -1)],                      // slide down from the plateau
+    spawns: [[1.5, 7], [5, 7], [11, 13], [15, 13], [19, 13], [23, 9], [27.5, 10.5], [29, 10.5]],
+    powerups: [[16, 2.5], [23.5, 9], [4, 7], [12, 13], [20, 13], [28, 10.5]],
+    killFloor: { type: 'water', y: 15.6 },
     teleporters: false,
-    hazards: [{ type: 'crusher', x: 12.5, w: 5, top: 1, bottom: 8, every: 5, dmg: 40, label: 'Icicles fall' }],
-    blurb: 'An ice cave with a floating block in the middle. Icicles crash down on the block every 5 turns.',
+    hazards: [{ type: 'crusher', x: 0, w: 8, top: 1, bottom: 7.5, every: 5, dmg: 40, label: 'Icicles fall' }],
+    blurb: 'A frozen slide from a high plateau down to the cave floor. The plateau has the view, but icicles crash onto it every 5 turns.',
   },
+  // Idea: a fortress. A raised central keep with ramps on both sides, two floating
+  // watchtowers at the ends, teleporting edges. Gusts sweep the walls.
   glacierfort: {
     id: 'glacierfort', name: 'Glacier Fortress', theme: 'ice', size: 'battle', width: 48, height: 22,
     minPlayers: 2, maxPlayers: 8, recommended: 8,
     terrain: [
-      R(0, 17, 12, 5), R(18, 17.5, 12, 4.5), R(36, 17, 12, 5),   // three frozen floors
-      R(2, 12, 6, 1), R(40, 12, 6, 1),                            // low shelves
-      R(12, 13.5, 5, 1), R(31, 13.5, 5, 1),                       // gap shelves
-      R(21, 12, 6, 1),                                            // centre shelf (cover)
-      R(9, 8, 5, 0.9), R(34, 8, 5, 0.9),                          // mid shelves
-      R(21.5, 6.5, 5, 0.9),                                       // top shelf
-      R(16, 8, 0.9, 6), R(31.1, 8, 0.9, 6),                       // hanging ice columns
-      R(0, 8, 1, 9), R(47, 8, 1, 9),                              // cave walls
+      R(0, 17, 48, 5),                                  // continuous frozen ground
+      R(18, 11, 12, 6),                                 // the keep
+      R(21, 6.5, 6, 0.9),                               // keep roof (cover)
+      R(23.5, 7.4, 1, 2),                               // flagpole under the roof
+      R(4, 9, 5, 0.9), R(39, 9, 5, 0.9),                // watchtower tops
+      R(6, 9.9, 1, 3), R(41, 9.9, 1, 3),                // watchtower columns (hanging)
+      R(10, 13.5, 4, 0.8), R(34, 13.5, 4, 0.8),         // wall walks
     ],
-    spawns: [[2, 16.5], [6, 16.5], [10, 16.5], [20, 17], [28, 17], [38, 16.5], [42, 16.5], [46, 16.5]],
-    powerups: [[24, 6], [11.5, 7.5], [36.5, 7.5], [24, 11.5], [5, 11.5], [43, 11.5], [24, 17], [14.5, 13], [33.5, 13]],
+    slopes: [S(12, 11, 6, 6, 1), S(30, 11, 6, 6, -1)],  // ramps up to the keep
+    spawns: [[2, 16.5], [7, 16.5], [11.5, 16.5], [21, 10.5], [27, 10.5], [36.5, 16.5], [41, 16.5], [46, 16.5]],
+    powerups: [[24, 6], [6.5, 8.5], [41.5, 8.5], [12, 13], [36, 13], [24, 10.5], [3, 16.5], [45, 16.5]],
     killFloor: { type: 'water', y: 20.4 },
     teleporters: true,
-    hazards: [{ type: 'gusts', every: 3, strength: 10, label: 'Blizzard gust' }, { type: 'crusher', x: 21, w: 6, top: 1, bottom: 12, every: 6, dmg: 40, label: 'Icicles fall' }],
-    blurb: 'A frozen fortress on three floors with teleporting edges. Blizzard gusts every 3 turns; icicles drop on the centre shelf.',
+    hazards: [{ type: 'gusts', every: 3, strength: 10, label: 'Blizzard gust' }],
+    blurb: 'A frozen keep with ramps on both sides and watchtowers at the edges. Teleporting edges and a blizzard gust every 3 turns.',
   },
 
   // ===================== JUNGLE =====================
+  // Idea: vertical canopy. Solid ground, then three tiers of tree platforms stacked
+  // upward. Fights go up, not across. Mines hang in the branches.
   canopyruins: {
-    id: 'canopyruins', name: 'Canopy Ruins', theme: 'jungle', size: 'standard', width: 30, height: 17,
+    id: 'canopyruins', name: 'Canopy Ruins', theme: 'jungle', size: 'standard', width: 30, height: 18,
     minPlayers: 2, maxPlayers: 4, recommended: 3,
     terrain: [
-      R(0, 13, 8, 4), R(11, 13, 8, 4), R(22, 13, 8, 4),          // mossy ground with two water gaps
-      R(2, 8.5, 6, 0.9), R(22, 8.5, 6, 0.9),                     // side ledges
-      R(11.5, 6, 7, 0.9),                                        // centre ledge
-      R(14.5, 6.9, 1, 3.5),                                      // stone stalactite under the ledge
-      R(5, 3.5, 0.8, 6.5), R(24.2, 3.5, 0.8, 6.5),               // hanging vine-wrapped totems
-      R(12, 9.5, 2, 0.8), R(16, 9.5, 2, 0.8),                    // step stones
+      R(0, 14, 30, 4),                                  // jungle floor
+      R(3, 10.5, 6, 0.9), R(21, 10.5, 6, 0.9),          // low branches
+      R(11, 8, 8, 0.9),                                 // middle branch
+      R(1, 6, 5, 0.9), R(24, 6, 5, 0.9),                // upper branches
+      R(12.5, 3.5, 5, 0.9),                             // crown (cover for the middle branch)
+      R(14.5, 8.9, 1, 3),                               // trunk hanging under the middle branch
     ],
-    spawns: [[1.5, 12.5], [4, 12.5], [7, 12.5], [12.5, 12.5], [17.5, 12.5], [23, 12.5], [26, 12.5], [28.5, 12.5]],
-    powerups: [[15, 5.5], [5, 8], [25, 8], [15, 12.5], [1, 12.5], [29, 12.5], [12.5, 9], [17.5, 9]],
-    mines: [[9.5, 11], [20.5, 11], [15, 11.2]],
-    killFloor: { type: 'water', y: 15.2 },
+    slopes: [],
+    spawns: [[2, 13.5], [7, 13.5], [12, 13.5], [18, 13.5], [23, 13.5], [28, 13.5], [4, 10], [24, 10]],
+    powerups: [[15, 3], [3.5, 5.5], [26.5, 5.5], [15, 7.5], [6, 10], [24, 10], [9, 13.5], [21, 13.5]],
+    mines: [[9.5, 8.5], [20.5, 8.5], [15, 11.5], [7, 4.5], [23, 4.5]],
+    killFloor: { type: 'water', y: 16.2 },
     teleporters: false,
     hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, label: 'Spike mines' }],
-    blurb: 'Overgrown temple ruins. Spike mines float over the water gaps and under the centre ledge.',
+    blurb: 'Solid jungle floor under three tiers of branches. Climb for the high ground and watch the spike mines hanging in the canopy.',
   },
+  // Idea: the temple. A big stepped pyramid fills the middle; flat ground either side.
+  // King of the hill on the top step, where the log drops.
   templecrossing: {
     id: 'templecrossing', name: 'Temple Crossing', theme: 'jungle', size: 'battle', width: 46, height: 21,
     minPlayers: 2, maxPlayers: 8, recommended: 6,
     terrain: [
-      R(0, 15.5, 13, 5.5), R(17, 16, 12, 5), R(33, 15.5, 13, 5.5), // three ground blocks
-      R(2, 10.5, 5, 0.9), R(39, 10.5, 5, 0.9),                    // side ledges
-      R(9, 12.5, 4, 0.9), R(33, 12.5, 4, 0.9),                    // low steps
-      R(19.5, 11, 7, 0.9),                                        // temple roof (cover)
-      R(22, 6, 2, 5),                                             // temple spire
-      R(14, 8, 4, 0.9), R(28, 8, 4, 0.9),                         // hanging ledges
-      R(6, 13.5, 1, 2), R(39, 13.5, 1, 2),                        // totem stubs
-      R(0, 9, 1, 6.5), R(45, 9, 1, 6.5),                          // walls
+      R(0, 16, 46, 5),                                  // ground
+      R(13, 13, 20, 3), R(16, 10, 14, 3), R(19, 7, 8, 3),  // pyramid steps
+      R(21, 3.5, 4, 0.8),                               // altar canopy (cover on the summit)
+      R(3, 11, 5, 0.9), R(38, 11, 5, 0.9),              // side tree platforms
+      R(5, 11.9, 1, 2.5), R(40, 11.9, 1, 2.5),          // trunks hanging beneath
     ],
-    spawns: [[2, 15], [6, 15], [10, 15], [12, 15], [34, 15], [36.5, 15], [40, 15], [44, 15]],
-    powerups: [[23, 10.5], [16, 7.5], [30, 7.5], [4.5, 10], [41.5, 10], [23, 15.5], [11, 12], [35, 12], [1.5, 15], [44.5, 15]],
-    mines: [[15, 14], [31, 14], [23, 8.5], [10.5, 9.5], [35.5, 9.5]],
+    slopes: [],
+    spawns: [[2, 15.5], [6, 15.5], [10, 15.5], [15, 12.5], [31, 12.5], [36, 15.5], [40, 15.5], [44, 15.5]],
+    powerups: [[23, 3], [23, 6.5], [5.5, 10.5], [40.5, 10.5], [14, 12.5], [32, 12.5], [2, 15.5], [44, 15.5]],
+    mines: [[11, 13.5], [35, 13.5], [23, 9.5]],
     killFloor: { type: 'water', y: 18.6 },
     teleporters: false,
-    hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, label: 'Spike mines' }, { type: 'crusher', x: 17, w: 12, top: 1, bottom: 16, every: 6, dmg: 35, label: 'Log drop' }],
-    blurb: 'A temple bridge between two jungle ground blocks. Spike mines guard the crossings; a log drops on the bridge every 6 turns.',
+    hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, label: 'Spike mines' }, { type: 'crusher', x: 19, w: 8, top: 1, bottom: 7, every: 5, dmg: 35, label: 'Log drop' }],
+    blurb: 'A stepped temple pyramid in the middle of solid ground. The summit is king of the hill, and a log drops on it every 5 turns.',
   },
 
   // ===================== SKY =====================
+  // Idea: the staircase. Islands rise from left to right like steps. Low side is safe
+  // from nothing; high side sees everything. Wind decides who gets to climb.
   cloudsteps: {
     id: 'cloudsteps', name: 'Cloud Steps', theme: 'sky', size: 'standard', width: 30, height: 17,
     minPlayers: 2, maxPlayers: 4, recommended: 3,
     terrain: [
-      R(1, 11, 6, 1.6), R(9, 13, 5, 1.6), R(16, 13, 5, 1.6), R(23, 11, 6, 1.6),  // floating islands
-      R(12.5, 8, 5, 1.1),                                                       // centre island
-      R(5, 6.5, 3, 0.8), R(22, 6.5, 3, 0.8),                                    // high perches
-      R(13.5, 4, 3, 0.8),                                                       // top perch (cover for centre)
-      R(2, 8.5, 3, 0.8), R(25, 8.5, 3, 0.8),                                    // shelters over the side islands
+      R(0, 13, 8, 1.6), R(8, 11, 6, 1.6), R(14, 9, 6, 1.6), R(20, 7, 6, 1.6), R(26, 5, 4, 1.6),  // staircase of islands
+      R(3, 8.5, 3, 0.8), R(16, 4.5, 3, 0.8),            // shelters above the steps
+      R(9, 15.5, 4, 1.2),                               // catch platform under the low steps
     ],
-    spawns: [[2, 10.5], [5.5, 10.5], [10, 12.5], [12.5, 12.5], [17, 12.5], [19.5, 12.5], [24.5, 10.5], [28, 10.5]],
-    powerups: [[15, 7.5], [6.5, 6], [23.5, 6], [11.5, 12.5], [18.5, 12.5], [15, 3.5]],
+    slopes: [],
+    spawns: [[1.5, 12.5], [4.5, 12.5], [10, 10.5], [16.5, 8.5], [22, 6.5], [27.5, 4.5], [12.5, 10.5], [24, 6.5]],
+    powerups: [[4.5, 8], [17.5, 4], [11, 15], [23, 6.5], [28, 4.5], [1, 12.5]],
     killFloor: { type: 'void', y: 18 },
     teleporters: false,
     hazards: [{ type: 'wind', max: 7, label: 'Wind' }],
-    blurb: 'Floating islands above open sky. The wind changes every turn and bends every shot.',
+    blurb: 'Islands rising like a staircase. The wind changes every turn and decides who can climb.',
   },
+  // Idea: the ring. A wide floating ring of islands around an empty centre with a single
+  // high pillar island in the middle. Teleporting edges close the loop. Gusts push into the void.
   nimbus: {
     id: 'nimbus', name: 'Nimbus Reach', theme: 'sky', size: 'battle', width: 50, height: 22,
     minPlayers: 2, maxPlayers: 8, recommended: 8,
     terrain: [
-      R(4, 18, 9, 1.6), R(20, 19, 10, 1.6), R(37, 18, 9, 1.6),                  // bottom tier
-      R(0, 12, 6, 1.2), R(12, 13, 7, 1.2), R(31, 13, 7, 1.2), R(44, 12, 6, 1.2), // middle tier
-      R(8, 7, 5, 1), R(22.5, 6, 5, 1), R(37, 7, 5, 1),                          // top tier
-      R(8, 16, 1, 2), R(41, 16, 1, 2), R(24.5, 17, 1, 2),                      // pillars
-      R(6, 15, 4, 0.8), R(40, 15, 4, 0.8), R(22, 16, 6, 0.8),                  // cloud shelters
+      R(0, 15, 14, 1.8), R(36, 15, 14, 1.8),            // outer islands (linked by teleporting edges)
+      R(10, 19, 30, 1.6),                               // long bottom island
+      R(22, 8, 6, 1.4),                                 // centre pillar island
+      R(24, 9.4, 2, 6),                                 // pillar hanging beneath it
+      R(6, 10, 5, 1), R(39, 10, 5, 1),                  // upper side islands
+      R(13, 5.5, 5, 0.9), R(32, 5.5, 5, 0.9),           // high perches (cover for the side islands)
+      R(20, 13.5, 3, 0.8), R(27, 13.5, 3, 0.8),         // step stones to the centre
     ],
-    spawns: [[1.5, 11.5], [5.5, 17.5], [11, 17.5], [14, 12.5], [35, 12.5], [39, 17.5], [44.5, 17.5], [48, 11.5]],
-    powerups: [[25, 5.5], [10.5, 6.5], [39.5, 6.5], [25, 18.5], [15.5, 12.5], [34.5, 12.5], [22, 18.5], [28, 18.5]],
+    slopes: [],
+    spawns: [[2, 14.5], [7, 14.5], [12, 14.5], [16, 18.5], [34, 18.5], [38, 14.5], [43, 14.5], [48, 14.5]],
+    powerups: [[25, 7.5], [8.5, 9.5], [41.5, 9.5], [15.5, 5], [34.5, 5], [25, 18.5], [21.5, 13], [28.5, 13]],
     killFloor: { type: 'void', y: 23 },
     teleporters: true,
     hazards: [{ type: 'gusts', every: 3, strength: 11, label: 'Gust' }],
-    blurb: 'Three altitude tiers with teleporting edges. A strong gust hits every 3 turns.',
+    blurb: 'A ring of islands around an empty centre with one high pillar island in the middle. Teleporting edges close the loop; gusts every 3 turns.',
   },
 
   // ===================== NEO CITY =====================
+  // Idea: the ramp (after the reference map). Continuous street, a long ramp climbing to
+  // a raised plateau with a cliff notch, three thin catwalks at different heights.
   neonalley: {
     id: 'neonalley', name: 'Neon Alley', theme: 'neo', size: 'standard', width: 30, height: 17,
     minPlayers: 2, maxPlayers: 4, recommended: 2,
     terrain: [
-      R(0, 13, 9, 4), R(21, 13, 9, 4),                            // street slabs
-      R(12, 13.5, 6, 3.5),                                        // container block in the middle
-      R(2, 8.5, 5, 0.9), R(23, 8.5, 5, 0.9),                      // catwalks
-      R(11, 8, 8, 0.9),                                           // billboard walkway (cover for container)
-      R(14.5, 8.9, 1, 3),                                         // support post under the walkway
-      R(8, 3.5, 0.8, 6.5), R(21.2, 3.5, 0.8, 6.5),                // hanging signal masts
-      R(13.5, 4, 3, 0.8),                                         // rooftop perch
+      R(0, 14, 30, 3),                                  // street
+      R(12, 9, 8, 5),                                   // plateau
+      R(21.5, 11.5, 8.5, 2.5),                          // lower shelf past the cliff notch
+      R(2, 5, 9, 0.7),                                  // upper-left catwalk
+      R(0, 9.5, 4, 0.7),                                // mid-left catwalk
+      R(23, 7.5, 5, 0.7),                               // right catwalk (cover for the shelf)
     ],
-    spawns: [[1.5, 12.5], [4.5, 12.5], [7, 12.5], [13, 13], [17, 13], [23, 12.5], [25.5, 12.5], [28.5, 12.5]],
-    powerups: [[15, 7.5], [4.5, 8], [25.5, 8], [15, 3.5], [1, 12.5], [29, 12.5], [15, 13]],
-    killFloor: { type: 'neon', y: 15.6 },
+    slopes: [S(4, 9, 8, 5, 1)],                         // the ramp
+    spawns: [[1.5, 13.5], [3, 9], [6, 4.5], [14, 8.5], [18, 8.5], [23, 11], [27, 11], [29, 11]],
+    powerups: [[6, 4.5], [1.5, 9], [25.5, 7], [16, 8.5], [21, 13.5], [28, 11], [9, 13.5]],
+    killFloor: { type: 'neon', y: 16.2 },
     teleporters: false,
-    hazards: [{ type: 'reactor', x: 15, y: 11, r: 3.5, every: 4, dmg: 15, label: 'EMP pulse' }],
-    blurb: 'A rain-slick alley between two street slabs. The EMP tower in the middle pulses every 4 turns.',
+    hazards: [{ type: 'reactor', x: 20.5, y: 12, r: 2.2, every: 4, dmg: 15, label: 'EMP pulse' }],
+    blurb: 'A neon street with a long ramp up to a plateau and three catwalks. The EMP node in the cliff notch pulses every 4 turns.',
   },
+  // Idea: rooftops. Three buildings of different heights with two vertical drops between
+  // them, a billboard deck bridging the tallest gap. Teleporting edges wrap the block.
   skylinegrid: {
     id: 'skylinegrid', name: 'Skyline Grid', theme: 'neo', size: 'battle', width: 46, height: 20,
     minPlayers: 2, maxPlayers: 8, recommended: 6,
     terrain: [
-      R(0, 16, 10, 4), R(14, 16, 18, 4), R(36, 16, 10, 4),        // rooftops with two drops
-      R(4, 11, 4, 0.9), R(38, 11, 4, 0.9),                        // side catwalks
-      R(19, 8, 8, 0.9),                                           // billboard deck (cover)
-      R(16.5, 14, 1, 2), R(28.5, 14, 1, 2),                       // pillars flanking the tower
-      R(22, 9, 2, 7),                                             // EMP tower
-      R(11, 12.5, 3, 0.9), R(32, 12.5, 3, 0.9),                   // drop-side ledges
-      R(0, 13.5, 2, 2.5), R(44, 13.5, 2, 2.5),                    // corner blocks
-      R(10, 13, 1, 1), R(35, 13, 1, 1),                           // drop lips
+      R(0, 12, 14, 8),                                  // tall building (left)
+      R(17, 16, 12, 4),                                 // low building (middle)
+      R(32, 9, 14, 11),                                 // tallest building (right)
+      R(14, 18.5, 3, 1.5), R(29, 18.5, 3, 1.5),         // alley floors between buildings
+      R(19, 12, 8, 0.8),                                // billboard deck over the low roof (cover)
+      R(3, 7.5, 5, 0.8), R(36, 4.5, 5, 0.8),            // rooftop water towers / signs (cover)
+      R(22, 6, 2, 6),                                   // antenna mast hanging over the deck
     ],
-    spawns: [[3, 15.5], [7, 15.5], [15.5, 15.5], [19, 15.5], [27, 15.5], [30.5, 15.5], [39, 15.5], [43, 15.5]],
-    powerups: [[23, 7.5], [6, 10.5], [40, 10.5], [23, 15.5], [12.5, 12], [33.5, 12], [1, 15.5], [45, 15.5]],
-    killFloor: { type: 'neon', y: 17.6 },
+    slopes: [S(29, 12, 3, 4, 1)],                       // fire-escape ramp up to the tallest roof
+    spawns: [[2, 11.5], [7, 11.5], [12, 11.5], [19, 15.5], [27, 15.5], [34, 8.5], [39, 8.5], [44, 8.5]],
+    powerups: [[5.5, 7], [38.5, 4], [23, 11.5], [15.5, 18], [30.5, 18], [23, 15.5], [1, 11.5], [45, 8.5]],
+    killFloor: { type: 'neon', y: 20 },
     teleporters: true,
-    hazards: [{ type: 'reactor', x: 23, y: 12.5, r: 4, every: 4, dmg: 15, label: 'EMP pulse' }],
-    blurb: 'Neon rooftops with teleporting edges. The central EMP tower pulses every 4 turns.',
+    hazards: [{ type: 'reactor', x: 23, y: 14, r: 3, every: 4, dmg: 15, label: 'EMP pulse' }],
+    blurb: 'Three rooftops at three heights with alleys between them. Teleporting edges wrap the block; the billboard tower pulses every 4 turns.',
   },
 };
+
+// Turn slopes into stair-step collision rects (bots jump, they never walk, so steps play like a ramp).
+for (const m of Object.values(MAPS)) {
+  m.slopes = m.slopes || [];
+  for (const s of m.slopes) {
+    const steps = Math.max(2, Math.round(s.h / 0.25));
+    for (let i = 0; i < steps; i++) {
+      const t = (i + 1) / steps;            // fraction of height reached at this step
+      const hh = s.h * t;
+      const ww = s.w * t;
+      const x = s.dir === 1 ? s.x + s.w - ww : s.x;
+      m.terrain.push({ x, y: s.y + s.h - hh, w: ww, h: hh, step: true });
+    }
+  }
+}
 
 export const MAP_IDS = Object.keys(MAPS);
 export const THEME_IDS = Object.keys(THEMES);

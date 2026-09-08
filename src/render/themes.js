@@ -110,10 +110,28 @@ export function paintBackdrop(c, T, map, view, cam, time) {
 
 // ------------------------------------------------------------------ PLATFORMS
 // rects: array of { x, y, w, h } in screen px plus `world` rect; z = px per unit
-export function paintTerrain(c, T, rects, z, time) {
+export function paintTerrain(c, T, rects, z, time, slopes = []) {
   const O = '#0b0e14';
   c.lineJoin = 'round';
+  // Slopes: filled triangles in the theme's rock colours with a top-edge stripe.
+  for (const s of slopes) {
+    const { x, y, w, h } = s;
+    const topX = s.dir === 1 ? x + w : x, botX = s.dir === 1 ? x : x + w;
+    const fill = T.id === 'ice' ? grad(c, x, y, x, y + h, [[0, '#eaf8ff'], [0.35, '#a9dcf5'], [1, '#4f8fc0']]) : (T.id === 'sky' ? grad(c, x, y, x, y + h, [[0, '#fff4d6'], [0.4, T.rock], [1, '#b89860']]) : grad(c, x, y, x, y + h, [[0, T.rockLite], [0.3, T.rock], [1, T.id === 'neo' ? '#14171f' : '#241412']]));
+    c.beginPath(); c.moveTo(topX, y); c.lineTo(x + w, y + h); c.lineTo(x, y + h); c.closePath();
+    c.fillStyle = fill; c.fill(); c.lineWidth = Math.max(2, z * 0.08); c.strokeStyle = T.id === 'ice' ? '#1e4a70' : (T.id === 'sky' ? '#6b5530' : O); c.stroke();
+    // top stripe along the hypotenuse
+    const sw = Math.max(4, z * 0.28);
+    const nx = (y + h - y) / Math.hypot(w, h), ny = -(botX - topX) / Math.hypot(w, h); // unit normal (approximately up)
+    c.save(); c.beginPath(); c.moveTo(topX, y); c.lineTo(botX, y + h); c.lineTo(botX + nx * sw * (s.dir === 1 ? -1 : 1) * 0, y + h + sw); c.lineTo(topX, y + sw); c.closePath(); c.clip();
+    c.fillStyle = T.id === 'neo' ? '#d9e64a' : (T.id === 'jungle' ? T.rockTop : (T.id === 'ice' ? '#ffffff' : (T.id === 'sky' ? '#ffffff' : T.rockTop)));
+    c.beginPath(); c.moveTo(topX, y); c.lineTo(botX, y + h); c.lineTo(botX, y + h + sw); c.lineTo(topX, y + sw); c.closePath(); c.fill();
+    if (T.id === 'neo') { c.fillStyle = '#14171f'; const L = Math.hypot(w, h); const ux = (botX - topX) / L, uy = h / L; for (let d = 0; d < L; d += sw * 2) { c.beginPath(); c.moveTo(topX + ux * d, y + uy * d); c.lineTo(topX + ux * (d + sw), y + uy * (d + sw)); c.lineTo(topX + ux * (d + sw), y + uy * (d + sw) + sw); c.lineTo(topX + ux * d, y + uy * d + sw); c.closePath(); c.fill(); } }
+    c.restore();
+    void ny;
+  }
   for (const r of rects) {
+    if (r.world.step) continue;
     const { x, y, w, h } = r;
     const tall = r.world.h > r.world.w * 1.3;
     const lw = Math.max(2, z * 0.08);

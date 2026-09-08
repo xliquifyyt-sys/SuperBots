@@ -267,7 +267,8 @@ export class Renderer {
   drawTerrain() {
     const z = this.cam.zoom * this.userZoom;
     const rects = this.world.map.terrain.map((r) => { const [x, y, W, H] = this.rectScreen(r); return { x, y, w: W, h: H, world: r }; });
-    paintTerrain(this.ctx, this.theme, rects, z, this.time);
+    const slopes = (this.world.map.slopes || []).map((s) => { const [x, y, W, H] = this.rectScreen(s); return { x, y, w: W, h: H, dir: s.dir }; });
+    paintTerrain(this.ctx, this.theme, rects, z, this.time, slopes);
   }
 
   drawMines() {
