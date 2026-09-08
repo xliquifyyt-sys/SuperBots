@@ -136,7 +136,7 @@ export const MAPS = {
     slopes: [],
     spawns: [[2, 13.5], [7, 13.5], [12, 13.5], [18, 13.5], [23, 13.5], [28, 13.5], [4, 10], [24, 10]],
     powerups: [[15, 3], [3.5, 5.5], [26.5, 5.5], [15, 7.5], [6, 10], [24, 10], [9, 13.5], [21, 13.5]],
-    mines: [[9.5, 8.5], [20.5, 8.5], [15, 11.5], [7, 4.5], [23, 4.5]],
+    mines: [[9.5, 8.5], [20.5, 8.5], [15, 13], [7, 4.5], [23, 4.5]],
     killFloor: { type: 'water', y: 16.2 },
     teleporters: false,
     hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, label: 'Spike mines' }],
@@ -157,7 +157,7 @@ export const MAPS = {
     slopes: [],
     spawns: [[2, 15.5], [6, 15.5], [10, 15.5], [15, 12.5], [31, 12.5], [36, 15.5], [40, 15.5], [44, 15.5]],
     powerups: [[23, 3], [23, 6.5], [5.5, 10.5], [40.5, 10.5], [14, 12.5], [32, 12.5], [2, 15.5], [44, 15.5]],
-    mines: [[11, 13.5], [35, 13.5], [23, 9.5]],
+    mines: [[11, 13.5], [35, 13.5], [23, 5.3]],
     killFloor: { type: 'water', y: 18.6 },
     teleporters: false,
     hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, label: 'Spike mines' }, { type: 'crusher', x: 19, w: 8, top: 1, bottom: 7, every: 5, dmg: 35, label: 'Log drop' }],
@@ -252,17 +252,17 @@ export const MAPS = {
   },
 };
 
-// Turn slopes into stair-step collision rects (bots jump, they never walk, so steps play like a ramp).
+// Turn slopes into stair-step collision rects: one thin column per 0.5 units,
+// each only as tall as the ramp surface at that column, so the ramp collides
+// like a ramp instead of a solid block.
 for (const m of Object.values(MAPS)) {
   m.slopes = m.slopes || [];
   for (const s of m.slopes) {
-    const steps = Math.max(2, Math.round(s.h / 0.25));
-    for (let i = 0; i < steps; i++) {
-      const t = (i + 1) / steps;            // fraction of height reached at this step
-      const hh = s.h * t;
-      const ww = s.w * t;
-      const x = s.dir === 1 ? s.x + s.w - ww : s.x;
-      m.terrain.push({ x, y: s.y + s.h - hh, w: ww, h: hh, step: true });
+    const cols = Math.max(2, Math.round(s.w / 0.5));
+    for (let j = 0; j < cols; j++) {
+      const frac = s.dir === 1 ? (j + 1) / cols : (cols - j) / cols;  // surface height fraction in this column
+      const hh = s.h * frac;
+      m.terrain.push({ x: s.x + (j * s.w) / cols, y: s.y + s.h - hh, w: s.w / cols + 0.02, h: hh, step: true });
     }
   }
 }

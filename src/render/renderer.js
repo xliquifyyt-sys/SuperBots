@@ -7,6 +7,7 @@ import { drawBot, ANIM_LENGTH } from './bots.js';
 import { paintBackdrop, paintTerrain, paintFloor, paintMine, paintCrusher } from './themes.js';
 import { drawPowerupIcon } from './icons.js';
 
+function rgbaHex(h, a) { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
 const EFFECT_ICONS = { poison: '☠', burn: '🔥', frozen: '❄', rooted: '⚓', shocked: '⚡', smoked: '☁', amp: '▲', plating: '◆', thrusters: '⇈', reflector: '◐', rally: '★' };
 const EFFECT_COLORS = { poison: '#9dff2f', burn: '#ff8a2f', frozen: '#b5f4ff', rooted: '#3ddc97', shocked: '#ffe23a', smoked: '#c8c8d8', amp: '#ff7a2f', plating: '#c0c8d8', thrusters: '#ffd84f', reflector: '#e8f0ff', rally: '#ff9cf0' };
 
@@ -224,6 +225,7 @@ export class Renderer {
     this.drawKillFloor();
     this.drawHazardOverlays(info);
     this.drawTerrain();
+    this.drawEdges();
     this.drawMines();
     this.drawPatchesFields();
     this.drawPowerups();
@@ -270,6 +272,41 @@ export class Renderer {
     const rects = this.world.map.terrain.map((r) => { const [x, y, W, H] = this.rectScreen(r); return { x, y, w: W, h: H, world: r }; });
     const slopes = (this.world.map.slopes || []).map((s) => { const [x, y, W, H] = this.rectScreen(s); return { x, y, w: W, h: H, dir: s.dir }; });
     paintTerrain(this.ctx, this.theme, rects, z, this.time, slopes);
+  }
+
+  // The arena is bounded left and right. Show it: solid themed walls on normal
+  // maps, glowing portal edges on teleporter maps.
+  drawEdges() {
+    const c = this.ctx, w = this.world, T = this.theme, z = this.cam.zoom * this.userZoom;
+    const [xl] = this.toScreen(0, 0), [xr] = this.toScreen(w.map.width, 0);
+    const [, yTop] = this.toScreen(0, -4);
+    const [, yBot] = this.toScreen(0, w.lavaY + 0.8);
+    if (!w.map.teleporters) {
+      const wallW = Math.max(6, z * 0.9);
+      for (const [x, flip] of [[xl, -1], [xr, 1]]) {
+        const g = c.createLinearGradient(x, 0, x + flip * wallW, 0);
+        g.addColorStop(0, this.theme.rockLite); g.addColorStop(1, this.theme.rock);
+        c.fillStyle = g; c.fillRect(flip < 0 ? x - wallW : x, yTop, wallW, yBot - yTop);
+        c.lineWidth = Math.max(2, z * 0.08); c.strokeStyle = '#0b0e14';
+        c.strokeRect(flip < 0 ? x - wallW : x, yTop, wallW, yBot - yTop);
+        // rivets / cracks so it reads as a wall
+        c.fillStyle = 'rgba(0,0,0,0.25)';
+        for (let yy = yTop + z; yy < yBot; yy += z * 1.6) c.fillRect((flip < 0 ? x - wallW : x) + wallW * 0.3, yy, wallW * 0.4, Math.max(2, z * 0.08));
+      }
+    } else {
+      for (const [x] of [[xl], [xr]]) {
+        c.save();
+        c.globalAlpha = 0.55 + Math.sin(this.time * 4) * 0.2;
+        c.strokeStyle = T.light; c.lineWidth = Math.max(3, z * 0.14); c.setLineDash([z * 0.5, z * 0.35]);
+        c.lineDashOffset = -this.time * z * 1.5;
+        c.beginPath(); c.moveTo(x, yTop); c.lineTo(x, yBot); c.stroke();
+        c.setLineDash([]);
+        const g = c.createLinearGradient(x - z * 0.8, 0, x + z * 0.8, 0);
+        g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.5, rgbaHex(T.light, 0.18)); g.addColorStop(1, 'rgba(0,0,0,0)');
+        c.fillStyle = g; c.fillRect(x - z * 0.8, yTop, z * 1.6, yBot - yTop);
+        c.restore();
+      }
+    }
   }
 
   drawMines() {

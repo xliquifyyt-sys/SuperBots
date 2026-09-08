@@ -83,6 +83,7 @@ node test/features.mjs       # asserts every special, power-up, hazard and rule 
 node test/balance.mjs 3      # 1v1 round-robin balance report
 node test/stress.mjs 250     # randomised host settings, sizes and modes
 node test/browser.mjs        # Playwright browser smoke test (needs playwright-core and a static server on :8123)
+node test/bughunt.mjs 5      # 8-bot invariant checks on every map (embedding, stuck bots, misplaced pickups)
 node test/trace.mjs phantom volt frosthollow 7 hard   # turn-by-turn trace of one duel
 ```
 

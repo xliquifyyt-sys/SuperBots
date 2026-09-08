@@ -48,7 +48,7 @@ export class World {
     this.fields = [];
     this.powerups = [];
     this.beams = [];
-    this.mines = (map.mines || []).map(([x, y]) => ({ x, y, alive: true, timer: 0 }));
+    this.mines = (map.mines || []).map(([x, y]) => { const pt = { x, y }; for (let g = 0; g < 40; g++) { let hit = null; for (const rc of map.terrain) { const px = Math.max(rc.x, Math.min(pt.x, rc.x + rc.w)), py = Math.max(rc.y, Math.min(pt.y, rc.y + rc.h)); if (Math.hypot(pt.x - px, pt.y - py) < 0.45) { hit = rc; break; } } if (!hit) break; pt.y = hit.y - 0.6; } return { x: pt.x, y: pt.y, alive: true, timer: 0 }; });
     this.singularity = null;
     this.lavaY = map.killFloor.y;
     this.windX = 0;
@@ -118,6 +118,17 @@ export class World {
         b.vx -= (1 + rest) * vn * hit.nx; b.vy -= (1 + rest) * vn * hit.ny;
       }
       if (hit.ny < -0.5) touchedGround = true;
+    }
+    // Wedge rescue: a bot trapped between two stacked blocks (one pushing up, one
+    // pushing down) would oscillate forever. If the centre is still inside any
+    // solid, lift the bot to the top of that block.
+    for (let g = 0; g < 8; g++) {
+      let inside = null;
+      for (const rc of this.solids()) { if (b.x > rc.x && b.x < rc.x + rc.w && b.y > rc.y && b.y < rc.y + rc.h) { inside = rc; break; } }
+      if (!inside) break;
+      b.y = inside.y - PHYS.botRadius;
+      if (b.vy > 0) b.vy = 0;
+      touchedGround = true;
     }
     return touchedGround;
   }
@@ -207,10 +218,11 @@ export class World {
         const free = m.powerups.filter(([x, y]) => !this.powerups.some((p) => Math.abs(p.x - x) < 0.5 && Math.abs(p.y - y) < 0.5));
         const pool = POWERUP_IDS.filter((id) => this.settings.powerupPool[id] !== false && !(POWERUPS[id].teamsOnly && !this.teamsMode));
         if (free.length && pool.length) {
-          const [x, y] = this.rng.pick(free);
+          const [px0, py0] = this.rng.pick(free);
+          const pt = this.pushOutOfTerrain({ x: px0, y: py0 });
           const id = this.rng.weighted(pool, (k) => POWERUPS[k].weight);
-          this.powerups.push({ x, y, id, turns: TURN.powerupExpire });
-          this.emit('powerupSpawn', { x, y, id });
+          this.powerups.push({ x: pt.x, y: pt.y, id, turns: TURN.powerupExpire });
+          this.emit('powerupSpawn', { x: pt.x, y: pt.y, id });
         }
       }
     }
@@ -340,7 +352,7 @@ export class World {
     const dx = aim.dx * cos - aim.dy * sin, dy = aim.dx * sin + aim.dy * cos;
     const p = {
       x: (opts.x ?? b.x) + dx * 0.7, y: (opts.y ?? b.y) + dy * 0.7, vx: dx * speed, vy: dy * speed,
-      owner: b.id, kind: opts.kind, dmg: opts.dmg ?? DMG.missile, radius: opts.radius ?? DMG.missileRadius,
+      owner: b.id, kind: opts.kind, born: this.time, dmg: opts.dmg ?? DMG.missile, radius: opts.radius ?? DMG.missileRadius,
       bounces: opts.bounces || 0, bounced: 0, life: 6, r: opts.r ?? PROJ_R, gravity: opts.gravity ?? 1, wind: 1,
       color: opts.color || b.color, trail: [], knock: opts.knock ?? 1, effect: opts.effect || null, splitAt: opts.splitAt || false,
       onImpact: opts.onImpact || null, reflected: 0,
@@ -443,12 +455,13 @@ export class World {
   }
 
   dropToGround(obj) {
+    this.pushOutOfTerrain(obj, 0.4);
     for (let i = 0; i < 300; i++) {
       let hit = false;
-      for (const rc of this.map.terrain) if (circleRectPush(obj.x, obj.y, 0.4, rc)) { hit = true; break; }
-      if (hit) { obj.y -= 0.05; break; }
+      for (const rc of this.map.terrain) if (circleRectPush(obj.x, obj.y + 0.05, 0.4, rc)) { hit = true; break; }
+      if (hit) break;
       obj.y += 0.05;
-      if (obj.y > this.lavaY - 0.5) { obj.y = this.lavaY - 0.5; break; }
+      if (obj.y > this.lavaY - 0.6) { obj.y = this.lavaY - 0.6; break; }
     }
   }
 
@@ -559,10 +572,15 @@ export class World {
       }
       const speed = Math.hypot(b.vx, b.vy);
       if (speed > 0.01) { const drag = 1 - PHYS.airDrag * dt; b.vx *= drag; b.vy *= drag; }
-      b.x += b.vx * dt; b.y += b.vy * dt;
+      // Substep fast movers so knockback can never tunnel a bot inside a block.
+      const sub = Math.min(6, Math.max(1, Math.ceil((speed * dt) / 0.22)));
+      let onGround = false;
+      for (let ss = 0; ss < sub; ss++) {
+        b.x += (b.vx * dt) / sub; b.y += (b.vy * dt) / sub;
+        onGround = this.resolveBotTerrain(b) || onGround;
+      }
       if (this.map.teleporters) { if (b.x < 0) { b.x += this.map.width; this.emit('teleport', { bot: b.id }); } else if (b.x > this.map.width) { b.x -= this.map.width; this.emit('teleport', { bot: b.id }); } }
       else { if (b.x < PHYS.botRadius) { b.x = PHYS.botRadius; b.vx = Math.abs(b.vx) * 0.3; } if (b.x > this.map.width - PHYS.botRadius) { b.x = this.map.width - PHYS.botRadius; b.vx = -Math.abs(b.vx) * 0.3; } }
-      const onGround = this.resolveBotTerrain(b);
       b.grounded = onGround;
       if (onGround) { const f = Math.max(0, 1 - PHYS.groundFriction * dt); b.vx *= f; if (Math.abs(b.vx) < 0.05) b.vx = 0; if (b.vy > 0) b.vy = 0; }
       if (!prevGrounded && onGround && b.airborne) {
@@ -656,6 +674,17 @@ export class World {
     return this.done();
   }
 
+  // Lift a point straight up until a 0.45-radius circle around it is clear of terrain.
+  pushOutOfTerrain(pt, r = 0.45) {
+    for (let guard = 0; guard < 60; guard++) {
+      let hit = null;
+      for (const rc of this.map.terrain) { if (circleRectPush(pt.x, pt.y, r, rc)) { hit = rc; break; } }
+      if (!hit) return pt;
+      pt.y = hit.y - r - 0.15;
+    }
+    return pt;
+  }
+
   mineDef() { return this.map.hazards.find((h) => h.type === 'mines') || { dmg: 20, radius: 1.2, respawn: 4 }; }
   detonateMine(mn, source) {
     if (!mn.alive) return;
@@ -676,6 +705,16 @@ export class World {
 
   // Advance one projectile. Returns null or an impact descriptor. ghost=true skips bot deflection side effects.
   stepProjectile(p, dt, ghost) {
+    const spd = Math.hypot(p.vx, p.vy);
+    const sub = Math.min(5, Math.max(1, Math.ceil((spd * dt) / 0.25)));
+    if (sub > 1) {
+      for (let i = 0; i < sub; i++) { const r = this.stepProjectileOnce(p, dt / sub, ghost); if (r) return r; }
+      return null;
+    }
+    return this.stepProjectileOnce(p, dt, ghost);
+  }
+
+  stepProjectileOnce(p, dt, ghost) {
     p.life -= dt;
     if (p.life <= 0) return { type: 'expire' };
     const prevVy = p.vy;
@@ -702,7 +741,7 @@ export class World {
     // bots
     for (const b of this.bots) {
       if (!b.alive) continue;
-      if (b.id === p.owner && p.reflected === 0 && this.time < 0.25) continue; // don't hit yourself at launch
+      if (b.id === p.owner && p.reflected === 0 && this.time - (p.born || 0) < 0.3) continue; // don't hit yourself at launch
       const hitR = PHYS.botRadius + p.r + (b.deflector ? 0.55 : 0);
       if (Math.hypot(b.x - p.x, b.y - p.y) < hitR) {
         if (b.deflector || (this.hasEffect(b, 'reflector') && !b.reflectorUsed)) {
