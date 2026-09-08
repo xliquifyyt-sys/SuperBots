@@ -77,6 +77,7 @@ h3 { font-size: 14px; letter-spacing: 3px; margin: 14px 0 6px; color: var(--mute
 .action-bar { display: flex; gap: 6px; }
 .act { position: relative; width: 82px; height: 64px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.15); background: var(--panel); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-weight: 700; font-size: 12px; letter-spacing: 0.5px; padding: 4px; }
 .act .act-name { text-align: center; line-height: 1.1; }
+.act-icon { width: 44px; height: 44px; display: block; margin: 0 auto; pointer-events: none; }
 .act.special { border-color: rgba(255,157,47,0.4); }
 .act.on { border-color: var(--cyan); background: rgba(95,242,255,0.22); box-shadow: 0 0 12px rgba(95,242,255,0.4); }
 .act:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -167,3 +168,5 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; letter-
   #phase-timer { font-size: 24px; }
   #aim-readout { display: none; }
 }
+
+.skill { display: block; } .skill-icon { width: 22px; height: 22px; vertical-align: -5px; margin-right: 6px; }

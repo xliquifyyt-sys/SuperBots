@@ -87,6 +87,7 @@ export const MAPS = {
       R(16, 3.9, 0.8, 4),                               // icicle pillar hanging from the shelf
       R(21, 9, 5, 0.9),                                 // right shelf
       R(26, 11, 4, 2.5),                                // low step at the right edge
+      R(9.7, 11.5, 0.9, 2),                             // ice stalagmite on the floor (standing cover)
     ],
     slopes: [S(8, 7.5, 6, 6, -1)],                      // slide down from the plateau
     spawns: [[1.5, 7], [5, 7], [11, 13], [15, 13], [19, 13], [23, 8.5], [27.5, 10.5], [29, 10.5]],
@@ -128,13 +129,15 @@ export const MAPS = {
     terrain: [
       R(0, 14, 30, 4),                                  // jungle floor
       R(2.5, 9.5, 5, 0.9), R(22.5, 9.5, 5, 0.9),        // low branches
+      R(6.5, 10.4, 1, 2.2),                             // trunk hanging under the left branch (duck-under cover)
+      R(9.5, 13.2, 2, 0.8), R(19, 13.2, 2, 0.8),        // mossy ground bumps (low cover)
       R(11.5, 6, 7, 0.9),                               // middle branch
       R(1, 3.5, 4, 0.9), R(25, 3.5, 4, 0.9),            // high side branches
       R(12.5, 2, 5, 0.9),                               // crown (cover for the middle branch)
       R(14.5, 6.9, 1, 2.4),                             // trunk hanging under the middle branch
     ],
     slopes: [],
-    spawns: [[2, 13.5], [7, 13.5], [12, 13.5], [18, 13.5], [23, 13.5], [28, 13.5], [4.5, 9], [25, 9]],
+    spawns: [[2, 13.5], [8.4, 13.5], [12.7, 13.5], [17.8, 13.5], [23, 13.5], [28, 13.5], [4.5, 9], [25, 9]],
     powerups: [[15, 1.5], [2.5, 3], [27.5, 3], [15, 5.5], [5, 9], [25, 9], [9, 13.5], [21, 13.5]],
     mines: [[9.5, 7.5], [20.5, 7.5], [15, 11.8], [7, 3], [23, 3]],
     killFloor: { type: 'water', y: 16.2 },
@@ -152,10 +155,12 @@ export const MAPS = {
       R(13, 13, 20, 3), R(16, 10, 14, 3), R(19, 7, 8, 3),  // pyramid steps
       R(21, 3.5, 4, 0.8),                               // altar canopy (cover on the summit)
       R(3, 11, 5, 0.9), R(38, 11, 5, 0.9),              // side tree platforms
-      R(5, 11.9, 1, 2.5), R(40, 11.9, 1, 2.5),          // trunks hanging beneath
+      R(5, 11.9, 1, 2.7),                               // left trunk hanging low (duck-under cover, open below)
+      R(40, 11.9, 1, 2.5),                              // right trunk hanging beneath
+      R(40.8, 13.5, 0.9, 2.5),                          // stone totem on the right bank (standing cover)
     ],
     slopes: [],
-    spawns: [[2, 15.5], [6, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [39.5, 15.5], [42.5, 15.5], [45.5, 15.5]],
+    spawns: [[2, 15.5], [7.2, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [39.3, 15.5], [43, 15.5], [45.5, 15.5]],
     powerups: [[23, 3], [23, 6.5], [5.5, 10.5], [40.5, 10.5], [14, 12.5], [32, 12.5], [2, 15.5], [44, 15.5]],
     mines: [[11, 13.5], [37, 13.5], [23, 5.3]],
     killFloor: { type: 'water', y: 18.6 },
@@ -174,6 +179,7 @@ export const MAPS = {
       R(0, 13, 6, 1.6), R(8, 10.6, 5, 1.6), R(15, 8.2, 5, 1.6), R(22, 5.8, 5, 1.6), R(28, 3.8, 2, 1.4),  // step islands with gaps between them
       R(1.5, 8, 3, 0.8), R(16, 3.6, 3, 0.8),            // shelters above the steps
       R(9.5, 15.4, 4, 1.2),                             // catch platform under the low steps
+      R(2.7, 11.7, 0.8, 1.3),                           // stone spire on the first island (standing cover)
     ],
     slopes: [],
     spawns: [[1.5, 12.5], [4.5, 12.5], [9.5, 10.1], [12, 10.1], [16.5, 7.7], [19, 7.7], [23.5, 5.3], [29, 3.3]],
@@ -219,6 +225,7 @@ export const MAPS = {
       R(2, 5, 9, 0.7),                                  // upper-left catwalk
       R(0, 9.5, 4, 0.7),                                // mid-left catwalk
       R(23, 7.5, 5, 0.7),                               // right catwalk (cover for the shelf)
+      R(24.5, 4.2, 3.5, 0.7), R(26, 4.9, 0.8, 2.6),     // L-shaped neon sign beam over the catwalk
     ],
     slopes: [S(4, 9, 8, 5, 1)],                         // the ramp
     spawns: [[1.5, 13.5], [3, 9], [6, 4.5], [14, 8.5], [18, 8.5], [23, 11], [27, 11], [29, 11]],

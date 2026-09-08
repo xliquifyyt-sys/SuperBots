@@ -546,22 +546,61 @@ export class Renderer {
     c.globalAlpha = 1;
   }
 
-  // Dotted trajectory preview. fraction = how much of the path to show (accuracy).
+  // Dotted trajectory preview, styled per move (like Brawlbots):
+  // jump = plain white dots with a landing marker, missile = glowing coloured
+  // dots that shrink along the arc, specials = glowing diamond dots in the
+  // move's accent colour with a pulsing impact ring.
   drawAimGuide(aim) {
     const c = this.ctx, z = this.cam.zoom * this.userZoom;
     const { points, fraction, color, impact, radius, hidden } = aim;
     if (hidden) return;
+    const style = aim.style || 'missile';
+    const accent = aim.accent || color;
     const n = Math.max(2, Math.floor(points.length * fraction));
-    c.fillStyle = color; c.strokeStyle = '#0d1018';
-    for (let i = 0; i < n; i += 3) {
+    const step = style === 'jump' ? 4 : 3;
+    for (let i = 0; i < n; i += step) {
       const [x, y] = this.toScreen(points[i][0], points[i][1]);
-      c.globalAlpha = 1 - (i / n) * 0.5;
-      c.beginPath(); c.arc(x, y, Math.max(2, z * 0.09), 0, Math.PI * 2); c.fill();
+      const f = i / n;
+      const dr = Math.max(2.5, z * (style === 'jump' ? 0.1 : 0.115) * (1 - f * 0.45));
+      c.globalAlpha = 1 - f * 0.35;
+      if (style === 'jump') {
+        c.fillStyle = '#ffffff'; c.strokeStyle = 'rgba(13,16,24,0.8)'; c.lineWidth = 1.5;
+        c.beginPath(); c.arc(x, y, dr, 0, Math.PI * 2); c.fill(); c.stroke();
+      } else {
+        // soft glow behind the dot
+        c.fillStyle = accent; c.globalAlpha = (1 - f * 0.35) * 0.28;
+        c.beginPath(); c.arc(x, y, dr * 2.1, 0, Math.PI * 2); c.fill();
+        c.globalAlpha = 1 - f * 0.3;
+        if (style === 'special') {
+          c.save(); c.translate(x, y); c.rotate(Math.PI / 4);
+          c.fillStyle = '#ffffff'; c.strokeStyle = accent; c.lineWidth = Math.max(1.5, dr * 0.5);
+          c.fillRect(-dr * 0.72, -dr * 0.72, dr * 1.44, dr * 1.44); c.strokeRect(-dr * 0.72, -dr * 0.72, dr * 1.44, dr * 1.44);
+          c.restore();
+        } else {
+          const g = c.createRadialGradient(x, y, 0, x, y, dr);
+          g.addColorStop(0, '#ffffff'); g.addColorStop(0.55, accent); g.addColorStop(1, accent);
+          c.fillStyle = g; c.strokeStyle = 'rgba(13,16,24,0.7)'; c.lineWidth = 1.2;
+          c.beginPath(); c.arc(x, y, dr, 0, Math.PI * 2); c.fill(); c.stroke();
+        }
+      }
     }
     c.globalAlpha = 1;
-    if (impact && fraction >= 0.99 && radius) {
+    // landing / impact marker
+    if (impact && fraction >= 0.99) {
       const [x, y] = this.toScreen(impact.x, impact.y);
-      c.strokeStyle = color; c.lineWidth = 2; c.setLineDash([4, 4]); c.beginPath(); c.arc(x, y, radius * z, 0, Math.PI * 2); c.stroke(); c.setLineDash([]);
+      if (style === 'jump') {
+        // landing marker: bouncing down-chevron over a ground tick
+        const bob = Math.sin(this.time * 6) * z * 0.06;
+        c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(2.5, z * 0.06); c.lineCap = 'round';
+        c.beginPath(); c.moveTo(x - z * 0.18, y - z * 0.55 + bob); c.lineTo(x, y - z * 0.32 + bob); c.lineTo(x + z * 0.18, y - z * 0.55 + bob); c.stroke();
+        c.globalAlpha = 0.85; c.beginPath(); c.ellipse(x, y + z * 0.05, z * 0.26, z * 0.09, 0, 0, Math.PI * 2); c.stroke(); c.globalAlpha = 1;
+      } else if (radius) {
+        const pulse = 1 + Math.sin(this.time * 5) * 0.05;
+        c.strokeStyle = accent; c.lineWidth = 2.5; c.setLineDash([5, 5]);
+        c.beginPath(); c.arc(x, y, radius * z * pulse, 0, Math.PI * 2); c.stroke(); c.setLineDash([]);
+        c.globalAlpha = 0.15; c.fillStyle = accent; c.beginPath(); c.arc(x, y, radius * z * pulse, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1;
+        c.fillStyle = '#ffffff'; c.beginPath(); c.arc(x, y, Math.max(2.5, z * 0.07), 0, Math.PI * 2); c.fill();
+      }
     }
     if (aim.origin) {
       const [x, y] = this.toScreen(aim.origin[0], aim.origin[1]);

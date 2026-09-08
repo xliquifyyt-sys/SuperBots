@@ -4,7 +4,7 @@ import { MAPS, MAP_IDS, mapsForPlayers } from './core/maps.js';
 import { Match } from './core/match.js';
 import { Renderer } from './render/renderer.js';
 import { drawBot } from './render/bots.js';
-import { iconCanvas } from './render/icons.js';
+import { iconCanvas, actionIconCanvas } from './render/icons.js';
 import { GameController } from './ui/game.js';
 import { audio } from './audio.js';
 
@@ -73,8 +73,8 @@ function botCard(def, small) {
   card.innerHTML = `<h4>${def.name.toUpperCase()}</h4><div class="cls">${def.cls}</div>` +
     `<div class="stats"><span>${def.hp} HP</span><span>${def.weight}</span><span>${def.accuracy} acc</span></div>` +
     `<div class="desc">${def.desc}</div>` +
-    `<div class="skill"><b>${def.s1.name}</b> (CD ${def.s1.cd}) · ${def.s1.desc}</div>` +
-    `<div class="skill"><b>${def.s2.name}</b> (CD ${def.s2.cd}) · ${def.s2.desc}</div>` +
+    `<div class="skill"><img class="skill-icon" src="${actionIconCanvas(def.s1.id, 44).toDataURL()}" alt=""><b>${def.s1.name}</b> (CD ${def.s1.cd}) · ${def.s1.desc}</div>` +
+    `<div class="skill"><img class="skill-icon" src="${actionIconCanvas(def.s2.id, 44).toDataURL()}" alt=""><b>${def.s2.name}</b> (CD ${def.s2.cd}) · ${def.s2.desc}</div>` +
     `<div class="passive">Passive: ${def.passive}</div>`;
   card.insertBefore(portrait(def, small ? 56 : 72), card.firstChild);
   return card;

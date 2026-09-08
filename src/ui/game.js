@@ -2,7 +2,7 @@
 // gestures and the HUD.
 
 import { PHYS, POWERUPS } from '../core/defs.js';
-import { iconCanvas } from '../render/icons.js';
+import { iconCanvas, actionIconCanvas, ACTION_ACCENT } from '../render/icons.js';
 import { audio } from '../audio.js';
 
 const $ = (id) => document.getElementById(id);
@@ -141,9 +141,18 @@ export class GameController {
     if (!this.me) return;
     const w = this.match.world, b = this.me, avail = w.availableActions(b);
     const names = { jump: 'Jump', missile: 'Missile', s1: b.def.s1.name, s2: b.def.s2.name };
+    const kinds = { jump: 'jump', missile: 'missile', s1: b.def.s1.id, s2: b.def.s2.id };
     const cds = { jump: 0, missile: 0, s1: b.cd1, s2: b.cd2 };
+    if (!this._actIcons) this._actIcons = {};
     for (const [k, el] of Object.entries(this.el.acts)) {
-      el.querySelector('.act-name').textContent = names[k];
+      const span = el.querySelector('.act-name');
+      if (this._actIcons[k] !== kinds[k]) {
+        this._actIcons[k] = kinds[k];
+        span.textContent = '';
+        const cv = actionIconCanvas(kinds[k], 88); cv.className = 'act-icon';
+        span.appendChild(cv);
+        el.title = names[k];
+      }
       el.classList.toggle('on', this.selected === k);
       el.disabled = !avail[k];
       const cd = el.querySelector('.cd');
@@ -284,7 +293,9 @@ export class GameController {
       const pv = w.previewAction(this.me, type, this.aim, this.selected === 's1' ? this.param : undefined);
       const frac = PHYS.accuracyGuide[this.me.def.accuracy];
       const radius = type === 'missile' ? 1 : (this.me.def[this.selected]?.radius || 0);
-      aimInfo = { points: pv.points, fraction: type === 'jump' || type === 'blinkStrike' ? Math.max(frac, 0.7) : frac, color: this.me.color, impact: pv.impact, radius, origin: [this.me.x, this.me.y], dx: this.aim.dx, dy: this.aim.dy, power: this.aim.power };
+      const style = this.selected === 'jump' ? 'jump' : (this.selected === 's1' || this.selected === 's2' ? 'special' : 'missile');
+      const accent = style === 'special' ? ACTION_ACCENT(type) : (style === 'missile' ? ACTION_ACCENT('missile') : '#ffffff');
+      aimInfo = { points: pv.points, fraction: type === 'jump' || type === 'blinkStrike' ? Math.max(frac, 0.7) : frac, color: this.me.color, impact: pv.impact, radius, origin: [this.me.x, this.me.y], dx: this.aim.dx, dy: this.aim.dy, power: this.aim.power, style, accent };
       facing[this.me.id] = this.aim.dx < 0 ? -1 : 1;
       const ang = Math.round(-Math.atan2(this.aim.dy, this.aim.dx) * 180 / Math.PI);
       this.el.readout.textContent = `${type} · angle ${ang}° · power ${Math.round(this.aim.power * 100)}%${this.locked ? ' · LOCKED' : ''}`;
