@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Super Bots Roster</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&family=Rubik+Mono+One&display=swap" />
+<style>
+  :root { --bg: #101522; --panel: #171d2c; --line: #2a3346; --text: #eef2f8; --muted: #8a97ad; --accent: #5ff2ff; font-family: Rubik, "Segoe UI", sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); }
+  header { padding: 22px 24px 8px; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  h1 { font-family: "Rubik Mono One", Rubik, sans-serif; font-size: 26px; margin: 0; letter-spacing: 2px; }
+  header p { color: var(--muted); margin: 0; font-size: 14px; }
+  .toolbar { display: flex; gap: 8px; padding: 6px 24px 14px; flex-wrap: wrap; align-items: center; }
+  .toolbar span { color: var(--muted); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-right: 6px; }
+  button { font: inherit; font-weight: 700; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; cursor: pointer; min-height: 40px; }
+  button:hover { border-color: var(--accent); }
+  button.on { background: rgba(95,242,255,0.18); border-color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; padding: 0 24px 32px; }
+  .bot { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .bot canvas { display: block; width: 100%; height: 220px; }
+  .bot .meta { padding: 10px 14px 12px; }
+  .bot h2 { margin: 0; font-size: 18px; letter-spacing: 3px; font-family: "Rubik Mono One", Rubik, sans-serif; }
+  .bot .cls { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+  .bot .moves { display: flex; gap: 6px; flex-wrap: wrap; }
+  .bot .moves button { padding: 6px 10px; font-size: 12px; min-height: 34px; }
+  .bot .now { font-size: 12px; color: var(--accent); margin-top: 8px; min-height: 16px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<header><h1>SUPER BOTS ROSTER</h1><p>Vector rigs and move animations for all eight bots. Click a move to play it, or let them cycle.</p></header>
+<div class="toolbar"><span>All bots</span><button data-all="idle">Idle</button><button data-all="jump">Jump</button><button data-all="fire">Missile</button><button data-all="s1">Special 1</button><button data-all="s2">Special 2</button><button data-all="hit">Hit</button><button data-all="death">KO</button><button id="cycle" class="on">Auto cycle</button><button id="flip">Flip facing</button></div>
+<div class="grid" id="grid"></div>
+<script type="module">
+import { BOTS, BOT_IDS } from './src/core/defs.js';
+import { drawBot, ANIM_LENGTH } from './src/render/bots.js';
+
+const SEQ = ['idle', 'jump', 'land', 'fire', 's1', 's2', 'hit', 'idle', 'death'];
+const cards = [];
+let cycle = true, facing = 1;
+const grid = document.getElementById('grid');
+for (const id of BOT_IDS) {
+  const def = BOTS[id];
+  const el = document.createElement('div'); el.className = 'bot';
+  el.innerHTML = `<canvas></canvas><div class="meta"><h2 style="color:${def.color}">${def.name.toUpperCase()}</h2><div class="cls">${def.cls} · ${def.hp} HP · ${def.weight} · ${def.accuracy} accuracy</div><div class="moves"></div><div class="now"></div></div>`;
+  const moves = el.querySelector('.moves');
+  const labels = { idle: 'Idle', jump: 'Jump', fire: 'Missile', s1: def.s1.name, s2: def.s2.name, hit: 'Hit', death: 'KO' };
+  for (const k of ['idle', 'jump', 'fire', 's1', 's2', 'hit', 'death']) { const b = document.createElement('button'); b.textContent = labels[k]; b.addEventListener('click', () => { cycle = false; document.getElementById('cycle').classList.remove('on'); card.play(k); }); moves.appendChild(b); }
+  const canvas = el.querySelector('canvas');
+  const card = { def, canvas, ctx: canvas.getContext('2d'), anim: 'idle', start: 0, now: el.querySelector('.now'), labels, seqI: 0, nextAt: 1 + cards.length * 0.35 };
+  card.play = (k) => { card.anim = k; card.start = time; card.now.textContent = k === 'idle' ? '' : labels[k] || k; };
+  cards.push(card); grid.appendChild(el);
+}
+document.querySelectorAll('[data-all]').forEach((b) => b.addEventListener('click', () => { cycle = false; document.getElementById('cycle').classList.remove('on'); cards.forEach((c) => c.play(b.dataset.all)); }));
+document.getElementById('cycle').addEventListener('click', (e) => { cycle = !cycle; e.target.classList.toggle('on', cycle); });
+document.getElementById('flip').addEventListener('click', () => { facing = -facing; });
+
+let time = 0, last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; time += dt;
+  for (const card of cards) {
+    const { canvas, ctx, def } = card;
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const W = canvas.clientWidth, H = canvas.clientHeight;
+    if (canvas.width !== Math.floor(W * dpr)) { canvas.width = Math.floor(W * dpr); canvas.height = Math.floor(H * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1b2230'); g.addColorStop(1, '#0d1119');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#5b6577'; ctx.fillRect(W * 0.1, H * 0.78, W * 0.8, H * 0.2); ctx.fillStyle = '#8f9bb0'; ctx.fillRect(W * 0.1, H * 0.78, W * 0.8, 6);
+    ctx.strokeStyle = '#0d1018'; ctx.lineWidth = 3; ctx.strokeRect(W * 0.1, H * 0.78, W * 0.8, H * 0.2);
+    // animation progress
+    let t = (time - card.start) / (ANIM_LENGTH[card.anim] || 0.5);
+    if (t >= 1 && card.anim !== 'idle') { if (card.anim === 'death') { if (t > 1.6) card.play('idle'); } else card.play(card.anim === 'jump' ? 'land' : 'idle'); t = 0; }
+    if (cycle && time > card.nextAt && card.anim === 'idle') { card.seqI = (card.seqI + 1) % SEQ.length; card.play(SEQ[card.seqI]); card.nextAt = time + 1.6; }
+    const r = Math.min(W, H) * 0.19;
+    const st = { anim: card.anim, t: Math.min(1, t), facing, grounded: card.anim !== 'jump', vx: 0, vy: card.anim === 'jump' ? -8 * (1 - t) : 0, color: def.color, hp: 1, id: 0 };
+    ctx.save(); ctx.translate(W / 2, H * 0.78 - r - (card.anim === 'jump' ? Math.sin(t * Math.PI) * H * 0.3 : 0));
+    drawBot(ctx, def, r, st, time);
+    ctx.restore();
+  }
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 
 import { THEMES } from '../core/maps.js';
 import { PHYS, POWERUPS, TEAM_COLORS } from '../core/defs.js';
+import { drawBot, ANIM_LENGTH } from './bots.js';
 
 const EFFECT_ICONS = { poison: '☠', burn: '🔥', frozen: '❄', rooted: '⚓', shocked: '⚡', smoked: '☁', amp: '▲', plating: '◆', thrusters: '⇈', reflector: '◐', rally: '★' };
 const EFFECT_COLORS = { poison: '#9dff2f', burn: '#ff8a2f', frozen: '#b5f4ff', rooted: '#3ddc97', shocked: '#ffe23a', smoked: '#c8c8d8', amp: '#ff7a2f', plating: '#c0c8d8', thrusters: '#ffd84f', reflector: '#e8f0ff', rally: '#ff9cf0' };
@@ -23,6 +24,7 @@ export class Renderer {
     this.time = 0;
     this.eventCursor = 0;
     this.deadFx = new Set();
+    this.anims = new Map();   // bot id -> { anim, start }
     this.onEvent = null;   // hook for audio
     this.dpr = 1;
     this.resize();
@@ -38,7 +40,7 @@ export class Renderer {
   setWorld(world) {
     this.world = world;
     this.theme = THEMES[world.map.theme];
-    this.particles = []; this.numbers = []; this.flashes = []; this.eventCursor = 0; this.deadFx.clear();
+    this.particles = []; this.numbers = []; this.flashes = []; this.eventCursor = 0; this.deadFx.clear(); this.anims.clear();
     this.userZoom = 1; this.userPan = { x: 0, y: 0 };
     this.fitMap(true);
   }
@@ -114,8 +116,31 @@ export class Renderer {
     }
   }
 
+  playAnim(botId, anim) {
+    if (botId === undefined || botId === null) return;
+    const cur = this.anims.get(botId);
+    if (cur && cur.anim === 'death') return;
+    this.anims.set(botId, { anim, start: this.time });
+  }
+
+  animState(b) {
+    const a = this.anims.get(b.id);
+    if (!a) return { anim: 'idle', t: 0 };
+    const t = (this.time - a.start) / (ANIM_LENGTH[a.anim] || 0.5);
+    if (t >= 1 && a.anim !== 'death') { this.anims.delete(b.id); return { anim: 'idle', t: 0 }; }
+    return { anim: a.anim, t: Math.min(1, t) };
+  }
+
   handleEvent(e) {
     const T = this.theme;
+    switch (e.type) {
+      case 'jump': this.playAnim(e.bot, 'jump'); break;
+      case 'fire': this.playAnim(e.bot, 'fire'); break;
+      case 'special': { const b = this.world.bots[e.bot]; this.playAnim(e.bot, b && b.def.s1.name === e.name ? 's1' : 's2'); break; }
+      case 'damage': if (e.amount > 0) this.playAnim(e.bot, 'hit'); break;
+      case 'eliminated': this.playAnim(e.bot, 'death'); break;
+      case 'blink': break;
+    }
     switch (e.type) {
       case 'explosion': {
         const n = e.big ? 42 : 22;
@@ -362,7 +387,7 @@ export class Renderer {
   drawBots(info) {
     const c = this.ctx, w = this.world, z = this.cam.zoom * this.userZoom;
     for (const b of w.bots) {
-      if (!b.alive) continue;
+      if (!b.alive) { const a = this.anims.get(b.id); if (!a || a.anim !== 'death' || this.time - a.start > ANIM_LENGTH.death) continue; }
       const [x, y] = this.toScreen(b.x, b.y);
       const r = PHYS.botRadius * z;
       const facing = info.facing && info.facing[b.id] !== undefined ? info.facing[b.id] : (b.vx < -0.1 ? -1 : 1);
@@ -374,12 +399,14 @@ export class Renderer {
       if (b.deflector) { c.fillStyle = 'rgba(61,220,151,0.25)'; c.strokeStyle = '#3ddc97'; c.lineWidth = 3; c.beginPath(); c.arc(0, 0, r * 2.1, 0, Math.PI * 2); c.fill(); c.stroke(); }
       if (w.hasEffect(b, 'reflector')) { c.strokeStyle = '#ffffff'; c.lineWidth = 2; c.setLineDash([3, 3]); c.beginPath(); c.arc(0, 0, r * 1.5, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); }
       if (w.hasEffect(b, 'plating')) { c.strokeStyle = '#c0c8d8'; c.lineWidth = 4; c.beginPath(); c.arc(0, 0, r * 1.25, 0, Math.PI * 2); c.stroke(); }
-      c.lineWidth = Math.max(2.5, z * 0.09); c.strokeStyle = '#0d1018'; c.fillStyle = b.color;
-      c.scale(facing, 1);
-      this.drawBotShape(b.def.shape, r, b);
-      c.scale(facing, 1);
+      const st = this.animState(b);
+      const wasGrounded = this._grounded ? this._grounded.get(b.id) : undefined;
+      if (wasGrounded === false && b.grounded && st.anim === 'idle') { this.playAnim(b.id, 'land'); }
+      (this._grounded || (this._grounded = new Map())).set(b.id, b.grounded);
+      drawBot(c, b.def, r, { ...this.animState(b), facing, vx: b.vx, vy: b.vy, grounded: b.grounded, color: b.color, hp: b.hp / b.maxHp, id: b.id }, this.time);
       c.restore();
 
+      if (!b.alive) continue;
       // selection ring
       if (isSel) { c.strokeStyle = '#ffffff'; c.lineWidth = 2; c.setLineDash([5, 4]); c.beginPath(); c.arc(x, y, r * 1.6 + Math.sin(this.time * 5) * 2, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); }
       // name + hp bar

@@ -3,6 +3,7 @@ import { BOTS, BOT_IDS, POWERUPS, POWERUP_IDS, DEFAULT_SETTINGS, PRESETS, SETTIN
 import { MAPS, MAP_IDS, mapsForPlayers } from './core/maps.js';
 import { Match } from './core/match.js';
 import { Renderer } from './render/renderer.js';
+import { drawBot } from './render/bots.js';
 import { GameController } from './ui/game.js';
 import { audio } from './audio.js';
 
@@ -60,9 +61,8 @@ document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click'
 function portrait(def, size = 64, color) {
   const cv = document.createElement('canvas'); cv.width = cv.height = size;
   const ctx = cv.getContext('2d');
-  ctx.translate(size / 2, size / 2 + 2);
-  ctx.lineWidth = 3; ctx.strokeStyle = '#0d1018'; ctx.fillStyle = color || def.color;
-  Renderer.prototype.drawBotShape.call({ ctx, time: 0 }, def.shape, size * 0.32, { color: color || def.color, id: 0 });
+  ctx.translate(size / 2, size / 2);
+  drawBot(ctx, def, size * 0.3, { anim: 'idle', t: 0, facing: 1, grounded: true, color: color || def.color, hp: 1, id: 0 }, 0.7);
   return cv;
 }
 function botCard(def, small) {
