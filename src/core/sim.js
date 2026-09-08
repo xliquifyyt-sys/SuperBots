@@ -207,21 +207,21 @@ export class World {
       }
     }
 
-    // 4. Power-ups: expire, spawn
-    for (const p of this.powerups) p.turns--;
-    this.powerups = this.powerups.filter((p) => p.turns > 0);
+    // 4. Power-ups: spawn (they never despawn — they stay until a bot grabs them)
     if (this.settings.powerups !== 'off' && !this.suddenDeath && this.turn >= 2) {
       const battle = m.size === 'battle';
       const rate = { low: battle ? 0.35 : 0.25, normal: battle ? 1 : 0.5, high: 1 }[this.settings.powerups];
       const max = battle ? 5 : 3;
       if (this.powerups.length < max && this.rng.next() < rate) {
         const free = m.powerups.filter(([x, y]) => !this.powerups.some((p) => Math.abs(p.x - x) < 0.5 && Math.abs(p.y - y) < 0.5));
-        const pool = POWERUP_IDS.filter((id) => this.settings.powerupPool[id] !== false && !(POWERUPS[id].teamsOnly && !this.teamsMode));
+        // A power-up type can exist only once on the field at a time.
+        const onField = new Set(this.powerups.map((p) => p.id));
+        const pool = POWERUP_IDS.filter((id) => !onField.has(id) && this.settings.powerupPool[id] !== false && !(POWERUPS[id].teamsOnly && !this.teamsMode));
         if (free.length && pool.length) {
           const [px0, py0] = this.rng.pick(free);
           const pt = this.pushOutOfTerrain({ x: px0, y: py0 });
           const id = this.rng.weighted(pool, (k) => POWERUPS[k].weight);
-          this.powerups.push({ x: pt.x, y: pt.y, id, turns: TURN.powerupExpire });
+          this.powerups.push({ x: pt.x, y: pt.y, id });
           this.emit('powerupSpawn', { x: pt.x, y: pt.y, id });
         }
       }

@@ -10,8 +10,8 @@ export const PHYS = {
   groundFriction: 6,      // per second velocity damping while grounded
   airDrag: 0.05,
   botRestitution: 0.15,
-  missileSpeed: 30,       // at full power (range ~47 units on flat ground)
-  jumpSpeed: 16,          // at full power, medium weight (range ~13.5 units)
+  missileSpeed: 33,       // at full power (~20% more range than before)
+  jumpSpeed: 17.5,        // at full power, medium weight (~20% more range)
   weightJump: { light: 1.18, medium: 1.0, heavy: 0.86 },
   weightKnockback: { light: 1.3, medium: 1.0, heavy: 0.6 },
   accuracyGuide: { low: 0.3, medium: 0.55, high: 0.85 },

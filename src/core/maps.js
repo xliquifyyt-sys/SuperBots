@@ -85,11 +85,11 @@ export const MAPS = {
       R(0, 7.5, 8, 6),                                  // high plateau (left)
       R(13, 3, 6, 0.9),                                 // hanging ice ceiling shelf (cover)
       R(16, 3.9, 0.8, 4),                               // icicle pillar hanging from the shelf
-      R(21, 9.5, 5, 0.9),                               // right shelf
+      R(21, 9, 5, 0.9),                                 // right shelf
       R(26, 11, 4, 2.5),                                // low step at the right edge
     ],
     slopes: [S(8, 7.5, 6, 6, -1)],                      // slide down from the plateau
-    spawns: [[1.5, 7], [5, 7], [11, 13], [15, 13], [19, 13], [23, 9], [27.5, 10.5], [29, 10.5]],
+    spawns: [[1.5, 7], [5, 7], [11, 13], [15, 13], [19, 13], [23, 8.5], [27.5, 10.5], [29, 10.5]],
     powerups: [[16, 2.5], [23.5, 9], [4, 7], [12, 13], [20, 13], [28, 10.5]],
     killFloor: { type: 'water', y: 15.6 },
     teleporters: false,
@@ -102,7 +102,7 @@ export const MAPS = {
     id: 'glacierfort', name: 'Glacier Fortress', theme: 'ice', size: 'battle', width: 48, height: 22,
     minPlayers: 2, maxPlayers: 8, recommended: 8,
     terrain: [
-      R(0, 17, 48, 5),                                  // continuous frozen ground
+      R(0, 17, 9, 5), R(11, 17, 26, 5), R(39, 17, 9, 5), // frozen ground with two pit holes (9..11 and 37..39)
       R(18, 11, 12, 6),                                 // the keep
       R(21, 6.5, 6, 0.9),                               // keep roof (cover)
       R(23.5, 7.4, 1, 2),                               // flagpole under the roof
@@ -111,12 +111,12 @@ export const MAPS = {
       R(10, 13.5, 4, 0.8), R(34, 13.5, 4, 0.8),         // wall walks
     ],
     slopes: [S(12, 11, 6, 6, 1), S(30, 11, 6, 6, -1)],  // ramps up to the keep
-    spawns: [[2, 16.5], [7, 16.5], [11.5, 16.5], [21, 10.5], [27, 10.5], [36.5, 16.5], [41, 16.5], [46, 16.5]],
+    spawns: [[2, 16.5], [6.5, 16.5], [13, 16.5], [21, 10.5], [27, 10.5], [35, 16.5], [41.5, 16.5], [46, 16.5]],
     powerups: [[24, 6], [6.5, 8.5], [41.5, 8.5], [12, 13], [36, 13], [24, 10.5], [3, 16.5], [45, 16.5]],
     killFloor: { type: 'water', y: 20.4 },
     teleporters: true,
     hazards: [{ type: 'gusts', every: 3, strength: 10, label: 'Blizzard gust' }],
-    blurb: 'A frozen keep with ramps on both sides and watchtowers at the edges. Teleporting edges and a blizzard gust every 3 turns.',
+    blurb: 'A frozen keep with ramps, watchtowers, and two pit holes in the ice. Teleporting edges and a blizzard gust every 3 turns.',
   },
 
   // ===================== JUNGLE =====================
@@ -127,16 +127,16 @@ export const MAPS = {
     minPlayers: 2, maxPlayers: 4, recommended: 3,
     terrain: [
       R(0, 14, 30, 4),                                  // jungle floor
-      R(3, 10.5, 6, 0.9), R(21, 10.5, 6, 0.9),          // low branches
-      R(11, 8, 8, 0.9),                                 // middle branch
-      R(1, 6, 5, 0.9), R(24, 6, 5, 0.9),                // upper branches
-      R(12.5, 3.5, 5, 0.9),                             // crown (cover for the middle branch)
-      R(14.5, 8.9, 1, 3),                               // trunk hanging under the middle branch
+      R(2.5, 9.5, 5, 0.9), R(22.5, 9.5, 5, 0.9),        // low branches
+      R(11.5, 6, 7, 0.9),                               // middle branch
+      R(1, 3.5, 4, 0.9), R(25, 3.5, 4, 0.9),            // high side branches
+      R(12.5, 2, 5, 0.9),                               // crown (cover for the middle branch)
+      R(14.5, 6.9, 1, 2.4),                             // trunk hanging under the middle branch
     ],
     slopes: [],
-    spawns: [[2, 13.5], [7, 13.5], [12, 13.5], [18, 13.5], [23, 13.5], [28, 13.5], [4, 10], [24, 10]],
-    powerups: [[15, 3], [3.5, 5.5], [26.5, 5.5], [15, 7.5], [6, 10], [24, 10], [9, 13.5], [21, 13.5]],
-    mines: [[9.5, 8.5], [20.5, 8.5], [15, 13], [7, 4.5], [23, 4.5]],
+    spawns: [[2, 13.5], [7, 13.5], [12, 13.5], [18, 13.5], [23, 13.5], [28, 13.5], [4.5, 9], [25, 9]],
+    powerups: [[15, 1.5], [2.5, 3], [27.5, 3], [15, 5.5], [5, 9], [25, 9], [9, 13.5], [21, 13.5]],
+    mines: [[9.5, 7.5], [20.5, 7.5], [15, 11.8], [7, 3], [23, 3]],
     killFloor: { type: 'water', y: 16.2 },
     teleporters: false,
     hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, label: 'Spike mines' }],
@@ -148,20 +148,20 @@ export const MAPS = {
     id: 'templecrossing', name: 'Temple Crossing', theme: 'jungle', size: 'battle', width: 46, height: 21,
     minPlayers: 2, maxPlayers: 8, recommended: 6,
     terrain: [
-      R(0, 16, 46, 5),                                  // ground
+      R(0, 16, 10, 5), R(12, 16, 24, 5), R(38, 16, 8, 5),  // ground with two pit holes (10..12 and 36..38)
       R(13, 13, 20, 3), R(16, 10, 14, 3), R(19, 7, 8, 3),  // pyramid steps
       R(21, 3.5, 4, 0.8),                               // altar canopy (cover on the summit)
       R(3, 11, 5, 0.9), R(38, 11, 5, 0.9),              // side tree platforms
       R(5, 11.9, 1, 2.5), R(40, 11.9, 1, 2.5),          // trunks hanging beneath
     ],
     slopes: [],
-    spawns: [[2, 15.5], [6, 15.5], [10, 15.5], [15, 12.5], [31, 12.5], [36, 15.5], [40, 15.5], [44, 15.5]],
+    spawns: [[2, 15.5], [6, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [39.5, 15.5], [42.5, 15.5], [45.5, 15.5]],
     powerups: [[23, 3], [23, 6.5], [5.5, 10.5], [40.5, 10.5], [14, 12.5], [32, 12.5], [2, 15.5], [44, 15.5]],
-    mines: [[11, 13.5], [35, 13.5], [23, 5.3]],
+    mines: [[11, 13.5], [37, 13.5], [23, 5.3]],
     killFloor: { type: 'water', y: 18.6 },
     teleporters: false,
     hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, label: 'Spike mines' }, { type: 'crusher', x: 19, w: 8, top: 1, bottom: 7, every: 5, dmg: 35, label: 'Log drop' }],
-    blurb: 'A stepped temple pyramid in the middle of solid ground. The summit is king of the hill, and a log drops on it every 5 turns.',
+    blurb: 'A stepped temple pyramid flanked by two pit holes. The summit is king of the hill, and a log drops on it every 5 turns.',
   },
 
   // ===================== SKY =====================
@@ -171,13 +171,13 @@ export const MAPS = {
     id: 'cloudsteps', name: 'Cloud Steps', theme: 'sky', size: 'standard', width: 30, height: 17,
     minPlayers: 2, maxPlayers: 4, recommended: 3,
     terrain: [
-      R(0, 13, 8, 1.6), R(8, 11, 6, 1.6), R(14, 9, 6, 1.6), R(20, 7, 6, 1.6), R(26, 5, 4, 1.6),  // staircase of islands
-      R(3, 8.5, 3, 0.8), R(16, 4.5, 3, 0.8),            // shelters above the steps
-      R(9, 15.5, 4, 1.2),                               // catch platform under the low steps
+      R(0, 13, 6, 1.6), R(8, 10.6, 5, 1.6), R(15, 8.2, 5, 1.6), R(22, 5.8, 5, 1.6), R(28, 3.8, 2, 1.4),  // step islands with gaps between them
+      R(1.5, 8, 3, 0.8), R(16, 3.6, 3, 0.8),            // shelters above the steps
+      R(9.5, 15.4, 4, 1.2),                             // catch platform under the low steps
     ],
     slopes: [],
-    spawns: [[1.5, 12.5], [4.5, 12.5], [10, 10.5], [16.5, 8.5], [22, 6.5], [27.5, 4.5], [12.5, 10.5], [24, 6.5]],
-    powerups: [[4.5, 8], [17.5, 4], [11, 15], [23, 6.5], [28, 4.5], [1, 12.5]],
+    spawns: [[1.5, 12.5], [4.5, 12.5], [9.5, 10.1], [12, 10.1], [16.5, 7.7], [19, 7.7], [23.5, 5.3], [29, 3.3]],
+    powerups: [[3, 7.5], [17.5, 3.1], [11.5, 14.9], [24.5, 5.3], [29, 3.3], [0.8, 12.5]],
     killFloor: { type: 'void', y: 18 },
     teleporters: false,
     hazards: [{ type: 'wind', max: 7, label: 'Wind' }],
@@ -237,18 +237,18 @@ export const MAPS = {
       R(0, 12, 14, 8),                                  // tall building (left)
       R(17, 16, 12, 4),                                 // low building (middle)
       R(32, 9, 14, 11),                                 // tallest building (right)
-      R(14, 18.5, 3, 1.5), R(29, 18.5, 3, 1.5),         // alley floors between buildings
+      // the two alleys between buildings are open pit holes down to the rail
       R(19, 12, 8, 0.8),                                // billboard deck over the low roof (cover)
       R(3, 7.5, 5, 0.8), R(36, 4.5, 5, 0.8),            // rooftop water towers / signs (cover)
       R(22, 6, 2, 6),                                   // antenna mast hanging over the deck
     ],
     slopes: [S(29, 12, 3, 4, 1)],                       // fire-escape ramp up to the tallest roof
     spawns: [[2, 11.5], [7, 11.5], [12, 11.5], [19, 15.5], [27, 15.5], [34, 8.5], [39, 8.5], [44, 8.5]],
-    powerups: [[5.5, 7], [38.5, 4], [23, 11.5], [15.5, 18], [30.5, 18], [23, 15.5], [1, 11.5], [45, 8.5]],
+    powerups: [[5.5, 7], [38.5, 4], [23, 11.5], [23, 15.5], [1, 11.5], [45, 8.5], [10, 11.5], [42, 8.5]],
     killFloor: { type: 'neon', y: 20 },
     teleporters: true,
     hazards: [{ type: 'reactor', x: 23, y: 14, r: 3, every: 4, dmg: 15, label: 'EMP pulse' }],
-    blurb: 'Three rooftops at three heights with alleys between them. Teleporting edges wrap the block; the billboard tower pulses every 4 turns.',
+    blurb: 'Three rooftops at three heights with open pit alleys between them. Teleporting edges wrap the block; the billboard tower pulses every 4 turns.',
   },
 };
 

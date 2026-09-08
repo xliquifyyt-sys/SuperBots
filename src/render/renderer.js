@@ -375,7 +375,6 @@ export class Renderer {
     for (const p of this.world.powerups) {
       const [x, y] = this.toScreen(p.x, p.y - 0.15);
       drawPowerupIcon(c, p.id, x, y, Math.max(8, z * 0.46), { float: true, time: this.time });
-      if (p.turns <= 2) { c.fillStyle = '#fff'; c.strokeStyle = '#0b0e14'; c.lineWidth = 3; c.font = `bold ${Math.round(z * 0.3)}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.strokeText(String(p.turns), x, y - z * 0.75); c.fillText(String(p.turns), x, y - z * 0.75); }
     }
   }
 
