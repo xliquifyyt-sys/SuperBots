@@ -13,7 +13,7 @@ export const THEMES = {
     rock: '#4a3532', rockLite: '#7a5a50', rockTop: '#8f6a5a', accent: '#ff8a2f', light: '#ffb347', particle: '#ff9a4a', ui: '#ff7a2f',
   },
   ice: {
-    id: 'ice', name: 'Ice', sky: ['#7fd3f7', '#2a7fb8'], floor: 'water', floorColor: '#39b6e8', floorDeep: '#1560a0', floorGlow: '#d6f6ff',
+    id: 'ice', name: 'Ice', sky: ['#0d4a74', '#9fe8f8'], floor: 'water', floorColor: '#39b6e8', floorDeep: '#1560a0', floorGlow: '#d6f6ff',
     rock: '#5f8fb8', rockLite: '#c9ecff', rockTop: '#f2fbff', accent: '#9fe8ff', light: '#ffffff', particle: '#ffffff', ui: '#5ff2ff',
   },
   jungle: {

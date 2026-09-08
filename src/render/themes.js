@@ -14,6 +14,10 @@ function decorFor(map, gen) {
 }
 
 function grad(c, x0, y0, x1, y1, stops) { const g = c.createLinearGradient(x0, y0, x1, y1); stops.forEach(([t, col]) => g.addColorStop(t, col)); return g; }
+function spikeG(c, x, baseY, w, h, dir, c0, c1) {
+  const g = c.createLinearGradient(0, baseY, 0, baseY + h * dir); g.addColorStop(0, c0); g.addColorStop(1, c1);
+  c.fillStyle = g; c.beginPath(); c.moveTo(x - w / 2, baseY); c.lineTo(x, baseY + h * dir); c.lineTo(x + w / 2, baseY); c.closePath(); c.fill();
+}
 function spike(c, x, baseY, w, h, dir) { c.beginPath(); c.moveTo(x - w / 2, baseY); c.lineTo(x, baseY + h * dir); c.lineTo(x + w / 2, baseY); c.closePath(); c.fill(); }
 
 // ------------------------------------------------------------------ SKY / BACKDROP
@@ -45,17 +49,36 @@ export function paintBackdrop(c, T, map, view, cam, time) {
       break;
     }
     case 'ice': {
-      // back wall of ice with crystal spikes hanging and rising
-      c.fillStyle = 'rgba(190,235,255,0.35)';
-      for (let i = 0; i < 16; i++) { const x = ((d[i].a * 2400 + px(0.12)) % (w + 300) + w + 300) % (w + 300) - 150; spike(c, x, 0, 40 + d[i].b * 110, h * (0.25 + d[i].c * 0.45), 1); }
-      c.fillStyle = 'rgba(120,200,240,0.45)';
-      for (let i = 16; i < 30; i++) { const x = ((d[i].a * 2400 + px(0.25)) % (w + 300) + w + 300) % (w + 300) - 150; spike(c, x, 0, 30 + d[i].b * 70, h * (0.15 + d[i].c * 0.35), 1); spike(c, x + 60, h, 40 + d[i].d * 80, h * (0.15 + d[i].c * 0.3), -1); }
+      // --- glacier cavern: layered parallax ice walls, like the reference ---
+      // bright core glow in the middle of the cavern
+      const cg = c.createRadialGradient(w * 0.5, h * 0.42, h * 0.1, w * 0.5, h * 0.42, h * 0.85);
+      cg.addColorStop(0, 'rgba(220,248,255,0.3)'); cg.addColorStop(1, 'rgba(220,248,255,0)');
+      c.fillStyle = cg; c.fillRect(0, 0, w, h);
+      // far pale wall spikes (huge, soft)
+      for (let i = 0; i < 18; i++) { const x = ((d[i].a * 2600 + px(0.08)) % (w + 400) + w + 400) % (w + 400) - 200; spikeG(c, x, 0, 60 + d[i].b * 110, h * (0.3 + d[i].c * 0.38), 1, 'rgba(210,242,252,0.45)', 'rgba(210,242,252,0.03)'); }
+      for (let i = 10; i < 16; i++) { const x = ((d[i].a * 2600 + px(0.08)) % (w + 500) + w + 500) % (w + 500) - 250; spikeG(c, x, h, 150 + d[i].b * 200, h * (0.2 + d[i].c * 0.25), -1, 'rgba(190,235,250,0.4)', 'rgba(190,235,250,0.03)'); }
+      // big diagonal glacier sheet crossing the cavern
+      { const ox = px(0.18) % (w * 2); c.fillStyle = 'rgba(130,205,240,0.5)';
+        c.beginPath(); c.moveTo(ox - w * 0.4, h * 0.72); c.lineTo(ox + w * 0.75, h * 0.3); c.lineTo(ox + w * 0.95, h * 0.38); c.lineTo(ox - w * 0.2, h * 0.86); c.closePath(); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.3)'; c.beginPath(); c.moveTo(ox - w * 0.4, h * 0.72); c.lineTo(ox + w * 0.75, h * 0.3); c.lineTo(ox + w * 0.77, h * 0.335); c.lineTo(ox - w * 0.38, h * 0.755); c.closePath(); c.fill(); }
+      // mid stalactites and stalagmites, saturated cyan with a lit face
+      for (let i = 0; i < 18; i++) { const x = ((d[i].a * 2400 + px(0.25)) % (w + 360) + w + 360) % (w + 360) - 180; const sw = 34 + d[i].b * 66, sh = h * (0.2 + d[i].c * 0.42);
+        spikeG(c, x, 0, sw, sh, 1, 'rgba(58,168,215,0.95)', 'rgba(96,196,235,0.3)');
+        c.fillStyle = 'rgba(224,248,255,0.7)'; c.beginPath(); c.moveTo(x - sw / 2, 0); c.lineTo(x, sh); c.lineTo(x - sw * 0.1, 0); c.closePath(); c.fill();
+        c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x - sw / 2, 0); c.lineTo(x, sh); c.stroke();
+        if (i % 2 === 0) { spikeG(c, x + sw, h, sw * 0.9, sh * 0.45, -1, 'rgba(58,168,215,0.85)', 'rgba(96,196,235,0.2)'); } }
+      // near dark teal spikes hugging the top edge and bottom corners
+      for (let i = 14; i < 26; i++) { const x = ((d[i].a * 2400 + px(0.42)) % (w + 400) + w + 400) % (w + 400) - 200; spikeG(c, x, 0, 44 + d[i].b * 80, h * (0.12 + d[i].c * 0.26), 1, 'rgba(16,74,112,0.95)', 'rgba(23,96,140,0.4)'); }
+      for (let i = 26; i < 32; i++) { const e = d[i].a < 0.5 ? d[i].b * w * 0.22 : w - d[i].b * w * 0.22; spikeG(c, e + px(0.42) % 40, h, 60 + d[i].c * 90, h * (0.12 + d[i].d * 0.22), -1, 'rgba(14,66,100,0.9)', 'rgba(19,80,118,0.3)'); }
+      // cold green-teal vignette at the side edges
+      c.fillStyle = grad(c, 0, 0, w * 0.16, 0, [[0, 'rgba(20,70,60,0.5)'], [1, 'rgba(20,70,60,0)']]); c.fillRect(0, 0, w * 0.16, h);
+      c.fillStyle = grad(c, w, 0, w * 0.84, 0, [[0, 'rgba(20,70,60,0.5)'], [1, 'rgba(20,70,60,0)']]); c.fillRect(w * 0.84, 0, w * 0.16, h);
       // sparkles
       c.fillStyle = '#fff';
       for (let i = 0; i < 30; i++) { const a = (Math.sin(time * 2 + i * 1.7) + 1) / 2; c.globalAlpha = a * 0.8; c.beginPath(); c.arc(d[i].a * w, d[i].b * h * 0.7, 1 + d[i].c * 2, 0, TAU); c.fill(); }
       c.globalAlpha = 1;
-      // frost haze at the bottom
-      c.fillStyle = grad(c, 0, h * 0.6, 0, h, [[0, 'rgba(255,255,255,0)'], [1, 'rgba(255,255,255,0.35)']]); c.fillRect(0, h * 0.6, w, h * 0.4);
+      // frost haze near the water
+      c.fillStyle = grad(c, 0, h * 0.62, 0, h, [[0, 'rgba(210,245,255,0)'], [1, 'rgba(210,245,255,0.2)']]); c.fillRect(0, h * 0.62, w, h * 0.38);
       break;
     }
     case 'jungle': {
@@ -117,13 +140,18 @@ export function paintTerrain(c, T, rects, z, time, slopes = []) {
   for (const s of slopes) {
     const { x, y, w, h } = s;
     const topX = s.dir === 1 ? x + w : x, botX = s.dir === 1 ? x : x + w;
-    const fill = T.id === 'ice' ? grad(c, x, y, x, y + h, [[0, '#eaf8ff'], [0.35, '#a9dcf5'], [1, '#4f8fc0']]) : (T.id === 'sky' ? grad(c, x, y, x, y + h, [[0, '#fff4d6'], [0.4, T.rock], [1, '#b89860']]) : grad(c, x, y, x, y + h, [[0, T.rockLite], [0.3, T.rock], [1, T.id === 'neo' ? '#14171f' : '#241412']]));
+    const fill = T.id === 'ice' ? grad(c, x, y, x, y + h, [[0, '#e8fbff'], [0.25, '#9fe2f7'], [0.6, '#45a8dc'], [1, '#1d5c9c']]) : (T.id === 'sky' ? grad(c, x, y, x, y + h, [[0, '#fff4d6'], [0.4, T.rock], [1, '#b89860']]) : grad(c, x, y, x, y + h, [[0, T.rockLite], [0.3, T.rock], [1, T.id === 'neo' ? '#14171f' : '#241412']]));
     c.beginPath(); c.moveTo(topX, y); c.lineTo(x + w, y + h); c.lineTo(x, y + h); c.closePath();
     c.fillStyle = fill; c.fill(); c.lineWidth = Math.max(2, z * 0.08); c.strokeStyle = T.id === 'ice' ? '#1e4a70' : (T.id === 'sky' ? '#6b5530' : O); c.stroke();
     // top stripe along the hypotenuse
-    const sw = Math.max(4, z * 0.28);
+    const sw = Math.max(4, z * (T.id === 'ice' ? 0.4 : 0.28));
     const nx = (y + h - y) / Math.hypot(w, h), ny = -(botX - topX) / Math.hypot(w, h); // unit normal (approximately up)
     c.save(); c.beginPath(); c.moveTo(topX, y); c.lineTo(botX, y + h); c.lineTo(botX + nx * sw * (s.dir === 1 ? -1 : 1) * 0, y + h + sw); c.lineTo(topX, y + sw); c.closePath(); c.clip();
+    if (T.id === 'ice') {
+      // facet streaks down the ice face
+      c.fillStyle = 'rgba(255,255,255,0.14)';
+      for (let i = 0; i < Math.max(1, Math.floor(w / (z * 2))); i++) { const fx = x + z * 0.8 + i * z * 2; c.beginPath(); c.moveTo(fx, y); c.lineTo(fx + z * 0.5, y); c.lineTo(fx - z * 0.4, y + h); c.lineTo(fx - z * 0.9, y + h); c.closePath(); c.fill(); }
+    }
     c.fillStyle = T.id === 'neo' ? '#d9e64a' : (T.id === 'jungle' ? T.rockTop : (T.id === 'ice' ? '#ffffff' : (T.id === 'sky' ? '#ffffff' : T.rockTop)));
     c.beginPath(); c.moveTo(topX, y); c.lineTo(botX, y + h); c.lineTo(botX, y + h + sw); c.lineTo(topX, y + sw); c.closePath(); c.fill();
     if (T.id === 'neo') { c.fillStyle = '#14171f'; const L = Math.hypot(w, h); const ux = (botX - topX) / L, uy = h / L; for (let d = 0; d < L; d += sw * 2) { c.beginPath(); c.moveTo(topX + ux * d, y + uy * d); c.lineTo(topX + ux * (d + sw), y + uy * (d + sw)); c.lineTo(topX + ux * (d + sw), y + uy * (d + sw) + sw); c.lineTo(topX + ux * d, y + uy * d + sw); c.closePath(); c.fill(); } }
@@ -146,14 +174,47 @@ export function paintTerrain(c, T, rects, z, time, slopes = []) {
         break;
       }
       case 'ice': {
-        c.fillStyle = grad(c, x, y, x, y + h, [[0, '#eaf8ff'], [0.35, '#a9dcf5'], [1, '#4f8fc0']]);
-        c.beginPath(); c.roundRect(x, y, w, h, z * 0.18); c.fill(); c.lineWidth = lw; c.strokeStyle = '#1e4a70'; c.stroke();
-        // snowy cap
-        c.fillStyle = '#ffffff'; c.beginPath(); c.roundRect(x - 2, y - z * 0.1, w + 4, Math.max(4, z * 0.3), z * 0.12); c.fill(); c.strokeStyle = '#1e4a70'; c.lineWidth = lw * 0.8; c.stroke();
-        // gloss
-        c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(x + z * 0.3, y + z * 0.45, Math.max(6, w * 0.35), Math.max(2, z * 0.12));
-        // icicles under wide platforms
-        if (!tall) { c.fillStyle = '#d6f2ff'; c.strokeStyle = '#1e4a70'; c.lineWidth = lw * 0.6; for (let i = 0; i < Math.floor(w / (z * 1.1)); i++) { const ix = x + z * 0.5 + i * z * 1.1 + hash(i + x) * z * 0.3; const ih = z * (0.35 + hash(i * 3 + y) * 0.6); c.beginPath(); c.moveTo(ix - z * 0.14, y + h); c.lineTo(ix, y + h + ih); c.lineTo(ix + z * 0.14, y + h); c.closePath(); c.fill(); c.stroke(); } }
+        const rr = z * 0.16;
+        // translucent beveled slab: bright frozen top fading to deep blue
+        c.fillStyle = grad(c, x, y, x, y + h, [[0, '#eefdff'], [0.18, '#9fe6fa'], [0.5, '#3fa4dc'], [1, '#14497f']]);
+        c.beginPath(); c.roundRect(x, y, w, h, rr); c.fill();
+        c.lineWidth = lw; c.strokeStyle = '#155080'; c.stroke();
+        // inner crystal facets + side bevels (clipped)
+        c.save(); c.beginPath(); c.roundRect(x, y, w, h, rr); c.clip();
+        for (let i = 0; i < Math.max(1, Math.floor(w / (z * 2.6))); i++) {
+          const fx = x + z * 0.6 + i * z * 2.6 + hash(i * 5 + x) * z * 1.0;
+          c.fillStyle = 'rgba(255,255,255,0.16)';
+          c.beginPath(); c.moveTo(fx, y); c.lineTo(fx + z * 0.5, y); c.lineTo(fx - z * 0.35, y + h); c.lineTo(fx - z * 0.7, y + h); c.closePath(); c.fill();
+          c.fillStyle = 'rgba(21,80,128,0.10)';
+          c.beginPath(); c.moveTo(fx + z * 0.85, y); c.lineTo(fx + z * 1.0, y); c.lineTo(fx + z * 0.2, y + h); c.closePath(); c.fill();
+        }
+        c.fillStyle = 'rgba(255,255,255,0.5)'; c.fillRect(x, y, Math.max(2, z * 0.12), h);                 // lit left edge
+        c.fillStyle = 'rgba(15,58,100,0.3)'; c.fillRect(x + w - Math.max(2, z * 0.14), y, Math.max(2, z * 0.14), h); // shaded right edge
+        c.fillStyle = grad(c, x, y + h - z * 0.6, x, y + h, [[0, 'rgba(12,45,80,0)'], [1, 'rgba(12,45,80,0.45)']]); c.fillRect(x, y + h - z * 0.6, w, z * 0.6);
+        c.restore();
+        // snow cap: soft mounds spilling a little over the edges
+        if (!tall || r.world.w >= 1.2) {
+          const capH = Math.max(6, z * 0.4), over = z * 0.14;
+          c.fillStyle = grad(c, x, y - capH * 0.6, x, y + capH, [[0, '#ffffff'], [1, '#d8effc']]);
+          c.beginPath(); c.moveTo(x - over, y + capH * 0.6);
+          const bumps = Math.max(2, Math.round(w / (z * 1.1)));
+          for (let i = 0; i <= bumps; i++) { const bx = x - over + ((w + over * 2) * i) / bumps; const by = y - capH * (0.35 + hash(i * 7 + x) * 0.5); c.quadraticCurveTo(bx - (w + over * 2) / bumps / 2, by, bx, y + capH * (0.25 + hash(i + x) * 0.3)); }
+          c.lineTo(x + w + over, y + capH * 0.6); c.closePath(); c.fill();
+          c.strokeStyle = 'rgba(140,200,230,0.8)'; c.lineWidth = Math.max(1, lw * 0.5); c.stroke();
+        } else {
+          // tall pillar: round snow cap on top
+          c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(x + w / 2, y + z * 0.06, w * 0.62, Math.max(4, z * 0.22), 0, Math.PI, 0); c.fill();
+          c.strokeStyle = 'rgba(140,200,230,0.8)'; c.lineWidth = Math.max(1, lw * 0.5); c.stroke();
+        }
+        // gloss streak
+        c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(x + z * 0.3, y + z * 0.5, Math.max(6, w * 0.3), Math.max(2, z * 0.1));
+        // icicle fringe under every platform edge
+        { c.strokeStyle = '#155080'; c.lineWidth = lw * 0.5;
+          const n = Math.max(2, Math.floor(w / (z * 0.75)));
+          for (let i = 0; i < n; i++) { const ix = x + z * 0.25 + (i * (w - z * 0.5)) / Math.max(1, n - 1) + hash(i + x) * z * 0.2;
+            const big = i % 3 === 1; const ih = z * (big ? 0.55 + hash(i * 3 + y) * 0.7 : 0.22 + hash(i * 3 + y) * 0.3);
+            c.fillStyle = grad(c, ix, y + h, ix, y + h + ih, [[0, '#bfe8fa'], [1, '#7cc6ea']]);
+            c.beginPath(); c.moveTo(ix - z * (big ? 0.16 : 0.1), y + h); c.lineTo(ix, y + h + ih); c.lineTo(ix + z * (big ? 0.16 : 0.1), y + h); c.closePath(); c.fill(); c.stroke(); } }
         break;
       }
       case 'jungle': {
@@ -218,6 +279,11 @@ export function paintFloor(c, T, y0, view, z, time, toWorldX) {
       wave(c, y0, w, h, z, time, toWorldX, 0.1);
       c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 2;
       for (let i = 0; i < 10; i++) { const px = ((i * 173 + time * 30) % (w + 100)) - 50; c.beginPath(); c.moveTo(px, y0 + 8 + (i % 4) * 9); c.lineTo(px + 28 + (i % 3) * 10, y0 + 8 + (i % 4) * 9); c.stroke(); }
+      if (T.id === 'ice') {
+        // glowing surface band and shallow-water glow
+        c.fillStyle = grad(c, 0, y0, 0, y0 + z * 1.6, [[0, '#9ff0ff'], [1, 'rgba(159,240,255,0)']]); c.fillRect(0, y0, w, z * 1.6);
+        c.save(); c.shadowColor = '#bff6ff'; c.shadowBlur = 12; c.strokeStyle = 'rgba(230,252,255,0.9)'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(0, y0 + 1); c.lineTo(w, y0 + 1); c.stroke(); c.restore();
+      }
       if (T.id === 'ice') { c.fillStyle = '#e8f8ff'; c.strokeStyle = '#1e4a70'; c.lineWidth = 2; for (let i = 0; i < 7; i++) { const px = ((i * 211 + time * 10) % (w + 120)) - 60; const py = y0 + 4 + Math.sin(time * 1.5 + i) * 3; c.beginPath(); c.moveTo(px, py); c.lineTo(px + 26, py - 4); c.lineTo(px + 38, py + 6); c.lineTo(px + 6, py + 8); c.closePath(); c.fill(); c.stroke(); } }
       c.fillStyle = grad(c, 0, y0 - z * 1.2, 0, y0, [[0, 'rgba(255,255,255,0)'], [1, 'rgba(200,240,255,0.35)']]); c.fillRect(0, y0 - z * 1.2, w, z * 1.2);
       return;
