@@ -75,14 +75,14 @@ export const BOTS = {
     id: 'skyla', name: 'Skyla', cls: 'Medium aerial', hp: 130, weight: 'medium', accuracy: 'high',
     color: '#8fd3ff', shape: 'wing', desc: 'Owns the air. Repositions and shoots in one move.',
     passive: 'Not affected by map wind.',
-    s1: { id: 'updraft', name: 'Updraft', cd: 2, desc: 'Leap with 2x height and rain 3 missiles straight down from the apex: 15 damage each.', dmg: 15, radius: 0.9 },
+    s1: { id: 'updraft', name: 'Updraft', cd: 2, desc: 'Leap with 2x height and rain 3 missiles straight down from the apex: 18 damage each.', dmg: 18, radius: 0.9 },
     s2: { id: 'galeShot', name: 'Gale Shot', cd: 3, desc: 'Long wind blast that shoves bots, projectiles and power-ups: 20 damage. Jumping into the wind fights the push.', dmg: 20 },
   },
   phantom: {
     id: 'phantom', name: 'Phantom', cls: 'Light assassin', hp: 120, weight: 'light', accuracy: 'high',
     color: '#c46bff', shape: 'blade', desc: 'Appears next to you, then disappears.',
     passive: 'After a kill, next special cooldown is 1 turn shorter.',
-    s1: { id: 'blinkStrike', name: 'Blink Strike', cd: 3, desc: 'Teleport to your aim point (max 60% of map width), then release 4 shards: 6 damage each.', dmg: 6, radius: 0.8 },
+    s1: { id: 'blinkStrike', name: 'Blink Strike', cd: 3, desc: 'Teleport to your aim point (max 60% of map width), then release 4 shards: 9 damage each.', dmg: 9, radius: 0.8 },
     s2: { id: 'toxicBomb', name: 'Toxic Bomb', cd: 3, desc: 'Toxic cloud at impact: bots inside take 5 damage per tick, up to 35 this turn. The cloud clears when the turn ends.', dmg: 5, radius: 2.4 },
   },
   ricochet: {

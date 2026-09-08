@@ -148,9 +148,12 @@ export class Renderer {
       case 'explosion': {
         const n = e.big ? 42 : 22;
         this.emit(e.x, e.y, n, { speed: 5 + e.radius * 3, life: 0.6, size: 0.18 + e.radius * 0.1, color: e.color, gravity: 10 });
-        this.emit(e.x, e.y, 8, { speed: 1.5, life: 0.9, size: 0.5, color: '#666', gravity: -2 });
-        this.flashes.push({ x: e.x, y: e.y, r: e.radius, t: 0, life: 0.35, color: e.color });
-        this.shake += e.big ? 0.8 : 0.35;
+        this.emit(e.x, e.y, 10, { speed: 1.8, life: 1.1, size: 0.55, color: 'rgba(70,70,75,0.7)', gravity: -3 });
+        // cartoon burst: white spike star for one beat, then a bold expanding ring
+        this.flashes.push({ star: true, x: e.x, y: e.y, r: Math.max(1, e.radius * 1.15), t: 0, life: 0.14, color: '#ffffff', seed: (e.x * 7 + e.y * 13) % 100 });
+        this.flashes.push({ ring2: true, x: e.x, y: e.y, r: Math.max(1, e.radius * 1.25), t: 0, life: 0.42, color: e.color });
+        this.flashes.push({ x: e.x, y: e.y, r: e.radius * 0.8, t: 0, life: 0.3, color: e.color });
+        this.shake += e.big ? 1.1 : 0.5;
         break;
       }
       case 'damage':
@@ -164,7 +167,7 @@ export class Renderer {
         break;
       case 'pickup': this.numbers.push({ x: e.x, y: e.y - 1, text: e.name, color: POWERUPS[e.id].color, t: 0, life: 1.3 }); this.emit(e.x, e.y, 16, { speed: 3, life: 0.6, size: 0.15, color: POWERUPS[e.id].color, gravity: -4 }); break;
       case 'jump': this.emit(e.x, e.y + 0.4, 8, { speed: 2, life: 0.4, size: 0.2, color: '#ffffff', gravity: 6 }); break;
-      case 'fire': this.emit(e.x, e.y, 6, { speed: 2, life: 0.25, size: 0.15, color: '#ffffff' }); break;
+      case 'fire': this.emit(e.x, e.y, 6, { speed: 2, life: 0.25, size: 0.15, color: '#ffffff' }); this.flashes.push({ star: true, x: e.x, y: e.y - 0.2, r: 0.55, t: 0, life: 0.1, color: '#ffe9a8', seed: (e.x * 11) % 100 }); break;
       case 'beam': this.flashes.push({ beam: true, x1: e.x1, y1: e.y1, x2: e.x2, y2: e.y2, color: e.color, t: 0, life: 0.45 }); this.shake += 0.4; break;
       case 'blink': this.emit(e.from[0], e.from[1], 20, { speed: 3, life: 0.5, size: 0.18, color: e.color }); this.emit(e.to[0], e.to[1], 20, { speed: 3, life: 0.5, size: 0.18, color: e.color }); break;
       case 'gale': this.flashes.push({ cone: true, x: e.x, y: e.y, dx: e.dx, dy: e.dy, len: e.len, t: 0, life: 0.5, color: '#8fd3ff' }); break;
@@ -199,6 +202,7 @@ export class Renderer {
 
   // ----- main draw -----
   update(dt, ctxInfo) {
+    this.dt = dt;
     this.time += dt;
     const k = 1 - Math.pow(0.002, dt);
     this.cam.x += (this.camTarget.x - this.cam.x) * k;
@@ -406,7 +410,7 @@ export class Renderer {
       if (w.hasEffect(b, 'plating')) { c.strokeStyle = '#c0c8d8'; c.lineWidth = 4; c.beginPath(); c.arc(0, 0, r * 1.25, 0, Math.PI * 2); c.stroke(); }
       const st = this.animState(b);
       const wasGrounded = this._grounded ? this._grounded.get(b.id) : undefined;
-      if (wasGrounded === false && b.grounded && st.anim === 'idle') { this.playAnim(b.id, 'land'); }
+      if (wasGrounded === false && b.grounded && st.anim === 'idle') { this.playAnim(b.id, 'land'); this.emit(b.x, b.y + 0.45, 10, { speed: 2.2, life: 0.35, size: 0.18, color: 'rgba(255,255,255,0.8)', gravity: 3 }); }
       (this._grounded || (this._grounded = new Map())).set(b.id, b.grounded);
       drawBot(c, b.def, r * 1.67, { ...this.animState(b), facing, vx: b.vx, vy: b.vy, grounded: b.grounded, color: b.color, hp: b.hp / b.maxHp, id: b.id }, this.time);
       c.restore();
@@ -414,18 +418,39 @@ export class Renderer {
       if (!b.alive) continue;
       // selection ring
       if (isSel) { c.strokeStyle = '#ffffff'; c.lineWidth = 2; c.setLineDash([5, 4]); c.beginPath(); c.arc(x, y, r * 1.6 + Math.sin(this.time * 5) * 2, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); }
-      // name + hp bar
-      const bw = Math.max(34, r * 2.6), bh = Math.max(5, z * 0.16);
-      const by = y - r * 1.75 - z * 0.45;
-      c.fillStyle = '#0d1018'; c.fillRect(x - bw / 2 - 1, by - 1, bw + 2, bh + 2);
-      const frac = Math.max(0, b.hp / b.maxHp);
-      c.fillStyle = frac > 0.5 ? '#5cff7a' : (frac > 0.25 ? '#ffd84f' : '#ff4d4d');
-      c.fillRect(x - bw / 2, by, bw * Math.min(1, frac), bh);
-      if (b.hp > b.maxHp) { c.fillStyle = '#ff9cf0'; c.fillRect(x - bw / 2, by, bw * Math.min(1, (b.hp - b.maxHp) / 20) * 0.3, bh); }
-      c.fillStyle = '#fff'; c.font = `bold ${Math.max(10, Math.round(z * 0.32))}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'bottom';
-      c.strokeStyle = '#0d1018'; c.lineWidth = 3; c.strokeText(b.name, x, by - 2); c.fillText(b.name, x, by - 2);
-      c.font = `bold ${Math.max(8, Math.round(z * 0.24))}px sans-serif`; c.textBaseline = 'middle'; c.fillStyle = '#0d1018';
-      c.fillText(String(Math.ceil(b.hp)), x, by + bh / 2 + 0.5);
+      // Brawlbots-style nameplate: dark capsule, HP chip, identity-coloured bar
+      // with a white ghost segment that drains after damage.
+      const bw = Math.max(40, r * 3.1), bh = Math.max(6, z * 0.2);
+      const by = y - r * 1.75 - z * 0.5;
+      const frac = Math.max(0, Math.min(1, b.hp / b.maxHp));
+      if (!this._ghost) this._ghost = new Map();
+      let gh = this._ghost.get(b.id); if (gh === undefined || gh < frac) gh = frac;
+      gh = Math.max(frac, gh - this.dt * 0.35); this._ghost.set(b.id, gh);
+      const chipW = Math.max(16, z * 0.62), capH = bh + Math.max(3, z * 0.1);
+      const capX = x - bw / 2 - chipW * 0.55, capW = bw + chipW * 0.7;
+      c.fillStyle = 'rgba(13,16,24,0.92)'; c.beginPath(); c.roundRect(capX - 2, by - (capH - bh) / 2 - 1, capW + 4, capH + 2, capH); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,0.18)'; c.lineWidth = 1; c.stroke();
+      // HP chip
+      c.fillStyle = '#1c2230'; c.beginPath(); c.roundRect(capX, by - (capH - bh) / 2, chipW, capH, capH * 0.4); c.fill();
+      c.fillStyle = '#fff'; c.font = `bold ${Math.max(8, Math.round(z * 0.26))}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText(String(Math.ceil(b.hp)), capX + chipW / 2, by + bh / 2);
+      // bar track + ghost + fill
+      const tx = capX + chipW + z * 0.06, tw = capX + capW - tx - z * 0.1;
+      c.fillStyle = '#252b38'; c.beginPath(); c.roundRect(tx, by, tw, bh, bh / 2); c.fill();
+      if (gh > frac + 0.002) { c.fillStyle = 'rgba(255,255,255,0.85)'; c.beginPath(); c.roundRect(tx, by, tw * gh, bh, bh / 2); c.fill(); }
+      if (frac > 0) { c.fillStyle = b.color; c.beginPath(); c.roundRect(tx, by, Math.max(bh, tw * frac), bh, bh / 2); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.35)'; c.beginPath(); c.roundRect(tx, by, Math.max(bh, tw * frac), bh * 0.45, bh / 2); c.fill(); }
+      if (b.hp > b.maxHp) { c.fillStyle = '#ff9cf0'; c.beginPath(); c.roundRect(tx, by, tw * Math.min(1, (b.hp - b.maxHp) / 20) * 0.3, bh, bh / 2); c.fill(); }
+      // name above, READY! when locked in
+      c.fillStyle = '#fff'; c.font = `bold ${Math.max(10, Math.round(z * 0.32))}px sans-serif`; c.textBaseline = 'bottom';
+      c.strokeStyle = '#0d1018'; c.lineWidth = 3; c.strokeText(b.name, x, by - z * 0.12); c.fillText(b.name, x, by - z * 0.12);
+      if (info.ready && info.ready.has(b.id)) {
+        c.save(); c.translate(x - bw / 2 - z * 0.1, by - z * 0.55); c.rotate(-0.08);
+        c.font = `italic 900 ${Math.max(10, Math.round(z * 0.3))}px sans-serif`; c.textAlign = 'center';
+        c.strokeStyle = '#5a3a00'; c.lineWidth = 3; c.strokeText('READY!', 0, 0);
+        c.fillStyle = '#ffd23a'; c.fillText('READY!', 0, 0); c.restore();
+        c.textAlign = 'center';
+      }
       // effects
       const keys = Object.keys(b.effects).filter((k) => b.effects[k] > 0);
       if (b.contact) keys.push(b.contact);
@@ -518,6 +543,22 @@ export class Renderer {
       if (f.cone) { const [x, y] = this.toScreen(f.x, f.y); const a = Math.atan2(f.dy, f.dx); c.fillStyle = f.color; c.globalAlpha = 0.35 * (1 - k); c.beginPath(); c.moveTo(x, y); c.arc(x, y, f.len * z * Math.min(1, k * 3), a - 0.56, a + 0.56); c.closePath(); c.fill(); c.globalAlpha = 1; continue; }
       if (f.crusher) { const [x, y, W] = this.rectScreen({ x: f.x, y: f.top, w: f.w, h: 1 }); const drop = Math.min(1, k * 3); const [, yb] = this.toScreen(0, f.bottom); const h = (yb - y) * drop; paintCrusher(c, this.theme, x, y, W, h, k, z); continue; }
       const [x, y] = this.toScreen(f.x, f.y);
+      if (f.star) {
+        // comic spike star: alternating long/short points
+        const R = f.r * z * (0.8 + k * 0.5), pts = 10;
+        c.globalAlpha = 1 - k * 0.6; c.fillStyle = f.color;
+        c.beginPath();
+        for (let i = 0; i < pts * 2; i++) { const a = (i / (pts * 2)) * Math.PI * 2 + (f.seed || 0); const rr = i % 2 === 0 ? R : R * 0.42; const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr; i === 0 ? c.moveTo(px, py) : c.lineTo(px, py); }
+        c.closePath(); c.fill();
+        c.globalAlpha = 1; continue;
+      }
+      if (f.ring2) {
+        const R = f.r * z * (0.25 + k * 0.95);
+        c.globalAlpha = (1 - k) * 0.9;
+        c.strokeStyle = f.color; c.lineWidth = Math.max(3, z * 0.22 * (1 - k)); c.beginPath(); c.arc(x, y, R, 0, Math.PI * 2); c.stroke();
+        c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(1.5, z * 0.08 * (1 - k)); c.beginPath(); c.arc(x, y, R * 0.88, 0, Math.PI * 2); c.stroke();
+        c.globalAlpha = 1; continue;
+      }
       c.globalAlpha = 1 - k;
       if (f.ring) { c.strokeStyle = f.color; c.lineWidth = 4; c.beginPath(); c.arc(x, y, f.r * z * (0.2 + k * 0.8), 0, Math.PI * 2); c.stroke(); }
       else { c.fillStyle = f.color; c.beginPath(); c.arc(x, y, f.r * z * (0.6 + k * 0.6), 0, Math.PI * 2); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(x, y, f.r * z * 0.5 * (1 - k), 0, Math.PI * 2); c.fill(); }

@@ -170,3 +170,13 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; letter-
 }
 
 .skill { display: block; } .skill-icon { width: 22px; height: 22px; vertical-align: -5px; margin-right: 6px; }
+
+/* Brawlbots-style comic splash banner */
+#center-msg.comic { font-style: italic; font-weight: 900; letter-spacing: 2px; transform: translate(-50%, -50%) rotate(-3deg); background: linear-gradient(180deg, #fff7ae 0%, #ffd23a 40%, #ff8a1f 75%, #e0490f 100%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 2.5px #241000; filter: drop-shadow(0 4px 0 #241000) drop-shadow(0 8px 18px rgba(0,0,0,0.55)); animation: slam 0.35s cubic-bezier(0.2, 2.2, 0.4, 1); }
+#center-msg.comic.red { background: linear-gradient(180deg, #ffc6c6 0%, #ff6a5f 45%, #d41f2f 100%); -webkit-background-clip: text; background-clip: text; }
+@keyframes slam { 0% { transform: translate(-50%, -50%) rotate(-3deg) scale(2.4); opacity: 0; } 60% { transform: translate(-50%, -50%) rotate(-3deg) scale(0.92); opacity: 1; } 100% { transform: translate(-50%, -50%) rotate(-3deg) scale(1); } }
+
+/* Armoured timer capsule */
+#phase-timer { background: linear-gradient(180deg, #262d3d, #12161f); border: 2px solid #3a4358; border-radius: 12px; padding: 2px 14px; box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12); }
+#phase-timer.urgent { border-color: var(--red); box-shadow: 0 0 14px rgba(255,77,77,0.5), 0 3px 8px rgba(0,0,0,0.5); }
+#center-msg.comic, #center-msg.comic.red { text-shadow: none; }

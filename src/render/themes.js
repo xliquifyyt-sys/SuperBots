@@ -113,13 +113,50 @@ export function paintBackdrop(c, T, map, view, cam, time) {
       break;
     }
     case 'neo': {
-      // skyline
-      for (const [k, col, hMul] of [[0.1, '#1b1a58', 0.55], [0.22, '#25207a', 0.45], [0.38, '#2c2a8a', 0.35]]) {
+      // --- cyberpunk boulevard, after the reference video: building layers,
+      // a giant holo face billboard, a neon dragon sign, cables and rain ---
+      for (const [k, col, hMul] of [[0.08, '#191860', 0.6], [0.18, '#221e78', 0.5], [0.32, '#2b2890', 0.4]]) {
         c.fillStyle = col;
-        for (let i = 0; i < 18; i++) { const x = ((d[i].a * 2600 + px(k)) % (w + 400) + w + 400) % (w + 400) - 200; const bw = 40 + d[i].b * 80, bh = h * (hMul * 0.5 + d[i].c * hMul); c.fillRect(x, h - bh, bw, bh); c.fillStyle = 'rgba(63,233,255,0.35)'; for (let r = 0; r < Math.floor(bh / 14); r++) for (let q = 0; q < Math.floor(bw / 14); q++) if (hash(i * 97 + r * 13 + q * 7 + k * 100) > 0.55) c.fillRect(x + 4 + q * 14, h - bh + 6 + r * 14, 6, 6); c.fillStyle = col; }
+        for (let i = 0; i < 18; i++) { const x = ((d[i].a * 2600 + px(k)) % (w + 400) + w + 400) % (w + 400) - 200; const bw = 44 + d[i].b * 90, bh = h * (hMul * 0.5 + d[i].c * hMul); c.fillRect(x, h - bh, bw, bh); c.fillStyle = 'rgba(63,233,255,0.3)'; for (let r = 0; r < Math.floor(bh / 14); r++) for (let q = 0; q < Math.floor(bw / 14); q++) if (hash(i * 97 + r * 13 + q * 7 + k * 100) > 0.6) c.fillRect(x + 4 + q * 14, h - bh + 6 + r * 14, 6, 6); c.fillStyle = col; }
       }
-      // neon signs
-      for (let i = 0; i < 9; i++) { const x = ((d[i].a * 2600 + px(0.3)) % (w + 400) + w + 400) % (w + 400) - 200; const y = h * (0.15 + d[i].b * 0.5); const col = i % 2 ? '#ff3fd8' : '#3fe9ff'; c.save(); c.shadowColor = col; c.shadowBlur = 18; c.strokeStyle = col; c.lineWidth = 3; c.globalAlpha = 0.7 + Math.sin(time * 6 + i) * 0.3; c.strokeRect(x, y, 26 + d[i].c * 40, 60 + d[i].d * 80); c.restore(); }
+      // giant holographic face billboard (right of centre)
+      { const fx = w * 0.62 + px(0.22) % 60, fy = h * 0.3, fr = Math.min(w, h) * 0.16;
+        const fg = c.createRadialGradient(fx, fy, fr * 0.2, fx, fy, fr * 1.5);
+        fg.addColorStop(0, 'rgba(120,200,255,0.5)'); fg.addColorStop(1, 'rgba(120,200,255,0)');
+        c.fillStyle = fg; c.fillRect(fx - fr * 1.6, fy - fr * 1.8, fr * 3.2, fr * 3.6);
+        c.save(); c.globalAlpha = 0.55 + Math.sin(time * 1.4) * 0.1;
+        c.fillStyle = 'rgba(150,215,255,0.65)';
+        c.beginPath(); c.ellipse(fx, fy, fr * 0.72, fr, 0, 0, TAU); c.fill();  // head
+        c.fillStyle = 'rgba(40,80,140,0.8)';
+        c.beginPath(); c.ellipse(fx - fr * 0.28, fy - fr * 0.15, fr * 0.14, fr * 0.08, 0.1, 0, TAU); c.fill();  // eyes
+        c.beginPath(); c.ellipse(fx + fr * 0.24, fy - fr * 0.15, fr * 0.14, fr * 0.08, -0.1, 0, TAU); c.fill();
+        c.beginPath(); c.ellipse(fx, fy + fr * 0.45, fr * 0.2, fr * 0.06, 0, 0, TAU); c.fill();  // mouth
+        c.fillStyle = 'rgba(60,110,170,0.5)'; c.beginPath(); c.ellipse(fx, fy + fr * 0.18, fr * 0.1, fr * 0.16, 0, 0, TAU); c.fill();  // nose shade
+        // scanlines over the hologram
+        c.globalAlpha = 0.25; c.strokeStyle = '#bfeaff'; c.lineWidth = 1;
+        for (let yy = fy - fr; yy < fy + fr; yy += 5) { c.beginPath(); c.moveTo(fx - fr, yy + (time * 18) % 5); c.lineTo(fx + fr, yy + (time * 18) % 5); c.stroke(); }
+        c.restore(); }
+      // neon dragon sign (left): S-curve neon tube with glow
+      { const dx = w * 0.08 + px(0.3) % 40, dy = h * 0.32;
+        c.save(); c.shadowColor = '#ff3fd8'; c.shadowBlur = 22; c.strokeStyle = '#ff6fe4'; c.lineWidth = 4; c.lineCap = 'round';
+        c.globalAlpha = 0.8 + Math.sin(time * 5) * 0.2;
+        c.beginPath(); c.moveTo(dx, dy + 70);
+        c.bezierCurveTo(dx + 45, dy + 55, dx - 25, dy + 25, dx + 20, dy + 8);
+        c.bezierCurveTo(dx + 50, dy - 4, dx + 8, dy - 26, dx + 34, dy - 38); c.stroke();
+        c.beginPath(); c.arc(dx + 40, dy - 44, 5, 0, TAU); c.stroke();      // head
+        c.beginPath(); c.moveTo(dx + 46, dy - 48); c.lineTo(dx + 58, dy - 54); c.stroke(); // whisker
+        c.restore(); }
+      // animated ad panels
+      for (let i = 0; i < 7; i++) { const x = ((d[i].a * 2600 + px(0.3)) % (w + 400) + w + 400) % (w + 400) - 200; const y = h * (0.12 + d[i].b * 0.45); const col = ['#ff3fd8', '#3fe9ff', '#d9e64a'][i % 3]; const bw2 = 30 + d[i].c * 46, bh2 = 54 + d[i].d * 70;
+        c.save(); c.shadowColor = col; c.shadowBlur = 16; c.globalAlpha = 0.5 + (Math.sin(time * 3 + i * 2) + 1) * 0.25;
+        c.fillStyle = 'rgba(10,10,30,0.8)'; c.fillRect(x, y, bw2, bh2);
+        c.strokeStyle = col; c.lineWidth = 2.5; c.strokeRect(x, y, bw2, bh2);
+        c.fillStyle = col; const rows = Math.floor(bh2 / 12);
+        for (let r = 0; r < rows; r++) if (hash(i * 31 + r * 7 + Math.floor(time * 1.5)) > 0.45) c.fillRect(x + 5, y + 6 + r * 12, bw2 * (0.3 + hash(i + r) * 0.55), 5);
+        c.restore(); }
+      // sagging cables across the top
+      c.strokeStyle = 'rgba(10,12,30,0.9)'; c.lineWidth = 2;
+      for (let i = 0; i < 4; i++) { const y0 = h * (0.04 + i * 0.045), sag = 30 + d[i].d * 40, ox = px(0.35) % w; c.beginPath(); c.moveTo(ox - w * 0.2, y0); c.quadraticCurveTo(ox + w * 0.3, y0 + sag, ox + w * 0.8, y0 - 6); c.stroke(); c.beginPath(); c.moveTo(ox + w * 0.5, y0 - 3); c.quadraticCurveTo(ox + w * 0.9, y0 + sag * 0.8, ox + w * 1.3, y0 + 4); c.stroke(); }
       // holographic grid glow low in the scene
       c.strokeStyle = 'rgba(255,63,216,0.12)'; c.lineWidth = 1;
       for (let i = 0; i < 12; i++) { const y = h * 0.55 + i * i * 3; c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
@@ -243,8 +280,16 @@ export function paintTerrain(c, T, rects, z, time, slopes = []) {
       case 'neo': {
         c.fillStyle = grad(c, x, y, x, y + h, [[0, T.rockLite], [0.3, T.rock], [1, '#14171f']]);
         c.beginPath(); c.roundRect(x, y, w, h, z * 0.08); c.fill(); c.lineWidth = lw; c.strokeStyle = O; c.stroke();
-        // panel lines
-        c.strokeStyle = 'rgba(255,255,255,0.08)'; c.lineWidth = 1; for (let yy = y + z * 0.8; yy < y + h; yy += z * 0.8) { c.beginPath(); c.moveTo(x + 3, yy); c.lineTo(x + w - 3, yy); c.stroke(); }
+        // tread texture: rows of dark triangles like the reference ramp faces
+        c.save(); c.beginPath(); c.roundRect(x, y, w, h, z * 0.08); c.clip();
+        c.fillStyle = 'rgba(255,255,255,0.05)';
+        const ts = Math.max(6, z * 0.5);
+        for (let ry = 0, yy = y + z * 0.4; yy < y + h; yy += ts, ry++) {
+          for (let xx = x + (ry % 2) * ts * 0.5; xx < x + w; xx += ts) {
+            c.beginPath(); c.moveTo(xx, yy + ts * 0.7); c.lineTo(xx + ts * 0.4, yy); c.lineTo(xx + ts * 0.8, yy + ts * 0.7); c.closePath(); c.fill();
+          }
+        }
+        c.restore();
         // hazard stripes on the top edge
         const sh = Math.max(4, z * 0.26);
         c.save(); c.beginPath(); c.rect(x, y, w, sh); c.clip(); c.fillStyle = '#d9e64a'; c.fillRect(x, y, w, sh); c.fillStyle = '#14171f'; for (let sx = x - sh; sx < x + w + sh; sx += sh * 2) { c.beginPath(); c.moveTo(sx, y); c.lineTo(sx + sh, y); c.lineTo(sx + sh * 2, y + sh); c.lineTo(sx + sh, y + sh); c.closePath(); c.fill(); } c.restore();

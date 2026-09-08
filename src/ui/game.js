@@ -44,7 +44,7 @@ export class GameController {
     match.playbackSpeed = this.speed;
     match.onPhase = (p) => this._onPhase(p);
     match.start();
-    this.showCenter('TURN 1', 1.2);
+    this.showCenter('BATTLE START!', 1.6, 'comic');
   }
 
   stop() { this.match = null; this.el.hud.classList.add('hidden'); }
@@ -84,7 +84,7 @@ export class GameController {
     } else if (p === 'over') {
       this.el.plan.classList.add('hidden'); this.el.playback.classList.add('hidden');
       const won = this.me && m.winner && m.winner.ids.includes(this.me.id);
-      this.showCenter(m.winner.type === 'draw' ? 'DRAW' : (won ? 'VICTORY' : (this.me ? 'DEFEAT' : 'GAME OVER')), 2.2);
+      this.showCenter(m.winner.type === 'draw' ? 'DRAW' : (won ? 'VICTORY!' : (this.me ? 'DEFEAT' : 'GAME OVER')), 2.2, won ? 'comic' : 'comic red');
       if (won) audio.win(); else audio.lose();
       setTimeout(() => this.cb.onOver && this.cb.onOver(m), 2300);
     }
@@ -103,7 +103,7 @@ export class GameController {
     }
   }
 
-  showCenter(text, secs) { this.el.center.textContent = text; this.el.center.classList.remove('hidden'); this.centerTimer = secs; }
+  showCenter(text, secs, cls) { this.el.center.textContent = text; this.el.center.className = cls ? cls : ''; this.el.center.classList.remove('hidden'); this.centerTimer = secs; }
 
   // ----- actions -----
   selectAction(k) {
@@ -300,7 +300,9 @@ export class GameController {
       const ang = Math.round(-Math.atan2(this.aim.dy, this.aim.dx) * 180 / Math.PI);
       this.el.readout.textContent = `${type} · angle ${ang}° · power ${Math.round(this.aim.power * 100)}%${this.locked ? ' · LOCKED' : ''}`;
     } else if (m.phase === 'plan') this.el.readout.textContent = this.me && this.me.alive ? 'Drag anywhere to aim' : 'Spectating';
-    this.r.update(dt, { aim: aimInfo, facing, selected: this.infoBot ? this.infoBot.id : (this.me ? this.me.id : -1) });
+    let ready = null;
+    if (m.phase === 'plan') { ready = new Set(); for (const b of w.bots) if (b.alive && m.pendingActions[b.id] && (m.pendingActions[b.id].locked || b.isAI)) ready.add(b.id); }
+    this.r.update(dt, { aim: aimInfo, facing, ready, selected: this.infoBot ? this.infoBot.id : (this.me ? this.me.id : -1) });
     // roster + info
     this.renderRoster();
     if (this.infoBot) this.renderInfo();
