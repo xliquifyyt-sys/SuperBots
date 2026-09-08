@@ -77,25 +77,27 @@ export const MAPS = {
   // ===================== ICE =====================
   // Idea: a frozen slide. Continuous floor, one long ramp up to a high plateau on the left,
   // a low ceiling of hanging ice over the middle. Icicles crash onto the plateau.
-  frosthollow: {
-    id: 'frosthollow', name: 'Frost Hollow', theme: 'ice', size: 'standard', width: 30, height: 17,
-    minPlayers: 2, maxPlayers: 4, recommended: 2,
+  // Idea: the frozen keel (after the reference shot). A huge ship-hull ice island
+  // floats over the water in the middle, four wall shelves around it. Open air
+  // everywhere else: falling in the water is the main threat.
+  frozenkeel: {
+    id: 'frozenkeel', name: 'Frozen Keel', theme: 'ice', size: 'standard', width: 30, height: 17,
+    minPlayers: 2, maxPlayers: 4, recommended: 4,
     terrain: [
-      R(0, 13.5, 30, 3.5),                              // frozen floor
-      R(0, 7.5, 8, 6),                                  // high plateau (left)
-      R(13, 3, 6, 0.9),                                 // hanging ice ceiling shelf (cover)
-      R(16, 3.9, 0.8, 4),                               // icicle pillar hanging from the shelf
-      R(21, 9, 5, 0.9),                                 // right shelf
-      R(26, 11, 4, 2.5),                                // low step at the right edge
-      R(9.7, 11.5, 0.9, 2),                             // ice stalagmite on the floor (standing cover)
+      { ...R(8, 8.2, 14, 1.3), noFringe: true },        // the keel deck (main island)
+      { ...R(9.5, 9.2, 11, 1.3), noCap: true, noFringe: true }, // hull taper 1
+      { ...R(11.8, 10.2, 6.4, 1.2), noCap: true },      // hull taper 2 (the keel point, icicles below)
+      { ...R(13.3, 6.4, 1, 1.8), noFringe: true },      // snow stump on deck (standing cover)
+      R(0, 4.5, 6, 1.1), R(24, 4.5, 6, 1.1),            // high wall shelves
+      R(0, 12, 5, 1.1), R(25, 12, 5, 1.1),              // low water-side shelves
     ],
-    slopes: [S(8, 7.5, 6, 6, -1)],                      // slide down from the plateau
-    spawns: [[1.5, 7], [5, 7], [11, 13], [15, 13], [19, 13], [23, 8.5], [27.5, 10.5], [29, 10.5]],
-    powerups: [[16, 2.5], [23.5, 9], [4, 7], [12, 13], [20, 13], [28, 10.5]],
-    killFloor: { type: 'water', y: 15.6 },
+    slopes: [],
+    spawns: [[2, 11.5], [27.5, 11.5], [2.5, 4], [27, 4], [10, 7.7], [19.5, 7.7], [16, 7.7], [12, 7.7]],
+    powerups: [[15, 5.9], [3, 3.9], [27, 3.9], [1.5, 11.5], [28.5, 11.5], [20.5, 7.7]],
+    killFloor: { type: 'water', y: 15.5 },
     teleporters: false,
-    hazards: [{ type: 'crusher', x: 0, w: 8, top: 1, bottom: 7.5, every: 5, dmg: 40, label: 'Icicles fall' }],
-    blurb: 'A frozen slide from a high plateau down to the cave floor. The plateau has the view, but icicles crash onto it every 5 turns.',
+    hazards: [{ type: 'gusts', every: 4, strength: 9, label: 'Blizzard gust' }],
+    blurb: 'A ship-hull ice island floating over freezing water, ringed by four wall shelves. A blizzard gust sweeps through every 4 turns.',
   },
   // Idea: a fortress. A raised central keep with ramps on both sides, two floating
   // watchtowers at the ends, teleporting edges. Gusts sweep the walls.

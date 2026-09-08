@@ -193,7 +193,7 @@ export function paintTerrain(c, T, rects, z, time, slopes = []) {
         c.fillStyle = grad(c, x, y + h - z * 0.6, x, y + h, [[0, 'rgba(12,45,80,0)'], [1, 'rgba(12,45,80,0.45)']]); c.fillRect(x, y + h - z * 0.6, w, z * 0.6);
         c.restore();
         // snow cap: soft mounds spilling a little over the edges
-        if (!tall || r.world.w >= 1.2) {
+        if (r.world.noCap) { /* hull tiers: bare ice, no cap */ } else if (!tall || r.world.w >= 1.2) {
           const capH = Math.max(6, z * 0.4), over = z * 0.14;
           c.fillStyle = grad(c, x, y - capH * 0.6, x, y + capH, [[0, '#ffffff'], [1, '#d8effc']]);
           c.beginPath(); c.moveTo(x - over, y + capH * 0.6);
@@ -207,9 +207,9 @@ export function paintTerrain(c, T, rects, z, time, slopes = []) {
           c.strokeStyle = 'rgba(140,200,230,0.8)'; c.lineWidth = Math.max(1, lw * 0.5); c.stroke();
         }
         // gloss streak
-        c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(x + z * 0.3, y + z * 0.5, Math.max(6, w * 0.3), Math.max(2, z * 0.1));
+        if (!r.world.noCap) { c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(x + z * 0.3, y + z * 0.5, Math.max(6, w * 0.3), Math.max(2, z * 0.1)); }
         // icicle fringe under every platform edge
-        { c.strokeStyle = '#155080'; c.lineWidth = lw * 0.5;
+        if (!r.world.noFringe) { c.strokeStyle = '#155080'; c.lineWidth = lw * 0.5;
           const n = Math.max(2, Math.floor(w / (z * 0.75)));
           for (let i = 0; i < n; i++) { const ix = x + z * 0.25 + (i * (w - z * 0.5)) / Math.max(1, n - 1) + hash(i + x) * z * 0.2;
             const big = i % 3 === 1; const ih = z * (big ? 0.55 + hash(i * 3 + y) * 0.7 : 0.22 + hash(i * 3 + y) * 0.3);

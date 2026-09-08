@@ -1,5 +1,5 @@
 import { Match } from '../src/core/match.js';
-const [,, a='phantom', b='volt', mapId='frosthollow', seed='7', diff='hard'] = process.argv;
+const [,, a='phantom', b='volt', mapId='frozenkeel', seed='7', diff='hard'] = process.argv;
 const m = new Match([{name:'A',botId:a,team:0,isAI:true},{name:'B',botId:b,team:1,isAI:true}], { mode:'ffa', map:mapId, aiDifficulty:diff }, Number(seed));
 m.start();
 let guard=0;
