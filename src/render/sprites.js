@@ -16,6 +16,22 @@ export function spritesReady() { return manifest !== null; }
 export function loadSprites(onChange) {
   if (loading) return;
   loading = true;
+  // Single-file builds inline the art as data URIs, since there is no art/ dir.
+  const inlined = typeof window !== 'undefined' && window.__SUPERBOTS_SPRITES;
+  if (inlined) {
+    manifest = inlined.manifest || {};
+    for (const [bot, parts] of Object.entries(manifest)) {
+      for (const part of Object.keys(parts)) {
+        const uri = inlined.data[`${bot}:${part}`];
+        if (!uri) continue;
+        const img = new Image();
+        img.onload = () => { images.set(`${bot}:${part}`, img); if (onChange) onChange(); };
+        img.onerror = () => {};
+        img.src = uri;
+      }
+    }
+    return;
+  }
   fetch(BASE + 'manifest.json', { cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : {}))
     .then((m) => {

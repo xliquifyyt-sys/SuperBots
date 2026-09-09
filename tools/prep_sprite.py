@@ -39,6 +39,9 @@ bgr, alpha = img[:, :, :3], img[:, :, 3]
 
 if alpha.min() > 250:  # fully opaque, so there is a backdrop to strip
     # Seed a flood fill from every border pixel matching the corner colour.
+    # FIXED_RANGE compares each pixel to the seed, not to its neighbour; without
+    # it the fill walks a gradient from the backdrop through the dark outline and
+    # eats the artwork.
     corners = np.array([bgr[0, 0], bgr[0, w - 1], bgr[h - 1, 0], bgr[h - 1, w - 1]], dtype=np.int16)
     backdrop = np.median(corners, axis=0).astype(np.uint8)
     mask = np.zeros((h + 2, w + 2), np.uint8)
@@ -46,7 +49,8 @@ if alpha.min() > 250:  # fully opaque, so there is a backdrop to strip
     lo = up = (a.tol,) * 3
     for sx, sy in [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1), (w // 2, 0), (w // 2, h - 1), (0, h // 2), (w - 1, h // 2)]:
         if np.abs(work[sy, sx].astype(np.int16) - backdrop.astype(np.int16)).max() <= a.tol:
-            cv2.floodFill(work, mask, (sx, sy), (0, 0, 0), lo, up, 4 | cv2.FLOODFILL_MASK_ONLY | (255 << 8))
+            cv2.floodFill(work, mask, (sx, sy), (0, 0, 0), lo, up,
+                          4 | cv2.FLOODFILL_MASK_ONLY | cv2.FLOODFILL_FIXED_RANGE | (255 << 8))
     outside = mask[1:-1, 1:-1] > 0
     alpha = np.where(outside, 0, 255).astype(np.uint8)
     # Feather one pixel so the cut edge is not jagged.
