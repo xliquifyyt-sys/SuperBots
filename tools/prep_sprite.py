@@ -21,7 +21,7 @@ ap.add_argument("bot")
 ap.add_argument("--part", default="full")
 ap.add_argument("--size", type=int, default=512)
 ap.add_argument("--fill", type=float, default=0.92, help="fraction of canvas the art spans")
-ap.add_argument("--pivot-x", type=float, default=0.5)
+ap.add_argument("--pivot-x", default="auto", help="0..1, or 'auto' for the alpha-weighted centroid")
 ap.add_argument("--pivot-y", type=float, default=0.5)
 ap.add_argument("--tol", type=int, default=18, help="backdrop colour tolerance")
 ap.add_argument("--out", default="art/sprites")
@@ -69,8 +69,18 @@ scale = min(span / cw, span / ch)
 nw, nh = max(1, int(round(cw * scale))), max(1, int(round(ch * scale)))
 cut = cv2.resize(cut, (nw, nh), interpolation=cv2.INTER_AREA)
 
+# Pivot: 'auto' uses the alpha-weighted centroid, so a thin barrel or jaw
+# jutting out barely moves it and the bot's mass lands on the collision centre.
+if str(a.pivot_x) == "auto":
+    ca = cut[:, :, 3].astype(np.float32)
+    px = float((ca.sum(axis=0) * np.arange(nw)).sum() / max(1.0, ca.sum()) / nw)
+    pivot_x = min(0.72, max(0.28, px))
+    print(f"  pivot-x auto -> {pivot_x:.3f}")
+else:
+    pivot_x = float(a.pivot_x)
+
 canvas = np.zeros((a.size, a.size, 4), np.uint8)
-ox = int(round(a.size / 2 - nw * a.pivot_x))
+ox = int(round(a.size / 2 - nw * pivot_x))
 oy = int(round(a.size / 2 - nh * a.pivot_y))
 ox, oy = max(0, min(a.size - nw, ox)), max(0, min(a.size - nh, oy))
 canvas[oy:oy + nh, ox:ox + nw] = cut

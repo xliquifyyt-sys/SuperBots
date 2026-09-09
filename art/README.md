@@ -33,3 +33,18 @@
 
 3. Reload. Any bot without an entry keeps its vector rig, so a partial art set
    is always safe.
+
+## Batch intake
+
+Drop every raw render into `art/sprites/raw/` named after its bot (`magmaw.png`,
+`volt.png`, or anything containing the bot id), then run one command:
+
+```
+python3 tools/intake_sprites.py
+```
+
+Each file is background-stripped, trimmed, centred on its alpha-weighted
+centroid, and registered in the manifest. Existing `scale` and `dy` tuning is
+preserved, so re-running after a re-generation will not undo hand adjustments.
+
+Bot ids: bulwark, magmaw, volt, warden, skyla, phantom, ricochet, gravitas.
