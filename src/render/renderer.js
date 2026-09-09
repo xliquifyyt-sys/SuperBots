@@ -6,6 +6,7 @@ import { PHYS, POWERUPS, TEAM_COLORS } from '../core/defs.js';
 import { drawBot, ANIM_LENGTH } from './bots.js';
 import { paintBackdrop, paintTerrain, paintFloor, paintMine, paintCrusher } from './themes.js';
 import { drawPowerupIcon, drawActionIcon } from './icons.js';
+import { loadSprites } from './sprites.js';
 
 function rgbaHex(h, a) { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
 const EFFECT_ICONS = { poison: '☠', burn: '🔥', frozen: '❄', rooted: '⚓', shocked: '⚡', smoked: '☁', amp: '▲', plating: '◆', thrusters: '⇈', reflector: '◐', rally: '★' };
@@ -24,6 +25,7 @@ export class Renderer {
     this.numbers = [];
     this.flashes = [];
     this.shake = 0;
+    loadSprites();
     this.time = 0;
     this.eventCursor = 0;
     this.deadFx = new Set();

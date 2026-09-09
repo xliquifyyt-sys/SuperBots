@@ -1,3 +1,4 @@
+import { getSprite, drawSpriteBody } from './sprites.js';
 // Bot rigs, second pass: heavy painted-style vector art in the language of the
 // reference art — armoured bodies with a glowing core window, one oversized
 // weapon up front, chunky mobility parts below, gradient shading, hot rim
@@ -438,7 +439,9 @@ export function drawBot(ctx, def, r, st, time) {
   ctx.translate(0, -r * 0.12);
   if (st.anim === 'death') ctx.globalAlpha = 1 - st.t * 0.9;
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  rig(ctx, R, st, time);
+  // Painted sprite when one is loaded for this bot, vector rig otherwise.
+  const sprite = getSprite(def.id);
+  if (sprite) drawSpriteBody(ctx, sprite, R, def.id); else rig(ctx, R, st, time);
   if (st.anim === 'hit' && st.t < 0.5) { ctx.globalAlpha = 0.5 * (1 - st.t * 2); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, r * 1.3, 0, TAU); ctx.fill(); }
   ctx.restore();
 }
