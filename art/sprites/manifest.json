@@ -2,15 +2,57 @@
   "bulwark": {
     "full": {
       "file": "bot_bulwark_full.png",
-      "scale": 1.34,
-      "dy": 0
+      "scale": 1.341,
+      "dy": -0.172
     }
   },
   "magmaw": {
     "full": {
       "file": "bot_magmaw_full.png",
-      "scale": 1.34,
-      "dy": 0
+      "scale": 1.435,
+      "dy": -0.172
+    }
+  },
+  "gravitas": {
+    "full": {
+      "file": "bot_gravitas_full.png",
+      "scale": 1.236,
+      "dy": -0.092
+    }
+  },
+  "phantom": {
+    "full": {
+      "file": "bot_phantom_full.png",
+      "scale": 1.021,
+      "dy": -0.007
+    }
+  },
+  "ricochet": {
+    "full": {
+      "file": "bot_ricochet_full.png",
+      "scale": 0.779,
+      "dy": -0.007
+    }
+  },
+  "skyla": {
+    "full": {
+      "file": "bot_skyla_full.png",
+      "scale": 1.241,
+      "dy": -0.092
+    }
+  },
+  "volt": {
+    "full": {
+      "file": "bot_volt_full.png",
+      "scale": 1.205,
+      "dy": -0.092
+    }
+  },
+  "warden": {
+    "full": {
+      "file": "bot_warden_full.png",
+      "scale": 1.554,
+      "dy": -0.092
     }
   }
 }

@@ -24,12 +24,15 @@ ap.add_argument("--fill", type=float, default=0.92, help="fraction of canvas the
 ap.add_argument("--pivot-x", default="auto", help="0..1, or 'auto' for the alpha-weighted centroid")
 ap.add_argument("--pivot-y", type=float, default=0.5)
 ap.add_argument("--tol", type=int, default=18, help="backdrop colour tolerance")
+ap.add_argument("--flip", action="store_true", help="mirror horizontally; the game draws bots facing right")
 ap.add_argument("--out", default="art/sprites")
 a = ap.parse_args()
 
 img = cv2.imread(a.src, cv2.IMREAD_UNCHANGED)
 if img is None:
     sys.exit(f"cannot read {a.src}")
+if a.flip:
+    img = cv2.flip(img, 1)
 if img.ndim == 2:
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGRA)
 if img.shape[2] == 3:
