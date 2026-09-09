@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Bot reference renderer</title>
+<style>body{margin:0;background:#0000}canvas{display:block}</style></head>
+<body>
+<canvas id="c" width="1024" height="1024"></canvas>
+<script type="module">
+import { drawBot } from '../src/render/bots.js';
+import { BOTS } from '../src/core/defs.js';
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+// Render one bot big and centred on transparency. mode: 'color' | 'silhouette'
+window.renderBot = (id, anim, mode) => {
+  ctx.clearRect(0, 0, 1024, 1024);
+  ctx.save();
+  ctx.translate(487, 540);
+  const st = { anim, t: anim === 'idle' ? 0.25 : 0.45, facing: 1, vx: 0, vy: 0, grounded: true, color: BOTS[id].color, hp: 1, id: 0 };
+  drawBot(ctx, BOTS[id], 318, st, 0.42);
+  ctx.restore();
+  if (mode === 'silhouette') {
+    const d = ctx.getImageData(0, 0, 1024, 1024), p = d.data;
+    for (let i = 0; i < p.length; i += 4) {
+      if (p[i + 3] > 140) { p[i] = 18; p[i + 1] = 21; p[i + 2] = 28; p[i + 3] = 255; } else { p[i + 3] = 0; }
+    }
+    ctx.putImageData(d, 0, 0);
+  }
+  return true;
+};
+window.__ready = true;
+</script>
+</body></html>
