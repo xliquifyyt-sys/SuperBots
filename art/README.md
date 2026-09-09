@@ -48,3 +48,29 @@ centroid, and registered in the manifest. Existing `scale` and `dy` tuning is
 preserved, so re-running after a re-generation will not undo hand adjustments.
 
 Bot ids: bulwark, magmaw, volt, warden, skyla, phantom, ricochet, gravitas.
+
+## Asking for map changes
+
+Two different kinds of change, two different routes.
+
+**Layout and gameplay** (platform positions, gaps, pits, spawns, hazards,
+power-up spots) live in `src/core/maps.js`. These need no prompt at all. Describe
+the change in plain words and it gets edited directly.
+
+To point at an exact spot, use the coordinate grids in
+`art/reference/maps/grid/`. The game's world units are what the code uses, so a
+request phrased in grid coordinates maps straight onto the data:
+
+> On Ember Pit, move the ledge at x 2-6, y 9 up to y 7, and widen it to 5 wide.
+
+Regenerate the grids after any layout edit:
+
+```
+python3 -m http.server 8123 --directory .
+node tools/gridrender.mjs
+```
+
+**Theme art** (how a map looks rather than how it plays) is regenerated in
+Scenario from `art/MAP_PROMPTS.md`. Change the theme's prompt, regenerate the
+affected layer, and drop it into `art/maps/raw/`. One theme change affects both
+maps that share it.
