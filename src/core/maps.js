@@ -38,18 +38,18 @@ export const MAPS = {
     id: 'emberpit', name: 'Ember Pit', theme: 'lava', size: 'standard', width: 30, height: 17,
     minPlayers: 2, maxPlayers: 4, recommended: 2,
     terrain: [
-      R(0, 13, 30, 4),                                  // continuous ground
-      R(12, 7.5, 6, 5.5),                               // volcano summit block
+      R(0, 13, 14.1, 4), R(15.9, 13, 14.1, 4),          // ground, split by the crater shaft (14.1..15.9)
+      R(12, 7.5, 2.1, 5.5), R(15.9, 7.5, 2.1, 5.5),     // volcano summit, split by the same shaft
       R(13.5, 3.5, 3, 0.8),                             // rim perch above the crater (cover)
-      R(2, 9, 4, 0.8), R(24, 9, 4, 0.8),                // side ledges
+      R(0, 9, 3.6, 0.8), R(26.4, 9, 3.6, 0.8),          // side ledges, anchored to the walls
     ],
     slopes: [S(6, 7.5, 6, 5.5, 1), S(18, 7.5, 6, 5.5, -1)],  // mountain flanks
-    spawns: [[1.5, 12.5], [4.5, 12.5], [9, 12.5], [13.5, 7], [16.5, 7], [21, 12.5], [25.5, 12.5], [28.5, 12.5]],
-    powerups: [[15, 3], [4, 8.5], [26, 8.5], [10, 12.5], [20, 12.5], [15, 7]],
+    spawns: [[1.5, 12.5], [4.5, 12.5], [9, 12.5], [13, 7], [17, 7], [21, 12.5], [25.5, 12.5], [28.5, 12.5]],
+    powerups: [[15, 3], [1.8, 8.5], [28.2, 8.5], [10, 12.5], [20, 12.5], [13, 7]],
     killFloor: { type: 'lava', y: 15.4 },
     teleporters: false,
     hazards: [{ type: 'risingLava', every: 4, amount: 0.8, label: 'The lava rises!' }, { type: 'geyser', every: 4, points: [[9, 12.5], [21, 12.5], [4, 12.5], [26, 12.5]], count: 1, dmg: 20, radius: 1.3, label: 'Geyser' }],
-    blurb: 'A volcano on solid ground. The lava rises every 4 turns and will flood the lowlands, so the fight climbs the mountain.',
+    blurb: 'A volcano with an open crater straight through to the lava. The lava rises every 4 turns and floods the lowlands, so the fight climbs the mountain and the summit gets narrow.',
   },
   // Idea: a stepped foundry. Long flat floor, a chain of ascending furnace tiers on the
   // right with hanging chimneys, one narrow lava channel on the left to punish careless jumps.
