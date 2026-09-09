@@ -49,8 +49,11 @@ export class World {
     this.powerups = [];
     this.beams = [];
     this.mines = (map.mines || []).map(([x, y]) => { const pt = { x, y }; for (let g = 0; g < 40; g++) { let hit = null; for (const rc of map.terrain) { const px = Math.max(rc.x, Math.min(pt.x, rc.x + rc.w)), py = Math.max(rc.y, Math.min(pt.y, rc.y + rc.h)); if (Math.hypot(pt.x - px, pt.y - py) < 0.45) { hit = rc; break; } } if (!hit) break; pt.y = hit.y - 0.6; } return { x: pt.x, y: pt.y, alive: true, timer: 0 }; });
+    this.pads = (map.pads || []).map((p) => ({ ...p }));
     this.singularity = null;
     this.lavaY = map.killFloor.y;
+    const mineHz = (map.hazards || []).find((h) => h.type === 'mines');
+    if (mineHz && mineHz.random) for (const mn of this.mines) this.scatterMine(mn);
     this.windX = 0;
     this.nextWind = 0;
     this.airStrike = null;      // { x, turn } scheduled
@@ -169,7 +172,7 @@ export class World {
           if (this.turn > 1 && this.turn % h.every === 0) { this.lavaY -= h.amount; this.hazardAnnounce.push({ type: 'lava', text: 'The lava rises!' }); }
           else if (this.turn % h.every === h.every - 1) this.hazardAnnounce.push({ type: 'warn', text: 'Lava rises next turn' });
         } else if (h.type === 'mines') {
-          for (const mn of this.mines) if (!mn.alive) { mn.timer--; if (mn.timer <= 0) { mn.alive = true; this.emit('mineSpawn', { x: mn.x, y: mn.y }); } }
+          for (const mn of this.mines) if (!mn.alive) { mn.timer--; if (mn.timer <= 0) { if (h.random) this.scatterMine(mn); mn.alive = true; this.emit('mineSpawn', { x: mn.x, y: mn.y }); } }
         } else if (h.type === 'crusher') {
           const lbl = (h.label || 'Crusher').toUpperCase();
           if (this.turn % h.every === 0) { this.pendingHazards.push({ type: 'crusher', h }); this.hazardAnnounce.push({ type: 'danger', text: `${lbl} THIS TURN`, zone: { x: h.x, y: h.top, w: h.w, h: h.bottom - h.top } }); }
@@ -480,6 +483,12 @@ export class World {
     return null;
   }
 
+  // Move a mine to a fresh random surface. Falls back to leaving it put.
+  scatterMine(mn) {
+    const pt = this.randomGroundSpot();
+    if (pt) { mn.x = pt.x; mn.y = pt.y - 0.15; }
+  }
+
   dropToGround(obj) {
     this.pushOutOfTerrain(obj, 0.4);
     for (let i = 0; i < 300; i++) {
@@ -662,6 +671,19 @@ export class World {
           if (pch.touched[b.id]) continue;
           pch.touched[b.id] = true;
           this.applyDamage(b, pch.dmg, { type: 'status', label: 'Burning ground' });
+        }
+      }
+    }
+    // Teleporter pads fling a bot to their exit. The cooldown stops it looping
+    // if the exit happens to sit near another pad.
+    for (const b of this.alive()) {
+      if (b.padCd > 0) { b.padCd -= dt; continue; }
+      for (const pad of this.pads) {
+        if (Math.hypot(b.x - pad.x, b.y - pad.y) < 0.75 + PHYS.botRadius) {
+          this.emit('teleport', { bot: b.id, from: [b.x, b.y], to: pad.to });
+          b.x = pad.to[0]; b.y = pad.to[1];
+          b.vx = 0; b.vy = 0; b.grounded = false; b.padCd = 0.8;
+          break;
         }
       }
     }

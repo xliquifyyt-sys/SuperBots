@@ -87,7 +87,7 @@ export const MAPS = {
       { ...R(8, 8.2, 14, 1.3), noFringe: true },        // the keel deck (main island)
       { ...R(9.5, 9.2, 11, 1.3), noCap: true, noFringe: true }, // hull taper 1
       { ...R(11.8, 10.2, 6.4, 1.2), noCap: true },      // hull taper 2 (the keel point, icicles below)
-      { ...R(13.3, 6.4, 1, 1.8), noFringe: true },      // snow stump on deck (standing cover)
+      { ...R(14.5, 6.4, 1, 1.8), noFringe: true },      // snow stump, centred on the deck
       R(0, 4.5, 6, 1.1), R(24, 4.5, 6, 1.1),            // high wall shelves
       R(0, 12, 5, 1.1), R(25, 12, 5, 1.1),              // low water-side shelves
     ],
@@ -108,9 +108,7 @@ export const MAPS = {
       R(0, 17, 9, 5), R(11, 17, 26, 5), R(39, 17, 9, 5), // frozen ground with two pit holes (9..11 and 37..39)
       R(18, 11, 12, 6),                                 // the keep
       R(21, 6.5, 6, 0.9),                               // keep roof (cover)
-      R(23.5, 7.4, 1, 2),                               // flagpole under the roof
       R(4, 9, 5, 0.9), R(39, 9, 5, 0.9),                // watchtower tops
-      R(6, 9.9, 1, 3), R(41, 9.9, 1, 3),                // watchtower columns (hanging)
       R(10, 13.5, 4, 0.8), R(34, 13.5, 4, 0.8),         // wall walks
     ],
     slopes: [S(12, 11, 6, 6, 1), S(30, 11, 6, 6, -1)],  // ramps up to the keep
@@ -131,12 +129,10 @@ export const MAPS = {
     terrain: [
       R(0, 14, 30, 4),                                  // jungle floor
       R(2.5, 9.5, 5, 0.9), R(22.5, 9.5, 5, 0.9),        // low branches
-      R(6.5, 10.4, 1, 2.2),                             // trunk hanging under the left branch (duck-under cover)
       R(9.5, 13.2, 2, 0.8), R(19, 13.2, 2, 0.8),        // mossy ground bumps (low cover)
       R(11.5, 6, 7, 0.9),                               // middle branch
       R(1, 3.5, 4, 0.9), R(25, 3.5, 4, 0.9),            // high side branches
       R(12.5, 2, 5, 0.9),                               // crown (cover for the middle branch)
-      R(14.5, 6.9, 1, 2.4),                             // trunk hanging under the middle branch
     ],
     slopes: [],
     spawns: [[2, 13.5], [8.4, 13.5], [12.7, 13.5], [17.8, 13.5], [23, 13.5], [28, 13.5], [4.5, 9], [25, 9]],
@@ -144,7 +140,7 @@ export const MAPS = {
     mines: [[9.5, 7.5], [20.5, 7.5], [15, 11.8], [7, 3], [23, 3]],
     killFloor: { type: 'water', y: 16.2 },
     teleporters: false,
-    hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, label: 'Spike mines' }],
+    hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, random: true, label: 'Spike mines' }],
     blurb: 'Solid jungle floor under three tiers of branches. Climb for the high ground and watch the spike mines hanging in the canopy.',
   },
   // Idea: the temple. A big stepped pyramid fills the middle; flat ground either side.
@@ -153,21 +149,18 @@ export const MAPS = {
     id: 'templecrossing', name: 'Temple Crossing', theme: 'jungle', size: 'battle', width: 46, height: 21,
     minPlayers: 2, maxPlayers: 8, recommended: 6,
     terrain: [
-      R(0, 16, 10, 5), R(12, 16, 24, 5), R(38, 16, 8, 5),  // ground with two pit holes (10..12 and 36..38)
+      R(0, 16, 9.5, 5), R(13, 16, 22.5, 5), R(39, 16, 7, 5), // ground split by two wide pit passages (9.5..13 and 35.5..39)
       R(13, 13, 20, 3), R(16, 10, 14, 3), R(19, 7, 8, 3),  // pyramid steps
       R(21, 3.5, 4, 0.8),                               // altar canopy (cover on the summit)
       R(3, 11, 5, 0.9), R(38, 11, 5, 0.9),              // side tree platforms
-      R(5, 11.9, 1, 2.7),                               // left trunk hanging low (duck-under cover, open below)
-      R(40, 11.9, 1, 2.5),                              // right trunk hanging beneath
-      R(40.8, 13.5, 0.9, 2.5),                          // stone totem on the right bank (standing cover)
     ],
     slopes: [],
     spawns: [[2, 15.5], [7.2, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [39.3, 15.5], [43, 15.5], [45.5, 15.5]],
     powerups: [[23, 3], [23, 6.5], [5.5, 10.5], [40.5, 10.5], [14, 12.5], [32, 12.5], [2, 15.5], [44, 15.5]],
-    mines: [[11, 13.5], [37, 13.5], [23, 5.3]],
+    mines: [[6, 15.5], [30, 12.5], [23, 5.3]],
     killFloor: { type: 'water', y: 18.6 },
     teleporters: false,
-    hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, label: 'Spike mines' }, { type: 'crusher', x: 19, w: 8, top: 1, bottom: 7, every: 5, dmg: 35, label: 'Log drop' }],
+    hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, random: true, label: 'Spike mines' }, { type: 'crusher', x: 19, w: 8, top: 1, bottom: 7, every: 5, dmg: 35, label: 'Log drop' }],
     blurb: 'A stepped temple pyramid flanked by two pit holes. The summit is king of the hill, and a log drops on it every 5 turns.',
   },
 
@@ -181,9 +174,9 @@ export const MAPS = {
       R(0, 13, 6, 1.6), R(8, 10.6, 5, 1.6), R(15, 8.2, 5, 1.6), R(22, 5.8, 5, 1.6), R(28, 3.8, 2, 1.4),  // step islands with gaps between them
       R(1.5, 8, 3, 0.8), R(16, 3.6, 3, 0.8),            // shelters above the steps
       R(9.5, 15.4, 4, 1.2),                             // catch platform under the low steps
-      R(2.7, 11.7, 0.8, 1.3),                           // stone spire on the first island (standing cover)
     ],
     slopes: [],
+    pads: [{ x: 3, y: 12.5, to: [17.5, 3.1], label: 'Updraft vent' }],  // low island -> top-centre shelter
     spawns: [[1.5, 12.5], [4.5, 12.5], [9.5, 10.1], [12, 10.1], [16.5, 7.7], [19, 7.7], [23.5, 5.3], [29, 3.3]],
     powerups: [[3, 7.5], [17.5, 3.1], [11.5, 14.9], [24.5, 5.3], [29, 3.3], [0.8, 12.5]],
     killFloor: { type: 'void', y: 18 },
@@ -206,6 +199,8 @@ export const MAPS = {
       R(20, 13.5, 3, 0.8), R(27, 13.5, 3, 0.8),         // step stones to the centre
     ],
     slopes: [],
+    pads: [{ x: 5, y: 14.5, to: [15.5, 5.0], label: 'Updraft vent' },      // left island -> top-left perch
+           { x: 45, y: 14.5, to: [34.5, 5.0], label: 'Updraft vent' }],    // right island -> top-right perch
     spawns: [[2, 14.5], [7, 14.5], [12, 14.5], [16, 18.5], [34, 18.5], [38, 14.5], [43, 14.5], [48, 14.5]],
     powerups: [[25, 7.5], [8.5, 9.5], [41.5, 9.5], [15.5, 5], [34.5, 5], [25, 18.5], [21.5, 13], [28.5, 13]],
     killFloor: { type: 'void', y: 23 },
@@ -245,15 +240,15 @@ export const MAPS = {
     terrain: [
       R(0, 12, 14, 8),                                  // tall building (left)
       R(17, 16, 12, 4),                                 // low building (middle)
-      R(32, 9, 14, 11),                                 // tallest building (right)
+      R(32, 10.5, 14, 9.5),                             // tallest building (right), lowered 1.5
       // the two alleys between buildings are open pit holes down to the rail
       R(19, 12, 8, 0.8),                                // billboard deck over the low roof (cover)
-      R(3, 7.5, 5, 0.8), R(36, 4.5, 5, 0.8),            // rooftop water towers / signs (cover)
-      R(22, 6, 2, 6),                                   // antenna mast hanging over the deck
+      R(3, 7.5, 5, 0.8), R(36, 6, 5, 0.8),              // rooftop signs (right one lowered with its tower)
+      R(10, 10.6, 0.8, 1.4), R(41, 9.1, 0.8, 1.4),      // small rooftop vents (standing cover)
     ],
-    slopes: [S(29, 12, 3, 4, 1)],                       // fire-escape ramp up to the tallest roof
-    spawns: [[2, 11.5], [7, 11.5], [12, 11.5], [19, 15.5], [27, 15.5], [34, 8.5], [39, 8.5], [44, 8.5]],
-    powerups: [[5.5, 7], [38.5, 4], [23, 11.5], [23, 15.5], [1, 11.5], [45, 8.5], [10, 11.5], [42, 8.5]],
+    slopes: [],
+    spawns: [[2, 11.5], [7, 11.5], [12, 11.5], [19, 15.5], [27, 15.5], [34, 10], [39, 10], [44, 10]],
+    powerups: [[5.5, 7], [38.5, 5.5], [23, 11.5], [23, 15.5], [1, 11.5], [45, 10], [10, 11.5], [42, 10]],
     killFloor: { type: 'neon', y: 20 },
     teleporters: true,
     hazards: [{ type: 'reactor', x: 23, y: 14, r: 3, every: 4, dmg: 15, label: 'EMP pulse' }],

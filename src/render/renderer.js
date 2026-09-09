@@ -236,6 +236,7 @@ export class Renderer {
     this.drawPatchesFields();
     this.drawPowerups();
     this.drawWalls();
+    this.drawPads();
     this.drawBots(info);
     this.drawProjectiles();
     this.drawFlashes();
@@ -395,6 +396,27 @@ export class Renderer {
   }
 
   // Bot art: one signature shape per bot, thick outline, team colour.
+  // Teleporter pads: a glowing ring with a rising swirl, so they read as an exit.
+  drawPads() {
+    const c = this.ctx, w = this.world, z = this.cam.zoom * this.userZoom;
+    for (const pad of w.pads || []) {
+      const [x, y] = this.toScreen(pad.x, pad.y);
+      const r = z * 0.75, pulse = 0.85 + Math.sin(this.time * 3 + pad.x) * 0.15;
+      const g = c.createRadialGradient(x, y, r * 0.1, x, y, r * 1.5);
+      g.addColorStop(0, 'rgba(150,230,255,0.55)'); g.addColorStop(1, 'rgba(150,230,255,0)');
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, r * 1.5, 0, Math.PI * 2); c.fill();
+      c.strokeStyle = '#9fe8ff'; c.lineWidth = Math.max(2, z * 0.09);
+      c.beginPath(); c.ellipse(x, y + r * 0.35, r, r * 0.35, 0, 0, Math.PI * 2); c.stroke();
+      c.strokeStyle = 'rgba(255,255,255,0.9)'; c.lineWidth = Math.max(1.5, z * 0.05);
+      for (let i = 0; i < 3; i++) {
+        const t2 = ((this.time * 0.8 + i / 3) % 1);
+        c.globalAlpha = (1 - t2) * pulse;
+        c.beginPath(); c.ellipse(x, y + r * 0.35 - t2 * r * 1.6, r * (1 - t2 * 0.6), r * 0.3 * (1 - t2 * 0.6), 0, 0, Math.PI * 2); c.stroke();
+      }
+      c.globalAlpha = 1;
+    }
+  }
+
   drawBots(info) {
     const c = this.ctx, w = this.world, z = this.cam.zoom * this.userZoom;
     for (const b of w.bots) {
