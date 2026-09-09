@@ -185,6 +185,17 @@ export class World {
             this.pendingGeysers = chosen;
             this.hazardAnnounce.push({ type: 'warn', text: `${h.label || 'Geysers'} next turn`, points: chosen, radius: h.radius });
           }
+        } else if (h.type === 'lavaPatch') {
+          if (this.turn > 1 && this.turn % h.every === 0) {
+            const pt = this.randomGroundSpot();
+            if (pt) {
+              this.patches.push({ x: pt.x, y: pt.y, w: h.w || 3, turns: h.turns || 2, dmg: h.dmg || 20, touched: {} });
+              this.emit('patch', { x: pt.x, y: pt.y, w: h.w || 3 });
+              this.hazardAnnounce.push({ type: 'danger', text: `${(h.label || 'Burning ground').toUpperCase()} ERUPTS` });
+            }
+          } else if (this.turn % h.every === h.every - 1) {
+            this.hazardAnnounce.push({ type: 'warn', text: `${h.label || 'Burning ground'} next turn` });
+          }
         } else if (h.type === 'reactor') {
           if (this.turn % h.every === 0) { this.pendingHazards.push({ type: 'reactor', h }); this.hazardAnnounce.push({ type: 'danger', text: `${(h.label || 'Reactor pulse').toUpperCase()} THIS TURN`, circle: { x: h.x, y: h.y, r: h.r } }); }
           else if (this.turn % h.every === h.every - 1) this.hazardAnnounce.push({ type: 'warn', text: `${h.label || 'Reactor pulse'} next turn`, circle: { x: h.x, y: h.y, r: h.r } });
@@ -453,6 +464,20 @@ export class World {
     }
     for (const p of this.projectiles) if (inCone(p.x, p.y)) { p.vx += aim.dx * 20; p.vy += aim.dy * 20; }
     for (const pu of this.powerups) if (inCone(pu.x, pu.y)) { pu.x = Math.max(1, Math.min(this.map.width - 1, pu.x + aim.dx * 3.5)); this.dropToGround(pu); }
+  }
+
+  // A random spot on the topmost standable surface at some x, for hazards that
+  // choose their own location. Returns null if nothing solid sits above the lava.
+  randomGroundSpot(tries = 30) {
+    for (let i = 0; i < tries; i++) {
+      const x = this.rng.range(1.5, this.map.width - 1.5);
+      let top = null;
+      for (const rc of this.map.terrain) {
+        if (x >= rc.x - 0.1 && x <= rc.x + rc.w + 0.1 && (top === null || rc.y < top)) top = rc.y;
+      }
+      if (top !== null && top < this.lavaY - 0.5) return { x, y: top - 0.45 };
+    }
+    return null;
   }
 
   dropToGround(obj) {

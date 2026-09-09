@@ -41,6 +41,7 @@ export const MAPS = {
       R(0, 13, 14.1, 4), R(15.9, 13, 14.1, 4),          // ground, split by the crater shaft (14.1..15.9)
       R(12, 9, 2.1, 4), R(15.9, 9, 2.1, 4),             // volcano summit, split by the same shaft
       R(13.5, 3.5, 3, 0.8),                             // rim perch above the crater (cover)
+      R(8.5, 6, 3, 0.7), R(18.5, 6, 3, 0.7),            // floating steps: summit -> perch, one each side
       R(0, 9, 3.6, 0.8), R(26.4, 9, 3.6, 0.8),          // side ledges, anchored to the walls
     ],
     slopes: [S(6, 9, 6, 4, 1), S(18, 9, 6, 4, -1)],     // mountain flanks: 4 up over 6 across
@@ -48,7 +49,7 @@ export const MAPS = {
     powerups: [[15, 3], [1.8, 8.5], [28.2, 8.5], [10, 12.5], [20, 12.5], [13, 8.5]],
     killFloor: { type: 'lava', y: 15.4 },
     teleporters: false,
-    hazards: [{ type: 'risingLava', every: 4, amount: 0.8, label: 'The lava rises!' }, { type: 'geyser', every: 4, points: [[9, 12.5], [21, 12.5], [4, 12.5], [26, 12.5]], count: 1, dmg: 20, radius: 1.3, label: 'Geyser' }],
+    hazards: [{ type: 'risingLava', every: 4, amount: 0.8, label: 'The lava rises!' }, { type: 'geyser', every: 4, points: [[9, 12.5], [21, 12.5], [4, 12.5], [26, 12.5]], count: 1, dmg: 20, radius: 1.3, label: 'Geyser' }, { type: 'lavaPatch', every: 3, dmg: 20, turns: 2, w: 3, label: 'Burning ground' }],
     blurb: 'A volcano with an open crater straight through to the lava. The lava rises every 4 turns and floods the lowlands, so the fight climbs the mountain and the summit gets narrow.',
   },
   // Idea: a stepped foundry. Long flat floor, a chain of ascending furnace tiers on the
@@ -70,7 +71,7 @@ export const MAPS = {
     powerups: [[23, 6], [43, 5.5], [5, 10], [16.5, 9.5], [28, 11.5], [36, 8.5], [10.5, 12.5], [2, 14.5]],
     killFloor: { type: 'lava', y: 18.6 },
     teleporters: false,
-    hazards: [{ type: 'geyser', every: 3, points: [[10.5, 15], [16, 15], [22, 15], [30, 12], [38, 9]], count: 2, dmg: 20, radius: 1.4, label: 'Geysers' }],
+    hazards: [{ type: 'geyser', every: 3, points: [[10.5, 15], [16, 15], [22, 15], [30, 12], [38, 9]], count: 2, dmg: 20, radius: 1.4, label: 'Geysers' }, { type: 'lavaPatch', every: 3, dmg: 20, turns: 2, w: 3, label: 'Burning ground' }],
     blurb: 'A foundry floor that steps up into furnace tiers on the right. High ground has the view; the low floor has cover. Geysers every 3 turns.',
   },
 
