@@ -60,18 +60,17 @@ export const MAPS = {
     terrain: [
       R(0, 15, 9, 6), R(12, 15, 34, 6),                 // floor with one lava channel (9..12)
       R(9, 13, 3, 0.8),                                 // grate over the channel (cover for the channel)
-      R(24, 12, 8, 3), R(32, 9, 8, 6), R(40, 6, 6, 9),  // furnace tiers stepping up to the right
-      R(3, 10.5, 5, 0.9), R(14, 10, 5, 0.9),            // catwalks on the low side
+      R(24, 12.6, 8, 2.4), R(32, 10.2, 8, 4.8),         // furnace tiers, 20% shorter, still floor-seated
+      R(14, 10, 5, 0.9),                                // catwalk on the low side
       R(20, 6.5, 6, 0.9),                               // crane arm (cover over the first tier)
-      R(28, 4, 1, 4), R(36.5, 2, 1, 4),                 // hanging chimneys
       R(0, 9, 1, 6),                                    // left wall
     ],
-    slopes: [S(20, 12, 4, 3, 1)],                       // ramp onto the first tier
-    spawns: [[2, 14.5], [6, 14.5], [15, 14.5], [19, 14.5], [27, 11.5], [35, 8.5], [43, 5.5], [22, 14.5]],
-    powerups: [[23, 6], [43, 5.5], [5, 10], [16.5, 9.5], [28, 11.5], [36, 8.5], [10.5, 12.5], [2, 14.5]],
+    slopes: [S(20, 12.6, 4, 2.4, 1)],                   // ramp onto the first tier
+    spawns: [[2, 14.5], [6, 14.5], [15, 14.5], [19, 14.5], [27, 12.1], [35, 9.7], [43, 14.5], [22, 14.5]],
+    powerups: [[23, 6], [43, 14.5], [5, 14.5], [16.5, 9.5], [28, 12.1], [36, 9.7], [10.5, 12.5], [2, 14.5]],
     killFloor: { type: 'lava', y: 18.6 },
     teleporters: false,
-    hazards: [{ type: 'geyser', every: 3, points: [[10.5, 15], [16, 15], [22, 15], [30, 12], [38, 9]], count: 2, dmg: 20, radius: 1.4, label: 'Geysers' }, { type: 'lavaPatch', every: 3, dmg: 20, turns: 2, w: 3, label: 'Burning ground' }],
+    hazards: [{ type: 'geyser', every: 3, points: [[10.5, 15], [16, 15], [22, 15], [30, 12.6], [38, 10.2]], count: 2, dmg: 20, radius: 1.4, label: 'Geysers' }, { type: 'lavaPatch', every: 3, dmg: 20, turns: 2, w: 3, label: 'Burning ground' }],
     blurb: 'A foundry floor that steps up into furnace tiers on the right. High ground has the view; the low floor has cover. Geysers every 3 turns.',
   },
 
