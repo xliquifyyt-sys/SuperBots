@@ -93,3 +93,16 @@ rectangles drawn from coordinates in `src/core/maps.js`, on top of the
 background. A backdrop with platforms painted into it shows those painted shapes
 behind the real ones, which reads as a doubled, misaligned mess. Platform art
 belongs in the terrain kit, not the background.
+
+### Batch intake for backgrounds
+
+Drop the clean, platform-free paintings into `art/maps/raw/` named after their
+map (`bg_emberpit.png`, `magmaworks background.jpg`, anything containing the map
+id), then:
+
+```
+python3 tools/intake_backgrounds.py
+```
+
+Each is resized to 2048 wide, saved as JPEG so it stays small enough to inline
+into the single-file build, and registered with a default parallax of 0.25.
