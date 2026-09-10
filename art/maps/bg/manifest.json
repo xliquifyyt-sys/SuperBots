@@ -28,5 +28,15 @@
     "file": "bg_templecrossing.jpg",
     "parallax": 0.25,
     "anchor": "bottom"
+  },
+  "cloudsteps": {
+    "file": "bg_cloudsteps.jpg",
+    "parallax": 0.25,
+    "anchor": "bottom"
+  },
+  "nimbus": {
+    "file": "bg_nimbus.jpg",
+    "parallax": 0.25,
+    "anchor": "bottom"
   }
 }

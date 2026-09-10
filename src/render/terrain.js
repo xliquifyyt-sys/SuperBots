@@ -13,6 +13,7 @@
 //           under platforms. Rects flagged noCap / noFringe skip crust / fringe.
 // snowCap – paint a scalloped snow mound over the top edge (ice kits).
 // grass / vines – grass blades along the top edge, vines hanging under wide platforms (jungle kits).
+// clouds – white puffs clinging under wide platforms (sky kits).
 //
 // Maps without an entry keep the procedural look, so a partial art set is fine.
 
@@ -63,7 +64,7 @@ export function getTerrainKit(mapId) {
   if (!spec) return null;
   const top = images.get(`${mapId}:top`), face = images.get(`${mapId}:face`);
   if (!top || !face) return null;
-  return { top, face, tile: spec.tile ?? 2, topTile: spec.topTile ?? spec.tile ?? 2, lift: spec.lift ?? 0.15, outline: spec.outline || OUTLINE, icicles: !!spec.icicles, snowCap: !!spec.snowCap, grass: !!spec.grass, vines: !!spec.vines };
+  return { top, face, tile: spec.tile ?? 2, topTile: spec.topTile ?? spec.tile ?? 2, lift: spec.lift ?? 0.15, outline: spec.outline || OUTLINE, icicles: !!spec.icicles, snowCap: !!spec.snowCap, grass: !!spec.grass, vines: !!spec.vines, clouds: !!spec.clouds };
 }
 
 const OUTLINE = '#0b0709';
@@ -141,6 +142,10 @@ export function paintPaintedTerrain(c, kit, rects, z, slopes = []) {
     if (kit.vines && !r.world.noFringe && r.world.h <= r.world.w * 1.3) {
       c.strokeStyle = '#3f9f5f'; c.lineWidth = Math.max(1.5, z * 0.06);
       for (let i = 0; i < Math.floor(w / (z * 2.5)); i++) { const vx = x + z * 0.8 + i * z * 2.5 + hash(i * 11 + x) * z; const vl = z * (0.8 + hash(i * 5 + x) * 1.2); c.beginPath(); c.moveTo(vx, y + h); c.quadraticCurveTo(vx + z * 0.15, y + h + vl * 0.6, vx - z * 0.1, y + h + vl); c.stroke(); }
+    }
+    if (kit.clouds && !r.world.noFringe && r.world.h <= r.world.w * 1.3) {
+      c.fillStyle = 'rgba(255,255,255,0.96)'; c.strokeStyle = 'rgba(120,150,190,0.6)'; c.lineWidth = lw * 0.6;
+      for (let i = 0; i < Math.floor(w / (z * 1.6)) + 1; i++) { const cx = x + z * 0.6 + i * z * 1.6; c.beginPath(); c.arc(cx, y + h + z * 0.1, z * (0.45 + hash(i + x) * 0.2), 0, Math.PI * 2); c.fill(); c.stroke(); }
     }
     if (kit.icicles && !r.world.noFringe) {
       c.strokeStyle = kit.outline; c.lineWidth = lw * 0.5;

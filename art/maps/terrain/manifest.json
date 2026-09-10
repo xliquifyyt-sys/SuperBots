@@ -52,5 +52,23 @@
     "outline": "#0f1a12",
     "grass": true,
     "vines": true
+  },
+  "cloudsteps": {
+    "top": "sky_cloud_top.jpg",
+    "face": "sky_face.jpg",
+    "tile": 6.0,
+    "topTile": 12.0,
+    "lift": 0.14,
+    "outline": "#3a2416",
+    "clouds": true
+  },
+  "nimbus": {
+    "top": "sky_nimbus_top.jpg",
+    "face": "sky_face.jpg",
+    "tile": 6.0,
+    "topTile": 7.0,
+    "lift": 0.14,
+    "outline": "#3a2416",
+    "clouds": true
   }
 }

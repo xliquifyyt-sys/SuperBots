@@ -130,7 +130,7 @@ paintings in `art/maps/raw/` (`Lava2-4.png` for Ember Pit, `Lava4-8.png` for
 Magma Works) with a seam-blend pass. The ice kits add `snowCap` (a scalloped white mound drawn over the top edge)
 and `icicles` (a fringe under every platform), with `outline` set to navy. The
 jungle kits use `grass` (blades along the top edge) and `vines` (hanging under
-wide platforms).
+wide platforms). The sky kits use `clouds` (white puffs under wide platforms).
 Maps without an entry keep the procedural look, so themes can be converted one
 at a time.
 
