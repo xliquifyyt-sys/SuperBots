@@ -86,7 +86,9 @@ export class GameController {
       const won = this.me && m.winner && m.winner.ids.includes(this.me.id);
       this.showCenter(m.winner.type === 'draw' ? 'DRAW' : (won ? 'VICTORY!' : (this.me ? 'DEFEAT' : 'GAME OVER')), 2.2, won ? 'comic' : 'comic red');
       if (won) audio.win(); else audio.lose();
-      setTimeout(() => this.cb.onOver && this.cb.onOver(m), 2300);
+      // Only hand this match over if it is still the one on screen: a match started
+      // during the banner must not be torn down by the previous match's timer.
+      setTimeout(() => { if (this.match === m && this.cb.onOver) this.cb.onOver(m); }, 2300);
     }
     this.el.sd.classList.toggle('hidden', !w.suddenDeath);
     this.el.vignette.classList.toggle('on', w.suddenDeath);

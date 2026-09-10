@@ -219,7 +219,7 @@ function onMatchOver(m) {
   $('result-sub').textContent = `${m.winner.type === 'team' ? TEAM_NAMES[m.winner.team % 4] + ' team' : winnerNames} · ${m.map.name} · ${m.turn} turns${m.winner.byCap ? ' · turn cap' : ''}`;
   const rows = m.world.bots.map((b) => `<tr class="${m.winner.ids.includes(b.id) ? 'winner' : ''}"><td>${b.name}${b.human ? ' (you)' : ''}</td><td>${b.def.name}</td><td>${Math.ceil(b.hp)}</td><td>${b.stats.dealt}</td><td>${b.stats.taken}</td><td>${b.stats.kills}</td><td>${b.stats.specials}</td><td>${b.alive ? '—' : b.diedTurn}</td></tr>`).join('');
   $('result-table').innerHTML = `<table><tr><th>Player</th><th>Bot</th><th>HP</th><th>Dealt</th><th>Taken</th><th>KOs</th><th>Specials</th><th>Died</th></tr>${rows}</table>`;
-  game.stop(); currentMatch = null;
+  if (currentMatch === m) { game.stop(); currentMatch = null; }
   showScreen('menu-result');
 }
 function renderRecord() {
