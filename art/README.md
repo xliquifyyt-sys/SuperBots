@@ -74,3 +74,22 @@ node tools/gridrender.mjs
 Scenario from `art/MAP_PROMPTS.md`. Change the theme's prompt, regenerate the
 affected layer, and drop it into `art/maps/raw/`. One theme change affects both
 maps that share it.
+
+## Painted map backgrounds
+
+Drop a background into `art/maps/bg/` and register it:
+
+```json
+{ "emberpit": { "file": "bg_emberpit.png", "parallax": 0.25, "anchor": "bottom" } }
+```
+
+`parallax` is how far the painting slides against the camera: 0 locks it in
+place, 1 moves it with the world. `anchor` pins it to the bottom or centres it.
+The image is cover-fitted and repeated horizontally, so a wide map never runs
+past its edge. Any map without an entry keeps its procedural backdrop.
+
+**The background must contain no platforms.** In game, platforms are collision
+rectangles drawn from coordinates in `src/core/maps.js`, on top of the
+background. A backdrop with platforms painted into it shows those painted shapes
+behind the real ones, which reads as a doubled, misaligned mess. Platform art
+belongs in the terrain kit, not the background.

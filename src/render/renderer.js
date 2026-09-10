@@ -7,6 +7,7 @@ import { drawBot, ANIM_LENGTH } from './bots.js';
 import { paintBackdrop, paintTerrain, paintFloor, paintMine, paintCrusher } from './themes.js';
 import { drawPowerupIcon, drawActionIcon } from './icons.js';
 import { loadSprites } from './sprites.js';
+import { loadBackgrounds, getBackground, drawBackground } from './backgrounds.js';
 
 function rgbaHex(h, a) { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
 const EFFECT_ICONS = { poison: '☠', burn: '🔥', frozen: '❄', rooted: '⚓', shocked: '⚡', smoked: '☁', amp: '▲', plating: '◆', thrusters: '⇈', reflector: '◐', rally: '★' };
@@ -26,6 +27,7 @@ export class Renderer {
     this.flashes = [];
     this.shake = 0;
     loadSprites();
+    loadBackgrounds();
     this.time = 0;
     this.eventCursor = 0;
     this.deadFx = new Set();
@@ -225,7 +227,10 @@ export class Renderer {
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     // sky
     if (!w) { const g = c.createLinearGradient(0, 0, 0, this.h); g.addColorStop(0, T.sky[0]); g.addColorStop(1, T.sky[1]); c.fillStyle = g; c.fillRect(0, 0, this.w, this.h); return; }
-    paintBackdrop(c, T, w.map, { w: this.w, h: this.h }, { x: this.cam.x + this.userPan.x, y: this.cam.y + this.userPan.y, zoom: this.cam.zoom * this.userZoom }, this.time);
+    const camInfo = { x: this.cam.x + this.userPan.x, y: this.cam.y + this.userPan.y, zoom: this.cam.zoom * this.userZoom };
+    const bg = getBackground(w.map.id);
+    if (bg) drawBackground(c, bg, w.map.id, { w: this.w, h: this.h }, camInfo, w.map);
+    else paintBackdrop(c, T, w.map, { w: this.w, h: this.h }, camInfo, this.time);
     const sx = (Math.random() - 0.5) * this.shake * 6, sy = (Math.random() - 0.5) * this.shake * 6;
     c.save(); c.translate(sx, sy);
     this.drawKillFloor();
