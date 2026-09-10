@@ -12,6 +12,7 @@
 // outline – outline colour (default near-black); icicles – draw an icicle fringe
 //           under platforms. Rects flagged noCap / noFringe skip crust / fringe.
 // snowCap – paint a scalloped snow mound over the top edge (ice kits).
+// grass / vines – grass blades along the top edge, vines hanging under wide platforms (jungle kits).
 //
 // Maps without an entry keep the procedural look, so a partial art set is fine.
 
@@ -62,7 +63,7 @@ export function getTerrainKit(mapId) {
   if (!spec) return null;
   const top = images.get(`${mapId}:top`), face = images.get(`${mapId}:face`);
   if (!top || !face) return null;
-  return { top, face, tile: spec.tile ?? 2, topTile: spec.topTile ?? spec.tile ?? 2, lift: spec.lift ?? 0.15, outline: spec.outline || OUTLINE, icicles: !!spec.icicles, snowCap: !!spec.snowCap };
+  return { top, face, tile: spec.tile ?? 2, topTile: spec.topTile ?? spec.tile ?? 2, lift: spec.lift ?? 0.15, outline: spec.outline || OUTLINE, icicles: !!spec.icicles, snowCap: !!spec.snowCap, grass: !!spec.grass, vines: !!spec.vines };
 }
 
 const OUTLINE = '#0b0709';
@@ -132,6 +133,14 @@ export function paintPaintedTerrain(c, kit, rects, z, slopes = []) {
       for (let i = 0; i <= bumps; i++) { const bx = x - ov + ((w + ov * 2) * i) / bumps; const by = y - capH * (0.35 + hash(i * 7 + x) * 0.5); c.quadraticCurveTo(bx - (w + ov * 2) / bumps / 2, by, bx, y + capH * (0.25 + hash(i + x) * 0.3)); }
       c.lineTo(x + w + ov, y + capH * 0.6); c.closePath(); c.fill();
       c.strokeStyle = 'rgba(140,200,230,0.8)'; c.lineWidth = Math.max(1, lw * 0.5); c.stroke();
+    }
+    if (kit.grass && cap) {
+      c.fillStyle = '#7fd43a';
+      for (let i = 0; i < Math.floor(w / (z * 0.8)); i++) { const gx = x + z * 0.3 + i * z * 0.8; c.beginPath(); c.moveTo(gx, y - lift + z * 0.05); c.lineTo(gx + z * 0.12, y - lift - z * 0.3 - hash(i + x) * z * 0.2); c.lineTo(gx + z * 0.24, y - lift + z * 0.05); c.fill(); }
+    }
+    if (kit.vines && !r.world.noFringe && r.world.h <= r.world.w * 1.3) {
+      c.strokeStyle = '#3f9f5f'; c.lineWidth = Math.max(1.5, z * 0.06);
+      for (let i = 0; i < Math.floor(w / (z * 2.5)); i++) { const vx = x + z * 0.8 + i * z * 2.5 + hash(i * 11 + x) * z; const vl = z * (0.8 + hash(i * 5 + x) * 1.2); c.beginPath(); c.moveTo(vx, y + h); c.quadraticCurveTo(vx + z * 0.15, y + h + vl * 0.6, vx - z * 0.1, y + h + vl); c.stroke(); }
     }
     if (kit.icicles && !r.world.noFringe) {
       c.strokeStyle = kit.outline; c.lineWidth = lw * 0.5;

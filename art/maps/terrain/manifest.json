@@ -32,5 +32,25 @@
     "outline": "#0e2a4a",
     "icicles": true,
     "snowCap": true
+  },
+  "canopyruins": {
+    "top": "jungle_canopy_top.jpg",
+    "face": "jungle_canopy_face.jpg",
+    "tile": 7.0,
+    "topTile": 4.0,
+    "lift": 0.12,
+    "outline": "#0f1a12",
+    "grass": true,
+    "vines": true
+  },
+  "templecrossing": {
+    "top": "jungle_temple_top.jpg",
+    "face": "jungle_temple_face.jpg",
+    "tile": 2.6,
+    "topTile": 3.6,
+    "lift": 0.16,
+    "outline": "#0f1a12",
+    "grass": true,
+    "vines": true
   }
 }

@@ -18,5 +18,15 @@
     "file": "bg_glacierfort.jpg",
     "parallax": 0.25,
     "anchor": "bottom"
+  },
+  "canopyruins": {
+    "file": "bg_canopyruins.jpg",
+    "parallax": 0.25,
+    "anchor": "bottom"
+  },
+  "templecrossing": {
+    "file": "bg_templecrossing.jpg",
+    "parallax": 0.25,
+    "anchor": "bottom"
   }
 }
