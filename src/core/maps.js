@@ -108,6 +108,7 @@ export const MAPS = {
       R(18, 11, 12, 6),                                 // the keep
       R(22.2, 6.5, 3.6, 0.9),                           // keep roof (cover), 40% shorter, still centred on 24
       R(4, 9, 5, 0.9), R(39, 9, 5, 0.9),                // watchtower tops
+      R(4, 7.6, 0.8, 1.4), R(43.2, 7.6, 0.8, 1.4),       // parapet posts at the outer ends of the watchtower tops (L shapes)
       R(10, 13.5, 4, 0.8), R(34, 13.5, 4, 0.8),         // wall walks
     ],
     slopes: [S(12, 11, 6, 6, 1), S(30, 11, 6, 6, -1)],  // ramps up to the keep
