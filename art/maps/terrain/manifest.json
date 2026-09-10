@@ -1,0 +1,4 @@
+{
+  "emberpit":   { "top": "lava_ember_top.jpg", "face": "lava_ember_face.jpg", "tile": 3.2, "topTile": 3.0, "lift": 0.25 },
+  "magmaworks": { "top": "lava_magma_top.jpg", "face": "lava_magma_face.jpg", "tile": 6.5, "topTile": 3.2, "lift": 0.15 }
+}

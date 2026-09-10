@@ -1,1 +1,12 @@
-{}
+{
+  "emberpit": {
+    "file": "bg_emberpit.jpg",
+    "parallax": 0.25,
+    "anchor": "bottom"
+  },
+  "magmaworks": {
+    "file": "bg_magmaworks.jpg",
+    "parallax": 0.25,
+    "anchor": "bottom"
+  }
+}

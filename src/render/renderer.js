@@ -8,6 +8,7 @@ import { paintBackdrop, paintTerrain, paintFloor, paintMine, paintCrusher } from
 import { drawPowerupIcon, drawActionIcon } from './icons.js';
 import { loadSprites } from './sprites.js';
 import { loadBackgrounds, getBackground, drawBackground } from './backgrounds.js';
+import { loadTerrain, getTerrainKit, paintPaintedTerrain } from './terrain.js';
 
 function rgbaHex(h, a) { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
 const EFFECT_ICONS = { poison: '☠', burn: '🔥', frozen: '❄', rooted: '⚓', shocked: '⚡', smoked: '☁', amp: '▲', plating: '◆', thrusters: '⇈', reflector: '◐', rally: '★' };
@@ -28,6 +29,7 @@ export class Renderer {
     this.shake = 0;
     loadSprites();
     loadBackgrounds();
+    loadTerrain();
     this.time = 0;
     this.eventCursor = 0;
     this.deadFx = new Set();
@@ -283,7 +285,9 @@ export class Renderer {
     const z = this.cam.zoom * this.userZoom;
     const rects = this.world.map.terrain.map((r) => { const [x, y, W, H] = this.rectScreen(r); return { x, y, w: W, h: H, world: r }; });
     const slopes = (this.world.map.slopes || []).map((s) => { const [x, y, W, H] = this.rectScreen(s); return { x, y, w: W, h: H, dir: s.dir }; });
-    paintTerrain(this.ctx, this.theme, rects, z, this.time, slopes);
+    const kit = getTerrainKit(this.world.map.id);
+    if (kit) paintPaintedTerrain(this.ctx, kit, rects, z, slopes);
+    else paintTerrain(this.ctx, this.theme, rects, z, this.time, slopes);
   }
 
   // The arena is bounded left and right. Show it: solid themed walls on normal
@@ -296,9 +300,12 @@ export class Renderer {
     if (!w.map.teleporters) {
       const wallW = Math.max(6, z * 0.9);
       for (const [x, flip] of [[xl, -1], [xr, 1]]) {
+        const kit = getTerrainKit(w.map.id);
         const g = c.createLinearGradient(x, 0, x + flip * wallW, 0);
         g.addColorStop(0, this.theme.rockLite); g.addColorStop(1, this.theme.rock);
-        c.fillStyle = g; c.fillRect(flip < 0 ? x - wallW : x, yTop, wallW, yBot - yTop);
+        c.fillStyle = g;
+        if (kit) { const p = c.createPattern(kit.face, 'repeat'); const s = (kit.tile * z) / kit.face.width; if (p && p.setTransform) p.setTransform(new DOMMatrix([s, 0, 0, s, x, yTop])); if (p) c.fillStyle = p; }
+        c.fillRect(flip < 0 ? x - wallW : x, yTop, wallW, yBot - yTop);
         c.lineWidth = Math.max(2, z * 0.08); c.strokeStyle = '#0b0e14';
         c.strokeRect(flip < 0 ? x - wallW : x, yTop, wallW, yBot - yTop);
         // rivets / cracks so it reads as a wall

@@ -106,3 +106,27 @@ python3 tools/intake_backgrounds.py
 
 Each is resized to 2048 wide, saved as JPEG so it stays small enough to inline
 into the single-file build, and registered with a default parallax of 0.25.
+
+## Painted terrain kits
+
+A map listed in `art/maps/terrain/manifest.json` draws its platforms with painted
+tiles instead of the procedural theme painter:
+
+```json
+{ "emberpit": { "top": "lava_ember_top.jpg", "face": "lava_ember_face.jpg",
+                "tile": 3.2, "topTile": 3.0, "lift": 0.25 } }
+```
+
+- `top` is the surface crust strip, repeated along the top edge of every platform
+  and along the surface of every slope.
+- `face` is the body texture, repeated in both directions under the crust.
+- `tile` / `topTile` are how many world units one repeat spans; bigger numbers
+  make the blocks look larger.
+- `lift` is how far the crust rises above the collision surface.
+
+Both pieces must tile seamlessly on their left and right edges (`face` on top and
+bottom too). The current lava kits were cut out of the two Scenario scene
+paintings in `art/maps/raw/` (`Lava2-4.png` for Ember Pit, `Lava4-8.png` for
+Magma Works) with a seam-blend pass. Maps without an entry keep the procedural
+look, so themes can be converted one at a time.
+
