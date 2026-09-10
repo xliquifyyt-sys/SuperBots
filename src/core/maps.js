@@ -130,6 +130,7 @@ export const MAPS = {
       R(2.5, 9.5, 5, 0.9), R(22.5, 9.5, 5, 0.9),        // low branches
       R(9.5, 13.2, 2, 0.8), R(19, 13.2, 2, 0.8),        // mossy ground bumps (low cover)
       R(11.5, 6, 7, 0.9),                               // middle branch
+      R(5.5, 6.5, 3.5, 0.8), R(21.5, 6.5, 3.5, 0.8),    // mid branches: low branch -> high side branch
       R(1, 3.5, 4, 0.9), R(25, 3.5, 4, 0.9),            // high side branches
       R(12.5, 2, 5, 0.9),                               // crown (cover for the middle branch)
     ],
@@ -149,7 +150,7 @@ export const MAPS = {
     minPlayers: 2, maxPlayers: 8, recommended: 6,
     terrain: [
       R(0, 16, 9.5, 5), R(13, 16, 22.5, 5), R(39, 16, 7, 5), // ground split by two wide pit passages (9.5..13 and 35.5..39)
-      R(13, 13, 20, 3), R(16, 10, 14, 3), R(19, 7, 8, 3),  // pyramid steps
+      R(13, 13, 20, 0.8), R(16, 10, 14, 3), R(19, 7, 8, 3), // pyramid steps; the base is a lintel over a through tunnel (13..33)
       R(21, 3.5, 4, 0.8),                               // altar canopy (cover on the summit)
       R(3, 11, 5, 0.9), R(38, 11, 5, 0.9),              // side tree platforms
     ],
@@ -175,7 +176,7 @@ export const MAPS = {
       R(9.5, 15.4, 4, 1.2),                             // catch platform under the low steps
     ],
     slopes: [],
-    pads: [{ x: 3, y: 12.5, to: [17.5, 3.1], label: 'Updraft vent' }],  // low island -> top-centre shelter
+    pads: [{ x: 3, y: 11, to: [17.5, 3.1], label: 'Updraft vent' }],    // floats over the low island -> top-centre shelter
     spawns: [[1.5, 12.5], [4.5, 12.5], [9.5, 10.1], [12, 10.1], [16.5, 7.7], [19, 7.7], [23.5, 5.3], [29, 3.3]],
     powerups: [[3, 7.5], [17.5, 3.1], [11.5, 14.9], [24.5, 5.3], [29, 3.3], [0.8, 12.5]],
     killFloor: { type: 'void', y: 18 },
@@ -198,8 +199,8 @@ export const MAPS = {
       R(20, 13.5, 3, 0.8), R(27, 13.5, 3, 0.8),         // step stones to the centre
     ],
     slopes: [],
-    pads: [{ x: 5, y: 14.5, to: [15.5, 5.0], label: 'Updraft vent' },      // left island -> top-left perch
-           { x: 45, y: 14.5, to: [34.5, 5.0], label: 'Updraft vent' }],    // right island -> top-right perch
+    pads: [{ x: 15, y: 17, to: [15.5, 5.0], label: 'Updraft vent' },      // floats over the bottom island, left -> top-left perch
+           { x: 35, y: 17, to: [34.5, 5.0], label: 'Updraft vent' }],    // floats over the bottom island, right -> top-right perch
     spawns: [[2, 14.5], [7, 14.5], [12, 14.5], [16, 18.5], [34, 18.5], [38, 14.5], [43, 14.5], [48, 14.5]],
     powerups: [[25, 7.5], [8.5, 9.5], [41.5, 9.5], [15.5, 5], [34.5, 5], [25, 18.5], [21.5, 13], [28.5, 13]],
     killFloor: { type: 'void', y: 23 },
