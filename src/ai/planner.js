@@ -249,9 +249,11 @@ export class AIPlanner {
       let score = (dangerHere - dangerThere) * 0.9 - 4; // moving costs a shot
       const moved = Math.hypot(lx - b.x, ly - b.y);
       if (moved > 2.5) score += (this.threat || 0) * (type === 'jump' ? 0.9 : 0.5); // dodging value
-      if (type === 'jump' && !wantMove && (this.threat || 0) < 8) score -= 10;
+      const camping = (b.stillTurns || 0) >= 3 && (this.threat || 0) > 0;
+      if (type === 'jump' && !wantMove && (this.threat || 0) < 8 && !camping) score -= 10;
+      if (type === 'jump' && camping && moved > 2) score += 6 + 3 * Math.min(4, b.stillTurns); // sitting in one spot under fire gets stale
       // Power-ups
-      for (const pu of w.powerups) { const d = Math.hypot(pu.x - lx, pu.y - ly); if (d < 1.0) score += pu.id === 'repair' && b.hp < b.maxHp * 0.7 ? 34 : 22; }
+      for (const pu of w.powerups) { const d = Math.hypot(pu.x - lx, pu.y - ly); if (d < 1.4) score += pu.id === 'repair' && b.hp < b.maxHp * 0.7 ? 34 : 22; }
       // Spacing from enemies
       if (nearest) {
         const dNow = Math.hypot(nearest.x - b.x, nearest.y - b.y), dThen = Math.hypot(nearest.x - lx, nearest.y - ly);

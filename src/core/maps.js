@@ -83,7 +83,7 @@ export const MAPS = {
     id: 'frozenkeel', name: 'Frozen Keel', theme: 'ice', size: 'standard', width: 30, height: 17,
     minPlayers: 2, maxPlayers: 4, recommended: 4,
     terrain: [
-      { ...R(8, 8.2, 14, 1.3), noFringe: true },        // the keel deck (main island)
+      { ...R(7, 8.2, 16, 1.3), noFringe: true },        // the keel deck (main island)
       { ...R(9.5, 9.2, 11, 1.3), noCap: true, noFringe: true }, // hull taper 1
       { ...R(11.8, 10.2, 6.4, 1.2), noCap: true },      // hull taper 2 (the keel point, icicles below)
       { ...R(14.5, 6.4, 1, 1.8), noFringe: true },      // snow stump, centred on the deck
@@ -128,15 +128,14 @@ export const MAPS = {
     minPlayers: 2, maxPlayers: 4, recommended: 3,
     terrain: [
       R(0, 14, 30, 4),                                  // jungle floor
-      R(2.5, 9.5, 5, 0.9), R(22.5, 9.5, 5, 0.9),        // low branches
-      R(9.5, 13.2, 2, 0.8), R(19, 13.2, 2, 0.8),        // mossy ground bumps (low cover)
+      R(2.5, 9.5, 3.3, 0.9), R(24.2, 9.5, 3.3, 0.9),    // low branches, shortened to open sightlines
       R(11.5, 4, 7, 0.9),                               // middle branch
       R(5.5, 6.5, 3.5, 0.8), R(21.5, 6.5, 3.5, 0.8),    // mid branches: low branch -> high side branch
       R(1, 3.5, 4, 0.9), R(25, 3.5, 4, 0.9),            // high side branches
     ],
     slopes: [],
-    spawns: [[2, 13.5], [8.4, 13.5], [12.7, 13.5], [17.8, 13.5], [23, 13.5], [28, 13.5], [4.5, 9], [25, 9]],
-    powerups: [[15, 3.5], [2.5, 3], [27.5, 3], [5, 9], [25, 9], [9, 13.5], [21, 13.5]],
+    spawns: [[2, 13.5], [8.4, 13.5], [12.7, 13.5], [17.8, 13.5], [23, 13.5], [28, 13.5], [4, 9], [26, 9]],
+    powerups: [[15, 3.5], [2.5, 3], [27.5, 3], [4, 9], [26, 9], [9, 13.5], [21, 13.5]],
     mines: [[9.5, 7.5], [20.5, 7.5], [15, 11.8], [7, 3], [23, 3]],
     killFloor: { type: 'water', y: 16.2 },
     teleporters: false,
@@ -153,13 +152,14 @@ export const MAPS = {
       R(13, 13, 20, 0.8), R(16, 10, 14, 3), R(19, 7, 8, 3), // pyramid steps; the base is a lintel over a through tunnel (13..33)
       R(21, 3.5, 4, 0.8),                               // altar canopy (cover on the summit)
       R(3, 11, 5, 0.9), R(38, 11, 5, 0.9),              // side tree platforms
+      R(13, 15, 1, 1), R(32, 15, 1, 1),                 // stair blocks at the tunnel mouths: one hop out of the tunnel
       R(6, 6.5, 4, 0.8), R(9.2, 5.1, 0.8, 1.4),         // L-shaped floating platform above the left ledge, post at its right end
       R(36, 6.5, 4, 0.8), R(36, 5.1, 0.8, 1.4),         // mirrored L above the right ledge, post at its left end
     ],
     slopes: [],
     spawns: [[2, 15.5], [7.2, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [39.3, 15.5], [43, 15.5], [45.5, 15.5]],
     powerups: [[23, 3], [23, 6.5], [5.5, 10.5], [40.5, 10.5], [14, 12.5], [32, 12.5], [2, 15.5], [44, 15.5]],
-    mines: [[6, 15.5], [30, 12.5], [23, 5.3]],
+    mines: [[6, 15.5], [30, 12.5], [23, 5.3], [23, 15.4, 'fixed']],  // the last one always sits inside the tunnel
     killFloor: { type: 'water', y: 18.6 },
     teleporters: true,
     hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, random: true, label: 'Spike mines' }, { type: 'crusher', x: 19, w: 8, top: 1, bottom: 7, every: 5, dmg: 35, label: 'Log drop' }],
@@ -183,7 +183,7 @@ export const MAPS = {
     powerups: [[3, 7.5], [17.5, 3.1], [11.5, 14.9], [24.5, 5.3], [29, 3.3], [0.8, 12.5]],
     killFloor: { type: 'void', y: 18 },
     teleporters: false,
-    hazards: [{ type: 'wind', max: 7, label: 'Wind' }],
+    hazards: [{ type: 'gusts', every: 3, strength: 7, label: 'Gust' }],
     blurb: 'Islands rising like a staircase. The wind changes every turn and decides who can climb.',
   },
   // Idea: the ring. A wide floating ring of islands around an empty centre with a single
@@ -218,16 +218,16 @@ export const MAPS = {
     minPlayers: 2, maxPlayers: 4, recommended: 2,
     terrain: [
       R(0, 14, 30, 3),                                  // street
-      R(12, 9, 8, 5),                                   // plateau
+      R(12, 11, 8, 3),                                  // plateau (lowered so shots cross the street)
       R(21.5, 11.5, 8.5, 2.5),                          // lower shelf past the cliff notch
-      R(2, 5, 9, 0.7),                                  // upper-left catwalk
+      R(2, 5, 3.5, 0.7), R(7.5, 5, 3.5, 0.7),           // upper-left catwalk, with a gap for lobbed shots
       R(0, 9.5, 4, 0.7),                                // mid-left catwalk
       R(23, 7.5, 5, 0.7),                               // right catwalk (cover for the shelf)
       R(24.5, 4.2, 3.5, 0.7), R(26, 4.9, 0.8, 2.6),     // L-shaped neon sign beam over the catwalk
     ],
-    slopes: [S(4, 9, 8, 5, 1)],                         // the ramp
-    spawns: [[1.5, 13.5], [3, 9], [6, 4.5], [14, 8.5], [18, 8.5], [23, 11], [27, 11], [29, 11]],
-    powerups: [[6, 4.5], [1.5, 9], [25.5, 7], [16, 8.5], [21, 13.5], [28, 11], [9, 13.5]],
+    slopes: [S(6, 11, 6, 3, 1)],                        // the ramp
+    spawns: [[1.5, 13.5], [3, 9], [4, 4.5], [14, 10.5], [18, 10.5], [23, 11], [27, 11], [29, 11]],
+    powerups: [[9, 4.5], [1.5, 9], [25.5, 7], [16, 10.5], [21, 13.5], [28, 11], [9, 13.5]],
     killFloor: { type: 'neon', y: 16.2 },
     teleporters: false,
     hazards: [{ type: 'reactor', x: 20.5, y: 12, r: 2.2, every: 4, dmg: 15, label: 'EMP pulse' }],
@@ -240,7 +240,7 @@ export const MAPS = {
     minPlayers: 2, maxPlayers: 8, recommended: 6,
     terrain: [
       R(0, 12, 14, 8),                                  // tall building (left)
-      R(17, 16, 12, 4),                                 // low building (middle)
+      R(16, 16, 14, 4),                                 // low building (middle)
       R(32, 10.5, 14, 9.5),                             // tallest building (right), lowered 1.5
       // the two alleys between buildings are open pit holes down to the rail
       R(19, 12, 8, 0.8),                                // billboard deck over the low roof (cover)

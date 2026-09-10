@@ -48,12 +48,12 @@ export class World {
     this.fields = [];
     this.powerups = [];
     this.beams = [];
-    this.mines = (map.mines || []).map(([x, y]) => { const pt = { x, y }; for (let g = 0; g < 40; g++) { let hit = null; for (const rc of map.terrain) { const px = Math.max(rc.x, Math.min(pt.x, rc.x + rc.w)), py = Math.max(rc.y, Math.min(pt.y, rc.y + rc.h)); if (Math.hypot(pt.x - px, pt.y - py) < 0.45) { hit = rc; break; } } if (!hit) break; pt.y = hit.y - 0.6; } return { x: pt.x, y: pt.y, alive: true, timer: 0 }; });
+    this.mines = (map.mines || []).map(([x, y, flag]) => { const pt = { x, y }; for (let g = 0; g < 40; g++) { let hit = null; for (const rc of map.terrain) { const px = Math.max(rc.x, Math.min(pt.x, rc.x + rc.w)), py = Math.max(rc.y, Math.min(pt.y, rc.y + rc.h)); if (Math.hypot(pt.x - px, pt.y - py) < 0.45) { hit = rc; break; } } if (!hit) break; pt.y = hit.y - 0.6; } return { x: pt.x, y: pt.y, alive: true, timer: 0, fixed: flag === 'fixed' }; });
     this.pads = (map.pads || []).map((p) => ({ ...p }));
     this.singularity = null;
     this.lavaY = map.killFloor.y;
     const mineHz = (map.hazards || []).find((h) => h.type === 'mines');
-    if (mineHz && mineHz.random) for (const mn of this.mines) this.scatterMine(mn);
+    if (mineHz && mineHz.random) for (const mn of this.mines) if (!mn.fixed) this.scatterMine(mn);
     this.windX = 0;
     this.nextWind = 0;
     this.airStrike = null;      // { x, turn } scheduled
@@ -145,7 +145,10 @@ export class World {
     this.hazardAnnounce = [];
     this.pendingHazards = [];
     const m = this.map;
-    for (const b of this.bots) { b.killsTurn = 0; b.reflectorUsed = false; if (b.alive) b.stats.turnsAlive++; }
+    for (const b of this.bots) {
+      b.killsTurn = 0; b.reflectorUsed = false; if (b.alive) b.stats.turnsAlive++;
+      const lp = b.lastTurnPos; b.stillTurns = lp && Math.hypot(lp[0] - b.x, lp[1] - b.y) < 0.3 ? (b.stillTurns || 0) + 1 : 0; b.lastTurnPos = [b.x, b.y];
+    }
 
     // 1. Pre-turn status effects
     for (const b of this.alive()) {
@@ -172,7 +175,7 @@ export class World {
           if (this.turn > 1 && this.turn % h.every === 0) { this.lavaY -= h.amount; this.hazardAnnounce.push({ type: 'lava', text: 'The lava rises!' }); }
           else if (this.turn % h.every === h.every - 1) this.hazardAnnounce.push({ type: 'warn', text: 'Lava rises next turn' });
         } else if (h.type === 'mines') {
-          for (const mn of this.mines) if (!mn.alive) { mn.timer--; if (mn.timer <= 0) { if (h.random) this.scatterMine(mn); mn.alive = true; this.emit('mineSpawn', { x: mn.x, y: mn.y }); } }
+          for (const mn of this.mines) if (!mn.alive) { mn.timer--; if (mn.timer <= 0) { if (h.random && !mn.fixed) this.scatterMine(mn); mn.alive = true; this.emit('mineSpawn', { x: mn.x, y: mn.y }); } }
         } else if (h.type === 'crusher') {
           const lbl = (h.label || 'Crusher').toUpperCase();
           if (this.turn % h.every === 0) { this.pendingHazards.push({ type: 'crusher', h }); this.hazardAnnounce.push({ type: 'danger', text: `${lbl} THIS TURN`, zone: { x: h.x, y: h.top, w: h.w, h: h.bottom - h.top } }); }
