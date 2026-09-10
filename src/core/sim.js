@@ -489,6 +489,22 @@ export class World {
     if (pt) { mn.x = pt.x; mn.y = pt.y - 0.15; }
   }
 
+  // A wrapping map can put a bot inside whatever stands at the opposite edge,
+  // because nothing guarantees the seam is open air. If the arrival point is
+  // solid, set the bot down on the surface above it instead of leaving it stuck.
+  landAfterWrap(b) {
+    let inside = false;
+    for (const rc of this.map.terrain) {
+      if (b.x > rc.x && b.x < rc.x + rc.w && b.y > rc.y && b.y < rc.y + rc.h) { inside = true; break; }
+    }
+    if (!inside) return;
+    let top = null;
+    for (const rc of this.map.terrain) {
+      if (b.x >= rc.x - 0.1 && b.x <= rc.x + rc.w + 0.1 && (top === null || rc.y < top)) top = rc.y;
+    }
+    if (top !== null) { b.y = top - PHYS.botRadius - 0.02; b.vy = Math.min(0, b.vy); b.grounded = false; }
+  }
+
   dropToGround(obj) {
     this.pushOutOfTerrain(obj, 0.4);
     for (let i = 0; i < 300; i++) {
@@ -614,7 +630,7 @@ export class World {
         b.x += (b.vx * dt) / sub; b.y += (b.vy * dt) / sub;
         onGround = this.resolveBotTerrain(b) || onGround;
       }
-      if (this.map.teleporters) { if (b.x < 0) { b.x += this.map.width; this.emit('teleport', { bot: b.id }); } else if (b.x > this.map.width) { b.x -= this.map.width; this.emit('teleport', { bot: b.id }); } }
+      if (this.map.teleporters) { if (b.x < 0) { b.x += this.map.width; this.landAfterWrap(b); this.emit('teleport', { bot: b.id }); } else if (b.x > this.map.width) { b.x -= this.map.width; this.landAfterWrap(b); this.emit('teleport', { bot: b.id }); } }
       else { if (b.x < PHYS.botRadius) { b.x = PHYS.botRadius; b.vx = Math.abs(b.vx) * 0.3; } if (b.x > this.map.width - PHYS.botRadius) { b.x = this.map.width - PHYS.botRadius; b.vx = -Math.abs(b.vx) * 0.3; } }
       b.grounded = onGround;
       if (onGround) { const f = Math.max(0, 1 - PHYS.groundFriction * dt); b.vx *= f; if (Math.abs(b.vx) < 0.05) b.vx = 0; if (b.vy > 0) b.vy = 0; }

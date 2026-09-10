@@ -11,7 +11,7 @@ export const PHYS = {
   airDrag: 0.05,
   botRestitution: 0.15,
   missileSpeed: 33,       // at full power (~20% more range than before)
-  jumpSpeed: 17.5,        // at full power, medium weight (~20% more range)
+  jumpSpeed: 19.57,       // at full power, medium weight. Height goes as v^2, so this is 17.5 x sqrt(1.25) for +25% height
   weightJump: { light: 1.18, medium: 1.0, heavy: 0.86 },
   weightKnockback: { light: 1.3, medium: 1.0, heavy: 0.6 },
   accuracyGuide: { low: 0.3, medium: 0.55, high: 0.85 },
