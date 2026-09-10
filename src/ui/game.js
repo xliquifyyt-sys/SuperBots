@@ -7,7 +7,6 @@ import { audio } from '../audio.js';
 
 const $ = (id) => document.getElementById(id);
 const SPECIAL_TYPE = (b, slot) => (slot === 's1' ? b.def.s1.id : b.def.s2.id);
-const HEAVY = new Set(['siegeShell']);
 
 export class GameController {
   constructor(canvas, renderer, cb) {
@@ -44,7 +43,7 @@ export class GameController {
     match.playbackSpeed = this.speed;
     match.onPhase = (p) => this._onPhase(p);
     match.start();
-    this.showCenter('BATTLE START!', 1.6, 'comic');
+    this.showCenter('BATTLE START!', 1.6, 'comic'); audio.battleStart();
   }
 
   stop() { this.match = null; this.el.hud.classList.add('hidden'); }
@@ -58,6 +57,8 @@ export class GameController {
       this.renderAnnouncements();
       this.r.fitMap();
       if (w.hazardAnnounce.some((a) => a.type === 'danger')) audio.warn();
+      if (w.hazardAnnounce.some((a) => a.type === 'wind')) audio.gust();
+      if (w.hazardAnnounce.some((a) => a.type === 'lava')) audio.lavaRise();
       if (w.suddenDeath && m.announceInfo.some((a) => a.type === 'sudden')) { this.showCenter('SUDDEN DEATH', 2); audio.sudden(); }
       else if (m.turn > 1) this.showCenter(`TURN ${m.turn}`, 0.9);
     } else if (p === 'plan') {
@@ -324,16 +325,37 @@ export class GameController {
     switch (e.type) {
       case 'explosion': audio.explosion(e.big); break;
       case 'fire': audio.fire(); break;
-      case 'special': if (HEAVY.has(e.name)) audio.heavyFire(); break;
+      case 'special': audio.special(e.name); break;
       case 'jump': audio.jump(); break;
+      case 'land': audio.land(e.hard); break;
       case 'damage': if (e.amount > 0) audio.hit(); break;
       case 'eliminated': audio.ko(); break;
       case 'pickup': audio.pickup(); break;
+      case 'powerupSpawn': audio.powerupSpawn(); break;
       case 'beam': audio.beam(); break;
       case 'blink': audio.blink(); break;
       case 'gale': audio.gale(); break;
       case 'deflector': audio.shield(); break;
+      case 'reflect': audio.reflect(); break;
+      case 'split': audio.split(); break;
+      case 'bounce': audio.bounce(); break;
+      case 'splash': audio.splash(e.kind); break;
+      case 'toxic': audio.toxicTick(); break;
+      case 'singularity': audio.singularityPull(); break;
+      case 'wallHit': audio.wallHit(); break;
+      case 'wallBreak': audio.wallBreak(); break;
+      case 'effect': audio.effect(e.effect); break;
+      case 'contact': audio.contact(); break;
+      case 'mine': audio.mine(); break;
+      case 'mineSpawn': audio.mineSpawn(); break;
+      case 'geyser': audio.geyser(); break;
+      case 'lavaSurf': audio.lavaSurf(); break;
+      case 'patch': audio.patch(); break;
+      case 'crusher': audio.crusher(); break;
+      case 'reactorPulse': audio.reactor(); break;
+      case 'teleport': audio.teleport(!!e.to); break;
       case 'airstrike': audio.airstrike(); break;
+      case 'bomb': audio.bombWhistle(); break;
       case 'suddenDeath': audio.sudden(); break;
     }
   }

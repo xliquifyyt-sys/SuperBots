@@ -30,6 +30,7 @@ export class Renderer {
     loadSprites();
     loadBackgrounds();
     loadTerrain();
+    this.callouts = [];
     this.time = 0;
     this.eventCursor = 0;
     this.deadFx = new Set();
@@ -192,7 +193,14 @@ export class Renderer {
       case 'mine': this.emit(e.x, e.y, 30, { speed: 7, life: 0.6, size: 0.2, color: '#ff4d4d', gravity: 8 }); this.flashes.push({ x: e.x, y: e.y, r: 1.2, t: 0, life: 0.35, color: '#ff8a2f' }); this.shake += 0.5; break;
       case 'mineSpawn': this.emit(e.x, e.y, 10, { speed: 2, life: 0.5, size: 0.15, color: '#fff' }); break;
       case 'lavaSurf': this.emit(e.x, e.y, 20, { speed: 5, life: 0.6, size: 0.2, color: '#ff5a1f', gravity: 12, up: true }); break;
-      case 'teleport': break;
+      case 'teleport': {
+        if (e.from) { this.emit(e.from[0], e.from[1], 22, { speed: 4, life: 0.5, size: 0.16, color: '#bff6ff', gravity: -6 }); this.flashes.push({ x: e.from[0], y: e.from[1], r: 1.1, t: 0, life: 0.35, color: '#bff6ff', ring: true }); }
+        if (e.to) { this.emit(e.to[0], e.to[1], 22, { speed: 4, life: 0.5, size: 0.16, color: '#ffffff', gravity: 5 }); this.flashes.push({ x: e.to[0], y: e.to[1], r: 1.1, t: 0, life: 0.45, color: '#ffffff', ring: true }); }
+        break;
+      }
+      case 'bomb': this.emit(e.x, e.y + 0.5, 3, { speed: 1, life: 0.4, size: 0.12, color: '#ffd08a', gravity: 20 }); break;
+      case 'effect': { const b = this.world.bots[e.bot]; if (b) this.numbers.push({ x: b.x, y: b.y - 1.1, text: String(e.effect).toUpperCase(), color: EFFECT_COLORS[e.effect] || '#ffffff', t: 0, life: 1.0 }); break; }
+      case 'special': { const b = this.world.bots[e.bot]; if (b) { const sp = b.def.s1.name === e.name ? b.def.s1 : b.def.s2; this.callouts.push({ bot: e.bot, kind: sp.id, name: sp.name, color: b.color, t: 0, life: 1.0 }); this.emit(e.x, e.y, 14, { speed: 3.5, life: 0.4, size: 0.16, color: b.color }); } break; }
     }
     if (this.onEvent) this.onEvent(e);
   }
@@ -250,6 +258,7 @@ export class Renderer {
     this.drawParticles();
     this.drawKillFloorSurface();
     if (info.aim) this.drawAimGuide(info.aim);
+    this.drawCallouts();
     this.drawNumbers();
     c.restore();
   }
@@ -446,7 +455,15 @@ export class Renderer {
       if (w.hasEffect(b, 'plating')) { c.strokeStyle = '#c0c8d8'; c.lineWidth = 4; c.beginPath(); c.arc(0, 0, r * 1.25, 0, Math.PI * 2); c.stroke(); }
       const st = this.animState(b);
       const wasGrounded = this._grounded ? this._grounded.get(b.id) : undefined;
-      if (wasGrounded === false && b.grounded && st.anim === 'idle') { this.playAnim(b.id, 'land'); this.emit(b.x, b.y + 0.45, 10, { speed: 2.2, life: 0.35, size: 0.18, color: 'rgba(255,255,255,0.8)', gravity: 3 }); }
+      if (!this._airTime) this._airTime = new Map();
+      this._airTime.set(b.id, b.grounded ? 0 : (this._airTime.get(b.id) || 0) + this.dt);
+      if (wasGrounded === false && b.grounded && st.anim === 'idle') {
+        const hard = (this._lastAir || 0) > 0.45;
+        this.playAnim(b.id, 'land'); this.emit(b.x, b.y + 0.45, hard ? 16 : 8, { speed: hard ? 3.2 : 2.2, life: 0.35, size: 0.18, color: 'rgba(255,255,255,0.8)', gravity: 3 });
+        if (hard) this.shake += 0.25;
+        if (this.onEvent) this.onEvent({ type: 'land', hard, bot: b.id });
+      }
+      if (!b.grounded) this._lastAir = this._airTime.get(b.id);
       (this._grounded || (this._grounded = new Map())).set(b.id, b.grounded);
       drawBot(c, b.def, r * 1.67, { ...this.animState(b), facing, vx: b.vx, vy: b.vy, grounded: b.grounded, color: b.color, hp: b.hp / b.maxHp, id: b.id }, this.time);
       c.restore();
@@ -610,6 +627,26 @@ export class Renderer {
       c.fillRect(x - p.size * z / 2, y - p.size * z / 2, p.size * z, p.size * z);
     }
     c.globalAlpha = 1;
+  }
+
+  // A special's icon and name pop over the bot that used it, then rise and fade.
+  drawCallouts() {
+    const c = this.ctx, z = this.cam.zoom * this.userZoom;
+    for (let i = this.callouts.length - 1; i >= 0; i--) {
+      const co = this.callouts[i]; co.t += this.dt;
+      if (co.t >= co.life) { this.callouts.splice(i, 1); continue; }
+      const b = this.world.bots[co.bot]; if (!b) continue;
+      const k = co.t / co.life, pop = k < 0.15 ? k / 0.15 : 1, fade = k > 0.7 ? 1 - (k - 0.7) / 0.3 : 1;
+      const [x, y] = this.toScreen(b.x, b.y);
+      const cy = y - z * 1.7 - z * 0.6 * k, size = Math.max(22, z * 0.72) * (0.6 + 0.4 * pop);
+      c.save(); c.globalAlpha = fade;
+      c.fillStyle = 'rgba(13,16,24,0.85)'; c.beginPath(); c.roundRect(x - size * 1.1, cy - size * 0.6, size * 2.2, size * 1.2, size * 0.3); c.fill();
+      c.strokeStyle = co.color; c.lineWidth = 2; c.stroke();
+      drawActionIcon(c, co.kind, x - size * 0.45, cy, size * 0.75);
+      c.fillStyle = '#fff'; c.font = `bold ${Math.max(9, size * 0.34)}px sans-serif`; c.textAlign = 'left'; c.textBaseline = 'middle';
+      c.fillText(co.name.toUpperCase(), x - size * 0.02, cy);
+      c.restore();
+    }
   }
 
   drawNumbers() {

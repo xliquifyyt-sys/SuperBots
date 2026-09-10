@@ -93,18 +93,20 @@ function lightning(c, x1, y1, x2, y2, seg, amp, color, w) {
 }
 
 function bodyTransform(st) {
-  let sx = 1, sy = 1, dy = 0, rot = 0;
+  let sx = 1, sy = 1, dy = 0, rot = 0, dx = 0;
   const t = st.t;
   switch (st.anim) {
     case 'jump': if (t < 0.25) { const k = t / 0.25; sx = 1 + 0.16 * k; sy = 1 - 0.2 * k; dy = 0.1 * k; } else { const k = ease((t - 0.25) / 0.75); sx = 1 + 0.08 * (1 - k); sy = 1 + 0.16 * (1 - k); } break;
     case 'land': { const k = pulse(t); sx = 1 + 0.2 * k; sy = 1 - 0.25 * k; dy = 0.12 * k; break; }
-    case 'fire': { const k = pulse(t * 1.4); rot = -0.05 * k; dy = 0.03 * k; break; }
+    case 'fire': { const k = pulse(t * 1.4); rot = -0.05 * k; dy = 0.03 * k; dx = -0.14 * k; break; }
     case 'hit': { const k = pulse(t); sx = 1 - 0.07 * k; sy = 1 + 0.05 * k; rot = 0.1 * k * Math.sin(t * 40); break; }
     case 'death': rot = t * 0.9; dy = -0.15 * t; break;
-    case 's1': case 's2': { const k = pulse(t); sy = 1 + 0.04 * k; break; }
+    case 's1': case 's2': { const k = pulse(t); sy = 1 + 0.06 * k; sx = 1 + 0.03 * k; dx = st.anim === 's2' ? -0.1 * k : 0; break; }
   }
   if (!st.grounded && st.anim !== 'jump') { const v = clamp((st.vy || 0) / 22, -0.12, 0.12); sy = 1 + Math.abs(v); sx = 1 - Math.abs(v) * 0.6; }
-  return { sx, sy, dy, rot };
+  // Airborne bots lean into their travel direction (world space, so undo the facing flip applied later).
+  if (!st.grounded) rot += clamp((st.vx || 0) / 28, -0.22, 0.22) * (st.facing || 1);
+  return { sx, sy, dy, rot, dx };
 }
 
 // ============================ RIGS ============================
@@ -433,7 +435,7 @@ export function drawBot(ctx, def, r, st, time) {
   const tf = bodyTransform(st);
   const R = r * ART_SCALE;
   ctx.save();
-  ctx.translate(0, tf.dy * r + r * 0.12);
+  ctx.translate((tf.dx || 0) * r * (st.facing || 1), tf.dy * r + r * 0.12);
   ctx.rotate(tf.rot * (st.facing || 1));
   ctx.scale(tf.sx * (st.facing || 1), tf.sy);
   ctx.translate(0, -r * 0.12);

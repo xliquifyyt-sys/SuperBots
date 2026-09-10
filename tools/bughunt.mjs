@@ -54,6 +54,7 @@ for (const mapId of MAP_IDS) {
             if (!Number.isFinite(b.x) || !Number.isFinite(b.y)) { note('nan-position', `${mapId} g${g} t${w.turn} ${b.botId}`); continue; }
             if (b.y + R > w.lavaY + 0.01) note('alive-below-floor', `${mapId} g${g} t${w.turn} ${b.botId} y=${b.y.toFixed(2)} floor=${w.lavaY}`);
             if (!map.teleporters && (b.x < -0.5 || b.x > map.width + 0.5)) note('alive-out-of-bounds', `${mapId} g${g} t${w.turn} ${b.botId} x=${b.x.toFixed(2)}`);
+            for (const sl of (map.slopes || [])) { const fx = (b.x - sl.x) / sl.w; const surf = sl.dir === 1 ? sl.y + sl.h - sl.h * fx : sl.y + sl.h * fx; if (fx > 0.05 && fx < 0.95 && b.y > surf + R * 0.6 && b.y < sl.y + sl.h) note('bot-inside-slope', `${mapId} g${g} t${w.turn} ${b.botId} at ${b.x.toFixed(1)},${b.y.toFixed(1)} slope ${sl.x},${sl.y}`); }
             for (const rc of map.terrain) if (insideRect(b.x, b.y, rc, R * 0.6)) note('bot-embedded', `${mapId} g${g} t${w.turn} ${b.botId} at ${b.x.toFixed(1)},${b.y.toFixed(1)} in rect ${rc.x},${rc.y} ${rc.w}x${rc.h}`);
             if (!b.grounded && b.y < w.lavaY - 1) { /* airborne at turn end is fine (falling into pit resolves next turn) */ }
             const rc = rectUnder(map, b.x, b.y); if (rc) F.stood.add(map.terrain.indexOf(rc));

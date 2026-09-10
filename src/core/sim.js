@@ -33,6 +33,35 @@ function circleRectPush(cx, cy, r, rect) {
 
 function pointInRect(x, y, rc) { return x >= rc.x && x <= rc.x + rc.w && y >= rc.y && y <= rc.y + rc.h; }
 
+// Slopes collide as real right triangles: { pts: [[x,y] x3] } wound clockwise on screen
+// (y down). Returns the push that moves a circle out of the triangle, like circleRectPush.
+function slopeTri(s) {
+  return s.dir === 1
+    ? { pts: [[s.x, s.y + s.h], [s.x + s.w, s.y], [s.x + s.w, s.y + s.h]], slope: s }
+    : { pts: [[s.x, s.y], [s.x + s.w, s.y + s.h], [s.x, s.y + s.h]], slope: s };
+}
+function circleTriPush(cx, cy, r, tri) {
+  const P = tri.pts;
+  let inside = true, best = null, hyp = null;
+  for (let i = 0; i < 3; i++) {
+    const [ax, ay] = P[i], [bx, by] = P[(i + 1) % 3];
+    const ex = bx - ax, ey = by - ay;
+    // outward normal: the triangles are wound so that (ey, -ex) points away from the interior
+    const len = Math.hypot(ex, ey) || 1; const nx = ey / len, ny = -ex / len;
+    const side = (cx - ax) * nx + (cy - ay) * ny;
+    if (side > 0) inside = false;
+    const t = Math.max(0, Math.min(1, ((cx - ax) * ex + (cy - ay) * ey) / (len * len)));
+    const qx = ax + ex * t, qy = ay + ey * t;
+    const d = Math.hypot(cx - qx, cy - qy);
+    if (!best || d < best.d) best = { d, qx, qy, nx, ny, side };
+    if (i === 0) hyp = { d, nx, ny };
+  }
+  if (inside) return { nx: hyp.nx, ny: hyp.ny, depth: hyp.d + r };
+  if (best.d >= r) return null;
+  if (best.d < 1e-6) return { nx: best.nx, ny: best.ny, depth: r };
+  return { nx: (cx - best.qx) / best.d, ny: (cy - best.qy) / best.d, depth: r - best.d };
+}
+
 export class World {
   constructor(map, settings, players, seed) {
     this.map = map;
@@ -50,6 +79,8 @@ export class World {
     this.beams = [];
     this.mines = (map.mines || []).map(([x, y, flag]) => { const pt = { x, y }; for (let g = 0; g < 40; g++) { let hit = null; for (const rc of map.terrain) { const px = Math.max(rc.x, Math.min(pt.x, rc.x + rc.w)), py = Math.max(rc.y, Math.min(pt.y, rc.y + rc.h)); if (Math.hypot(pt.x - px, pt.y - py) < 0.45) { hit = rc; break; } } if (!hit) break; pt.y = hit.y - 0.6; } return { x: pt.x, y: pt.y, alive: true, timer: 0, fixed: flag === 'fixed' }; });
     this.pads = (map.pads || []).map((p) => ({ ...p }));
+    this.physTerrain = map.terrain.filter((rc) => !rc.step);   // stair steps stay in map.terrain for AI/spawn helpers only
+    this.slopeTris = (map.slopes || []).map(slopeTri);
     this.singularity = null;
     this.lavaY = map.killFloor.y;
     const mineHz = (map.hazards || []).find((h) => h.type === 'mines');
@@ -90,6 +121,12 @@ export class World {
   enemiesOf(b) { return this.bots.filter((o) => o.alive && o !== b && !this.sameTeam(o, b)); }
   sameTeam(a, b) { return this.teamsMode && a.team === b.team; }
   solids() { return this.map.terrain.concat(this.walls.map((w) => w.rect)); }
+  // Every solid a circle can be pushed out of: blocks, walls and slope triangles. Calls fn(hit, solid) per contact.
+  eachSolidHit(cx, cy, r, fn) {
+    for (const rc of this.physTerrain) { const h = circleRectPush(cx, cy, r, rc); if (h) fn(h, rc); }
+    for (const w of this.walls) { const h = circleRectPush(cx, cy, r, w.rect); if (h) fn(h, w.rect, w); }
+    for (const tri of this.slopeTris) { const h = circleTriPush(cx, cy, r, tri); if (h) fn(h, tri); }
+  }
   hasEffect(b, k) { return (b.effects[k] || 0) > 0; }
   // True when a terrain rect sits above (x, y): a bot there is sheltered from things falling from the sky.
   hasCoverAbove(x, y) { return this.map.terrain.some((rc) => x > rc.x - 0.2 && x < rc.x + rc.w + 0.2 && rc.y + rc.h <= y - 0.4); }
@@ -110,24 +147,23 @@ export class World {
 
   resolveBotTerrain(b) {
     let touchedGround = false;
-    for (const rc of this.solids()) {
-      const hit = circleRectPush(b.x, b.y, PHYS.botRadius, rc);
-      if (!hit) continue;
+    b.onSlope = false;
+    this.eachSolidHit(b.x, b.y, PHYS.botRadius, (hit, solid) => {
       b.x += hit.nx * hit.depth; b.y += hit.ny * hit.depth;
       const vn = b.vx * hit.nx + b.vy * hit.ny;
       if (vn < 0) {
-        const rest = (b.bounceLeft > 0 && b.airborne) ? 0.65 : PHYS.botRestitution;
+        const rest = (b.bounceLeft > 0 && b.airborne) ? 0.65 : (Math.abs(vn) < 2.5 ? 0 : PHYS.botRestitution);
         if (b.bounceLeft > 0 && b.airborne && Math.abs(vn) > 3) { b.bounceLeft--; this.emit('bounce', { x: b.x, y: b.y }); }
         b.vx -= (1 + rest) * vn * hit.nx; b.vy -= (1 + rest) * vn * hit.ny;
       }
-      if (hit.ny < -0.5) touchedGround = true;
-    }
+      if (hit.ny < -0.5) { touchedGround = true; if (solid.pts) b.onSlope = true; }
+    });
     // Wedge rescue: a bot trapped between two stacked blocks (one pushing up, one
     // pushing down) would oscillate forever. If the centre is still inside any
     // solid, lift the bot to the top of that block.
     for (let g = 0; g < 8; g++) {
       let inside = null;
-      for (const rc of this.solids()) { if (b.x > rc.x && b.x < rc.x + rc.w && b.y > rc.y && b.y < rc.y + rc.h) { inside = rc; break; } }
+      for (const rc of this.physTerrain.concat(this.walls.map((w) => w.rect))) { if (b.x > rc.x && b.x < rc.x + rc.w && b.y > rc.y && b.y < rc.y + rc.h) { inside = rc; break; } }
       if (!inside) break;
       b.y = inside.y - PHYS.botRadius;
       if (b.vy > 0) b.vy = 0;
@@ -313,12 +349,14 @@ export class World {
     if (this.pendingAirStrike) {
       // Standard missiles fall from the sky across the whole map. They are held
       // until the end of the turn: player actions resolve first, then the rain lands.
-      const n = Math.max(4, Math.round((this.map.width / 3) * 0.7));
+      // One bomb every 2 units with a little jitter: blast radius 1.2 plus the bot's own
+      // half-width covers the gaps, so an exposed bot is hit and a sheltered one is not.
+      const n = Math.max(6, Math.round(this.map.width / 1.6));
       for (let i = 0; i < n; i++) {
-        const x = (i + 0.5) * (this.map.width / n) + this.rng.range(-1.2, 1.2);
+        const x = (i + 0.5) * (this.map.width / n) + this.rng.range(-0.3, 0.3);
         this.projectiles.push({
-          x, y: -2 - this.rng.range(0, 6), vx: this.rng.range(-2.5, 2.5), vy: 4, owner: null, kind: 'missile', dmg: DMG.missile, radius: DMG.missileRadius,
-          delay: 2.2 + this.rng.range(0, 1.2), bounces: 0, bounced: 0, life: 9, r: PROJ_R, gravity: 1, wind: 1, color: '#ff7a2f', trail: [], knock: 1, effect: null, splitAt: false, onImpact: null, reflected: 0,
+          x, y: -2 - this.rng.range(0, 5), vx: this.rng.range(-0.15, 0.15), vy: 6, owner: null, kind: 'bomb', dmg: DMG.airStrikeBomb, radius: DMG.airStrikeRadius,
+          delay: 2.2 + this.rng.range(0, 1.0), bounces: 0, bounced: 0, life: 9, r: PROJ_R, gravity: 1, wind: 0, color: '#ff7a2f', trail: [], knock: 1, effect: null, splitAt: false, onImpact: null, reflected: 0,
         });
       }
       this.emit('airstrike', { x: this.map.width / 2, count: n });
@@ -347,6 +385,8 @@ export class World {
     const l = Math.hypot(aim.dx, aim.dy) || 1;
     return { dx: aim.dx / l, dy: aim.dy / l, power: Math.max(0.15, Math.min(1, aim.power ?? 1)) };
   }
+
+  hitRadius(b) { return PHYS.hitRadius[b.def.weight] || PHYS.botRadius; }
 
   jumpMul(b) {
     let m = PHYS.weightJump[b.def.weight];
@@ -599,7 +639,7 @@ export class World {
       if (opts.excludeSelf && b === source) continue;
       if (opts.enemiesOnly && source && this.sameTeam(b, source) && b !== source) continue;
       const d = Math.hypot(b.x - x, b.y - y);
-      if (d > radius + PHYS.botRadius) continue;
+      if (d > radius + this.hitRadius(b)) continue;
       const nx = d > 0.01 ? (b.x - x) / d : 0, ny = d > 0.01 ? (b.y - y) / d : -1;
       let applied = 0;
       if (dmg > 0) applied = this.applyDamage(b, dmg, { type: 'blast', bot: source, label: opts.label, fromAbove: opts.fromAbove, depth: opts.depth || 0 });
@@ -636,7 +676,12 @@ export class World {
       if (this.map.teleporters) { if (b.x < 0) { b.x += this.map.width; this.landAfterWrap(b); this.emit('teleport', { bot: b.id }); } else if (b.x > this.map.width) { b.x -= this.map.width; this.landAfterWrap(b); this.emit('teleport', { bot: b.id }); } }
       else { if (b.x < PHYS.botRadius) { b.x = PHYS.botRadius; b.vx = Math.abs(b.vx) * 0.3; } if (b.x > this.map.width - PHYS.botRadius) { b.x = this.map.width - PHYS.botRadius; b.vx = -Math.abs(b.vx) * 0.3; } }
       b.grounded = onGround;
-      if (onGround) { const f = Math.max(0, 1 - PHYS.groundFriction * dt); b.vx *= f; if (Math.abs(b.vx) < 0.05) b.vx = 0; if (b.vy > 0) b.vy = 0; }
+      if (onGround) {
+        const f = Math.max(0, 1 - PHYS.groundFriction * dt); b.vx *= f;
+        if (b.onSlope) { b.vy *= f; if (Math.hypot(b.vx, b.vy) < PHYS.slopeGrip) { b.vx = 0; b.vy = 0; } } // rolling friction along the ramp, then static friction holds
+        else if (b.vy > 0) b.vy = 0;
+        if (Math.abs(b.vx) < 0.05) b.vx = 0;
+      }
       if (!prevGrounded && onGround && b.airborne) {
         if (b.slamPending) {
           b.slamPending = false;
@@ -724,10 +769,13 @@ export class World {
       const a = alive[i], c = alive[j];
       const dx = c.x - a.x, dy = c.y - a.y, d = Math.hypot(dx, dy), min = PHYS.botRadius * 2;
       if (d >= min || d < 1e-6) continue;
-      const nx = dx / d, ny = dy / d, push = (min - d) / 2;
-      a.x -= nx * push; a.y -= ny * push; c.x += nx * push; c.y += ny * push;
+      const nx = dx / d, ny = dy / d, overlap = min - d;
+      const ma = PHYS.mass[a.def.weight] || 1, mc = PHYS.mass[c.def.weight] || 1, mt = ma + mc;
+      a.x -= nx * overlap * (mc / mt); a.y -= ny * overlap * (mc / mt); c.x += nx * overlap * (ma / mt); c.y += ny * overlap * (ma / mt);
       const rel = (c.vx - a.vx) * nx + (c.vy - a.vy) * ny;
-      if (rel < 0) { const imp = -rel * 0.5; a.vx -= nx * imp; a.vy -= ny * imp; c.vx += nx * imp; c.vy += ny * imp; }
+      if (rel < 0) { const j = -(1 + PHYS.botBump) * rel / (1 / ma + 1 / mc); a.vx -= nx * j / ma; a.vy -= ny * j / ma; c.vx += nx * j / mc; c.vy += ny * j / mc; }
+      // a bot standing on another bot's head counts as grounded
+      if (ny > 0.7 && !a.grounded && a.vy >= -0.5) a.grounded = true; else if (ny < -0.7 && !c.grounded && c.vy >= -0.5) c.grounded = true;
       this.transferContact(a, c); this.transferContact(c, a);
     }
     // Projectiles
@@ -772,7 +820,7 @@ export class World {
 
   // Advance one projectile. Returns null or an impact descriptor. ghost=true skips bot deflection side effects.
   stepProjectile(p, dt, ghost) {
-    if (p.delay && p.delay > 0) { p.delay -= dt; return null; }
+    if (p.delay && p.delay > 0) { p.delay -= dt; if (p.delay <= 0 && p.owner === null && !ghost) this.emit('bomb', { x: p.x, y: p.y }); return null; }
     const spd = Math.hypot(p.vx, p.vy);
     const sub = Math.min(5, Math.max(1, Math.ceil((spd * dt) / 0.25)));
     if (sub > 1) {
@@ -795,8 +843,12 @@ export class World {
     else if (p.x < -1 || p.x > this.map.width + 1) return { type: 'out' };
     if (p.y > this.lavaY + 0.2 || p.y > this.map.height + 2) return { type: 'floor' };
     // terrain & walls
-    for (const rc of this.map.terrain) {
+    for (const rc of this.physTerrain) {
       const h = circleRectPush(p.x, p.y, p.r, rc);
+      if (h) return { type: 'terrain', nx: h.nx, ny: h.ny, depth: h.depth };
+    }
+    for (const tri of this.slopeTris) {
+      const h = circleTriPush(p.x, p.y, p.r, tri);
       if (h) return { type: 'terrain', nx: h.nx, ny: h.ny, depth: h.depth };
     }
     for (const w of this.walls) {
@@ -810,7 +862,7 @@ export class World {
     for (const b of this.bots) {
       if (!b.alive) continue;
       if (b.id === p.owner && p.reflected === 0 && this.time - (p.born || 0) < 0.3) continue; // don't hit yourself at launch
-      const hitR = PHYS.botRadius + p.r + (b.deflector ? 0.55 : 0);
+      const hitR = this.hitRadius(b) + p.r + (b.deflector ? 0.55 : 0);
       if (Math.hypot(b.x - p.x, b.y - p.y) < hitR) {
         if (b.deflector || (this.hasEffect(b, 'reflector') && !b.reflectorUsed)) {
           if (!ghost) {
@@ -960,26 +1012,34 @@ export class World {
       ghost.vx = aim.dx * s; ghost.vy = aim.dy * s * (type === 'updraft' ? 2 : 1);
       if (ghost.vy > -2) ghost.vy = -2;
       let apex = null;
-      for (let i = 0; i < 240; i++) {
+      let restFrames = 0;
+      for (let i = 0; i < 300; i++) {
         ghost.vy += PHYS.gravity * PHYS.dt;
         if (this.windX && b.def.id !== 'skyla') ghost.vx += this.windX * 0.25 * PHYS.dt;
-        ghost.x += ghost.vx * PHYS.dt; ghost.y += ghost.vy * PHYS.dt;
+        const speed = Math.hypot(ghost.vx, ghost.vy);
+        if (speed > 0.01) { const drag = 1 - PHYS.airDrag * PHYS.dt; ghost.vx *= drag; ghost.vy *= drag; }
+        const sub = Math.min(6, Math.max(1, Math.ceil((speed * PHYS.dt) / 0.22)));
+        let landed = false, onSlopeG = false;
+        for (let ss = 0; ss < sub; ss++) {
+          ghost.x += (ghost.vx * PHYS.dt) / sub; ghost.y += (ghost.vy * PHYS.dt) / sub;
+          this.eachSolidHit(ghost.x, ghost.y, PHYS.botRadius, (h, solid) => {
+            if (h.ny < -0.5 && solid.pts) onSlopeG = true;
+            ghost.x += h.nx * h.depth; ghost.y += h.ny * h.depth;
+            const vn = ghost.vx * h.nx + ghost.vy * h.ny;
+            if (vn < 0) {
+              if (ghost.bounceLeft > 0 && Math.abs(vn) > 3) { ghost.bounceLeft--; ghost.vx -= 1.65 * vn * h.nx; ghost.vy -= 1.65 * vn * h.ny; }
+              else { const rest = Math.abs(vn) < 2.5 ? 0 : PHYS.botRestitution; ghost.vx -= (1 + rest) * vn * h.nx; ghost.vy -= (1 + rest) * vn * h.ny; }
+            }
+            if (h.ny < -0.5) landed = true;
+          });
+        }
         if (!apex && ghost.vy >= 0) apex = [ghost.x, ghost.y];
         if (this.map.teleporters) { if (ghost.x < 0) ghost.x += this.map.width; else if (ghost.x > this.map.width) ghost.x -= this.map.width; }
-        else ghost.x = Math.max(PHYS.botRadius, Math.min(this.map.width - PHYS.botRadius, ghost.x));
-        let landed = false;
-        for (const rc of this.solids()) {
-          const h = circleRectPush(ghost.x, ghost.y, PHYS.botRadius, rc);
-          if (!h) continue;
-          ghost.x += h.nx * h.depth; ghost.y += h.ny * h.depth;
-          const vn = ghost.vx * h.nx + ghost.vy * h.ny;
-          if (vn < 0) {
-            if (ghost.bounceLeft > 0 && Math.abs(vn) > 3) { ghost.bounceLeft--; ghost.vx -= 1.65 * vn * h.nx; ghost.vy -= 1.65 * vn * h.ny; }
-            else { landed = h.ny < -0.5; ghost.vx -= (1 + PHYS.botRestitution) * vn * h.nx; ghost.vy -= (1 + PHYS.botRestitution) * vn * h.ny; }
-          }
-        }
+        else { if (ghost.x < PHYS.botRadius) { ghost.x = PHYS.botRadius; ghost.vx = Math.abs(ghost.vx) * 0.3; } if (ghost.x > this.map.width - PHYS.botRadius) { ghost.x = this.map.width - PHYS.botRadius; ghost.vx = -Math.abs(ghost.vx) * 0.3; } }
+        if (landed) { const f = Math.max(0, 1 - PHYS.groundFriction * PHYS.dt); ghost.vx *= f; if (onSlopeG) { ghost.vy *= f; if (Math.hypot(ghost.vx, ghost.vy) < PHYS.slopeGrip) { ghost.vx = 0; ghost.vy = 0; } } else if (ghost.vy > 0) ghost.vy = 0; }
         points.push([ghost.x, ghost.y]);
-        if (landed && Math.abs(ghost.vy) < 3) { impact = { type: 'land', x: ghost.x, y: ghost.y }; break; }
+        if (landed && Math.hypot(ghost.vx, ghost.vy) < 3) restFrames++; else restFrames = 0;
+        if (restFrames >= 2) { impact = { type: 'land', x: ghost.x, y: ghost.y }; break; }
         if (ghost.y + PHYS.botRadius > this.lavaY) { impact = { type: 'floor', x: ghost.x, y: ghost.y }; break; }
       }
       return { points, impact, apex };
@@ -990,7 +1050,7 @@ export class World {
       for (let d = 0.25; d <= maxD; d += 0.25) {
         const cx = b.x + aim.dx * d, cy = b.y + aim.dy * d;
         if (cx < 0.6 || cx > this.map.width - 0.6 || cy < 0.6 || cy > this.lavaY - 0.8) break;
-        if (this.solids().some((rc) => circleRectPush(cx, cy, PHYS.botRadius * 0.9, rc))) break;
+        let blocked = false; this.eachSolidHit(cx, cy, PHYS.botRadius * 0.9, () => { blocked = true; }); if (blocked) break;
         tx = cx; ty = cy; points.push([cx, cy]);
       }
       return { points, impact: { type: 'blink', x: tx, y: ty } };
