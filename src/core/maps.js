@@ -130,14 +130,13 @@ export const MAPS = {
       R(0, 14, 30, 4),                                  // jungle floor
       R(2.5, 9.5, 5, 0.9), R(22.5, 9.5, 5, 0.9),        // low branches
       R(9.5, 13.2, 2, 0.8), R(19, 13.2, 2, 0.8),        // mossy ground bumps (low cover)
-      R(11.5, 6, 7, 0.9),                               // middle branch
+      R(11.5, 4, 7, 0.9),                               // middle branch
       R(5.5, 6.5, 3.5, 0.8), R(21.5, 6.5, 3.5, 0.8),    // mid branches: low branch -> high side branch
       R(1, 3.5, 4, 0.9), R(25, 3.5, 4, 0.9),            // high side branches
-      R(12.5, 2, 5, 0.9),                               // crown (cover for the middle branch)
     ],
     slopes: [],
     spawns: [[2, 13.5], [8.4, 13.5], [12.7, 13.5], [17.8, 13.5], [23, 13.5], [28, 13.5], [4.5, 9], [25, 9]],
-    powerups: [[15, 1.5], [2.5, 3], [27.5, 3], [15, 5.5], [5, 9], [25, 9], [9, 13.5], [21, 13.5]],
+    powerups: [[15, 3.5], [2.5, 3], [27.5, 3], [5, 9], [25, 9], [9, 13.5], [21, 13.5]],
     mines: [[9.5, 7.5], [20.5, 7.5], [15, 11.8], [7, 3], [23, 3]],
     killFloor: { type: 'water', y: 16.2 },
     teleporters: false,
