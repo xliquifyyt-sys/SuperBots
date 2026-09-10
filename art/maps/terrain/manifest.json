@@ -70,5 +70,23 @@
     "lift": 0.14,
     "outline": "#3a2416",
     "clouds": true
+  },
+  "neonalley": {
+    "top": "neo_alley_top.jpg",
+    "face": "neo_alley_face.jpg",
+    "tile": 3.5,
+    "topTile": 3.0,
+    "lift": 0.06,
+    "outline": "#07080c",
+    "underglow": true
+  },
+  "skylinegrid": {
+    "top": "neo_grid_top.jpg",
+    "face": "neo_grid_face.jpg",
+    "tile": 6.0,
+    "topTile": 3.0,
+    "lift": 0.06,
+    "outline": "#07080c",
+    "underglow": true
   }
 }

@@ -14,6 +14,7 @@
 // snowCap – paint a scalloped snow mound over the top edge (ice kits).
 // grass / vines – grass blades along the top edge, vines hanging under wide platforms (jungle kits).
 // clouds – white puffs clinging under wide platforms (sky kits).
+// underglow – cyan light strip along the bottom edge (neo kits).
 //
 // Maps without an entry keep the procedural look, so a partial art set is fine.
 
@@ -64,7 +65,7 @@ export function getTerrainKit(mapId) {
   if (!spec) return null;
   const top = images.get(`${mapId}:top`), face = images.get(`${mapId}:face`);
   if (!top || !face) return null;
-  return { top, face, tile: spec.tile ?? 2, topTile: spec.topTile ?? spec.tile ?? 2, lift: spec.lift ?? 0.15, outline: spec.outline || OUTLINE, icicles: !!spec.icicles, snowCap: !!spec.snowCap, grass: !!spec.grass, vines: !!spec.vines, clouds: !!spec.clouds };
+  return { top, face, tile: spec.tile ?? 2, topTile: spec.topTile ?? spec.tile ?? 2, lift: spec.lift ?? 0.15, outline: spec.outline || OUTLINE, icicles: !!spec.icicles, snowCap: !!spec.snowCap, grass: !!spec.grass, vines: !!spec.vines, clouds: !!spec.clouds, underglow: !!spec.underglow };
 }
 
 const OUTLINE = '#0b0709';
@@ -146,6 +147,10 @@ export function paintPaintedTerrain(c, kit, rects, z, slopes = []) {
     if (kit.clouds && !r.world.noFringe && r.world.h <= r.world.w * 1.3) {
       c.fillStyle = 'rgba(255,255,255,0.96)'; c.strokeStyle = 'rgba(120,150,190,0.6)'; c.lineWidth = lw * 0.6;
       for (let i = 0; i < Math.floor(w / (z * 1.6)) + 1; i++) { const cx = x + z * 0.6 + i * z * 1.6; c.beginPath(); c.arc(cx, y + h + z * 0.1, z * (0.45 + hash(i + x) * 0.2), 0, Math.PI * 2); c.fill(); c.stroke(); }
+    }
+    if (kit.underglow) {
+      c.save(); c.shadowColor = '#3ff6ff'; c.shadowBlur = z * 0.5; c.fillStyle = '#3ff6ff';
+      c.fillRect(x + z * 0.1, y + h - Math.max(2, z * 0.07), w - z * 0.2, Math.max(2, z * 0.07)); c.restore();
     }
     if (kit.icicles && !r.world.noFringe) {
       c.strokeStyle = kit.outline; c.lineWidth = lw * 0.5;

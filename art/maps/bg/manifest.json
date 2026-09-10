@@ -38,5 +38,15 @@
     "file": "bg_nimbus.jpg",
     "parallax": 0.25,
     "anchor": "bottom"
+  },
+  "neonalley": {
+    "file": "bg_neonalley.jpg",
+    "parallax": 0.25,
+    "anchor": "bottom"
+  },
+  "skylinegrid": {
+    "file": "bg_skylinegrid.jpg",
+    "parallax": 0.25,
+    "anchor": "bottom"
   }
 }
