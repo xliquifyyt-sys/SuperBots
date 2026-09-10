@@ -154,6 +154,8 @@ export const MAPS = {
       R(13, 13, 20, 0.8), R(16, 10, 14, 3), R(19, 7, 8, 3), // pyramid steps; the base is a lintel over a through tunnel (13..33)
       R(21, 3.5, 4, 0.8),                               // altar canopy (cover on the summit)
       R(3, 11, 5, 0.9), R(38, 11, 5, 0.9),              // side tree platforms
+      R(6, 6.5, 4, 0.8), R(9.2, 5.1, 0.8, 1.4),         // L-shaped floating platform above the left ledge, post at its right end
+      R(36, 6.5, 4, 0.8), R(39.2, 5.1, 0.8, 1.4),       // mirrored L above the right ledge, post at its right end
     ],
     slopes: [],
     spawns: [[2, 15.5], [7.2, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [39.3, 15.5], [43, 15.5], [45.5, 15.5]],
@@ -194,7 +196,6 @@ export const MAPS = {
       R(0, 15, 14, 1.8), R(36, 15, 14, 1.8),            // outer islands (linked by teleporting edges)
       R(10, 19, 30, 1.6),                               // long bottom island
       R(22, 8, 6, 1.4),                                 // centre pillar island
-      R(24, 9.4, 2, 6),                                 // pillar hanging beneath it
       R(6, 10, 5, 1), R(39, 10, 5, 1),                  // upper side islands
       R(13, 5.5, 5, 0.9), R(32, 5.5, 5, 0.9),           // high perches (cover for the side islands)
       R(20, 13.5, 3, 0.8), R(27, 13.5, 3, 0.8),         // step stones to the centre
