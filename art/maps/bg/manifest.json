@@ -8,5 +8,15 @@
     "file": "bg_magmaworks.jpg",
     "parallax": 0.25,
     "anchor": "bottom"
+  },
+  "frozenkeel": {
+    "file": "bg_frozenkeel.jpg",
+    "parallax": 0.25,
+    "anchor": "bottom"
+  },
+  "glacierfort": {
+    "file": "bg_glacierfort.jpg",
+    "parallax": 0.25,
+    "anchor": "bottom"
   }
 }

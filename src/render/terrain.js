@@ -9,6 +9,9 @@
 // tile  – how many world units one repeat of the face texture spans horizontally
 // topTile – the same for the crust strip (defaults to tile)
 // lift  – how far (world units) the crust rises above the collision surface
+// outline – outline colour (default near-black); icicles – draw an icicle fringe
+//           under platforms. Rects flagged noCap / noFringe skip crust / fringe.
+// snowCap – paint a scalloped snow mound over the top edge (ice kits).
 //
 // Maps without an entry keep the procedural look, so a partial art set is fine.
 
@@ -59,10 +62,11 @@ export function getTerrainKit(mapId) {
   if (!spec) return null;
   const top = images.get(`${mapId}:top`), face = images.get(`${mapId}:face`);
   if (!top || !face) return null;
-  return { top, face, tile: spec.tile ?? 2, topTile: spec.topTile ?? spec.tile ?? 2, lift: spec.lift ?? 0.15 };
+  return { top, face, tile: spec.tile ?? 2, topTile: spec.topTile ?? spec.tile ?? 2, lift: spec.lift ?? 0.15, outline: spec.outline || OUTLINE, icicles: !!spec.icicles, snowCap: !!spec.snowCap };
 }
 
 const OUTLINE = '#0b0709';
+const hash = (n) => { const x = Math.sin(n * 12.9898) * 43758.5453; return x - Math.floor(x); };
 
 function pattern(c, img, scale, ox, oy) {
   const p = c.createPattern(img, 'repeat');
@@ -92,7 +96,14 @@ export function paintPaintedTerrain(c, kit, rects, z, slopes = []) {
     c.fillStyle = pattern(c, kit.top, st, 0, -lift); c.fillRect(0, -lift, L, topH);
     c.restore();
     c.beginPath(); c.moveTo(topX, y); c.lineTo(x + w, y + h); c.lineTo(x, y + h); c.closePath();
-    c.lineWidth = lw; c.strokeStyle = OUTLINE; c.stroke();
+    c.lineWidth = lw; c.strokeStyle = kit.outline; c.stroke();
+    if (kit.snowCap) {
+      const sw = Math.max(4, z * 0.32);
+      c.save(); c.translate(topX, y); c.rotate(ang);
+      c.fillStyle = '#ffffff'; c.beginPath(); c.roundRect(-sw * 0.3, -sw * 0.55, L + sw * 0.6, sw, sw * 0.5); c.fill();
+      c.strokeStyle = 'rgba(140,200,230,0.8)'; c.lineWidth = Math.max(1, lw * 0.5); c.stroke();
+      c.restore();
+    }
   }
 
   for (const r of rects) {
@@ -108,9 +119,30 @@ export function paintPaintedTerrain(c, kit, rects, z, slopes = []) {
     c.restore();
     // crust: rises a little above the collision top and overhangs the ends slightly
     const over = Math.max(1, z * 0.05);
-    c.fillStyle = pattern(c, kit.top, st, x, y - lift);
-    c.fillRect(x - over, y - lift, w + over * 2, Math.min(topH, h + lift));
-    c.lineWidth = lw; c.strokeStyle = OUTLINE;
-    c.strokeRect(x - over, y - lift, w + over * 2, h + lift);
+    const cap = !r.world.noCap;
+    if (cap) { c.fillStyle = pattern(c, kit.top, st, x, y - lift); c.fillRect(x - over, y - lift, w + over * 2, Math.min(topH, h + lift)); }
+    c.lineWidth = lw; c.strokeStyle = kit.outline;
+    if (cap) c.strokeRect(x - over, y - lift, w + over * 2, h + lift); else c.strokeRect(x, y, w, h);
+    if (kit.snowCap && cap) {
+      const capH = Math.max(6, z * 0.4), ov = z * 0.14;
+      const g = c.createLinearGradient(x, y - capH * 0.6, x, y + capH); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#d8effc');
+      c.fillStyle = g;
+      c.beginPath(); c.moveTo(x - ov, y + capH * 0.6);
+      const bumps = Math.max(2, Math.round(w / (z * 1.1)));
+      for (let i = 0; i <= bumps; i++) { const bx = x - ov + ((w + ov * 2) * i) / bumps; const by = y - capH * (0.35 + hash(i * 7 + x) * 0.5); c.quadraticCurveTo(bx - (w + ov * 2) / bumps / 2, by, bx, y + capH * (0.25 + hash(i + x) * 0.3)); }
+      c.lineTo(x + w + ov, y + capH * 0.6); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(140,200,230,0.8)'; c.lineWidth = Math.max(1, lw * 0.5); c.stroke();
+    }
+    if (kit.icicles && !r.world.noFringe) {
+      c.strokeStyle = kit.outline; c.lineWidth = lw * 0.5;
+      const n = Math.max(2, Math.floor(w / (z * 0.75)));
+      for (let i = 0; i < n; i++) {
+        const ix = x + z * 0.25 + (i * (w - z * 0.5)) / Math.max(1, n - 1) + hash(i + x) * z * 0.2;
+        const big = i % 3 === 1; const ih = z * (big ? 0.55 + hash(i * 3 + y) * 0.7 : 0.22 + hash(i * 3 + y) * 0.3);
+        const g = c.createLinearGradient(ix, y + h, ix, y + h + ih); g.addColorStop(0, '#dff4ff'); g.addColorStop(1, '#8fd0f0');
+        c.fillStyle = g;
+        c.beginPath(); c.moveTo(ix - z * (big ? 0.16 : 0.1), y + h); c.lineTo(ix, y + h + ih); c.lineTo(ix + z * (big ? 0.16 : 0.1), y + h); c.closePath(); c.fill(); c.stroke();
+      }
+    }
   }
 }

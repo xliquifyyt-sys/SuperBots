@@ -127,6 +127,8 @@ tiles instead of the procedural theme painter:
 Both pieces must tile seamlessly on their left and right edges (`face` on top and
 bottom too). The current lava kits were cut out of the two Scenario scene
 paintings in `art/maps/raw/` (`Lava2-4.png` for Ember Pit, `Lava4-8.png` for
-Magma Works) with a seam-blend pass. Maps without an entry keep the procedural
-look, so themes can be converted one at a time.
+Magma Works) with a seam-blend pass. The ice kits add `snowCap` (a scalloped white mound drawn over the top edge)
+and `icicles` (a fringe under every platform), with `outline` set to navy.
+Maps without an entry keep the procedural look, so themes can be converted one
+at a time.
 

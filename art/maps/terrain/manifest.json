@@ -1,4 +1,36 @@
 {
-  "emberpit":   { "top": "lava_ember_top.jpg", "face": "lava_ember_face.jpg", "tile": 3.2, "topTile": 3.0, "lift": 0.25 },
-  "magmaworks": { "top": "lava_magma_top.jpg", "face": "lava_magma_face.jpg", "tile": 6.5, "topTile": 3.2, "lift": 0.15 }
+  "emberpit": {
+    "top": "lava_ember_top.jpg",
+    "face": "lava_ember_face.jpg",
+    "tile": 3.2,
+    "topTile": 3.0,
+    "lift": 0.25
+  },
+  "magmaworks": {
+    "top": "lava_magma_top.jpg",
+    "face": "lava_magma_face.jpg",
+    "tile": 6.5,
+    "topTile": 3.2,
+    "lift": 0.15
+  },
+  "frozenkeel": {
+    "top": "ice_glacier_top.jpg",
+    "face": "ice_glacier_face.jpg",
+    "tile": 5.0,
+    "topTile": 5.0,
+    "lift": 0,
+    "outline": "#0e2a4a",
+    "icicles": true,
+    "snowCap": true
+  },
+  "glacierfort": {
+    "top": "ice_glacier_top.jpg",
+    "face": "ice_glacier_face.jpg",
+    "tile": 6.0,
+    "topTile": 6.0,
+    "lift": 0,
+    "outline": "#0e2a4a",
+    "icicles": true,
+    "snowCap": true
+  }
 }
