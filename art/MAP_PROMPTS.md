@@ -1,20 +1,21 @@
 # Map art generation pack
 
-Maps are not sprites. A bot is one image; a map is a **theme**, and every theme
-needs two different kinds of asset:
+Maps split into two asset classes that behave nothing alike:
 
-- **3 background layers** — single painted images, far to near, scrolling at
-  different parallax speeds. Must tile horizontally so the scroll never seams.
-- **6 terrain pieces** — the platform tile set. These must tile and must line up
-  with collision rectangles the engine already owns, so they are the fussier half.
+- **Backgrounds, one per map.** A single painted image each, so all ten maps get
+  their own. That is what lets Ember Pit read as a volcano interior and Magma
+  Works as a foundry even though both are lava. Must tile horizontally.
+- **Terrain kits, one per theme.** Tiles repeat across a map and must butt
+  together seamlessly, so the two maps sharing a theme share one kit of six
+  pieces. They also have to line up with collision rectangles the engine already
+  owns, which makes them the fussier half.
 
-Five themes, so 15 background layers and 30 terrain pieces, 45 assets total.
-Two maps share each theme, which is why theme art is the unit of work rather
-than map art. Layout references for all ten maps are in `art/reference/maps/`.
+Ten backgrounds plus five kits of six pieces is 40 assets. Layout references for
+every map are in `art/reference/maps/`, with coordinate grids under `grid/`.
 
 ## Background style suffix
 
-Append to every background layer prompt.
+Append to every background prompt below.
 
 ```
 game background art for a 2D side-scrolling platformer, painted cartoon style,
@@ -25,7 +26,7 @@ text, seamless horizontal tiling, wide 16:9 composition
 
 ## Terrain style suffix
 
-Append to every terrain piece prompt.
+Append to every terrain kit prompt.
 
 ```
 2D game terrain tile, painted cartoon style, thick dark outline on the outer
@@ -99,9 +100,35 @@ a narrow cyberpunk alley at night, walls crowded with layered neon signage in ka
 a cyberpunk city seen from rooftop level at night, distant tower blocks with grids of lit windows, enormous holographic billboards, sagging power cables crossing the view, falling rain lit magenta and cyan
 ```
 
+
+## Terrain kit prompts
+
+**Lava** &mdash; Ember Pit, Magma Works
+```
+charred black basalt rock platform, molten cracked crust along the top surface with glowing orange seams, dark brittle stone body, brittle chipped edges
+```
+**Ice** &mdash; Frozen Keel, Glacier Fortress
+```
+translucent blue ice slab platform, thick fresh snow cap along the top surface, crystal facets inside the ice body, icicles hanging from the underside
+```
+**Jungle** &mdash; Canopy Ruins, Temple Crossing
+```
+weathered grey temple stone block platform, thick moss and grass cap along the top surface, carved stone seams and cracks, small vines trailing from the underside
+```
+**Sky** &mdash; Cloud Steps, Nimbus Reach
+```
+floating island platform, warm sandstone rock body tapering to a point beneath, bright green grass cap along the top surface, small cloud puffs clinging to the underside
+```
+**Neo City** &mdash; Neon Alley, Skyline Grid
+```
+dark metal industrial platform, riveted panel body with tread plate texture, yellow and black hazard stripe cap along the top surface, cyan light strip glowing along the underside
+```
+
 ## Terrain piece breakdown
 
-Generate the terrain set as one wide strip per theme, then cut into six pieces:
+Generate each theme's kit as one wide strip, then cut into six pieces. Generating
+the pieces separately gives edges that do not match, and mismatched edges show on
+every platform in the game rather than in one place:
 
 | Piece | What it is |
 | --- | --- |
@@ -116,7 +143,9 @@ Generate the terrain set as one wide strip per theme, then cut into six pieces:
 
 - Backgrounds: 2048 x 1152 PNG or JPEG, horizontally tileable.
 - Terrain: PNG with alpha, one-unit tile at 256 x 256.
-- Naming: `bg_<theme>_<far|mid|near>.png`, `terrain_<theme>_<piece>.png`.
+- Naming: `bg_<map>.png`, `terrain_<theme>_<piece>.png`.
+- Map ids: `emberpit`, `magmaworks`, `frozenkeel`, `glacierfort`, `canopyruins`,
+  `templecrossing`, `cloudsteps`, `nimbus`, `neonalley`, `skylinegrid`.
 - Theme ids: `lava`, `ice`, `jungle`, `sky`, `neo`.
 
 Drop everything into `art/maps/raw/` and I will wire it in.
