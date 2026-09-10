@@ -32,6 +32,9 @@ export function loadSprites(onChange) {
     }
     return;
   }
+  // A bundled single-file build has no server to fetch from; without an http
+  // origin the request only produces a CORS error in the console.
+  if (typeof location !== 'undefined' && !/^https?:/.test(location.protocol)) { manifest = {}; return; }
   fetch(BASE + 'manifest.json', { cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : {}))
     .then((m) => {
