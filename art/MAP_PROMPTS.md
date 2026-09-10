@@ -47,126 +47,57 @@ vanishing point, tilted horizon, cropped
 
 ---
 
-## Lava — Ember Pit, Magma Works
+## Background prompts, one per map
 
-**Far layer**
+### Ember Pit  `emberpit`  &mdash; lava kit
 ```
-a vast volcanic cavern wall, distant jagged rock spires in silhouette, deep
-ember red and near black, faint heat haze rising, dim orange glow from below
-```
-**Mid layer**
-```
-cracked basalt cliff faces with glowing orange fissures running through them,
-iron scaffolding and hanging chains, industrial foundry structures, charred
-brown rock and molten seams
-```
-**Near layer**
-```
-foreground volcanic rock pillars and hanging chains framing the screen edges,
-almost black silhouettes with rim lighting from below, drifting ember sparks
-```
-**Terrain set**
-```
-charred black basalt rock platform, molten cracked crust along the top surface
-with glowing orange seams, dark brittle stone body, brittle chipped edges
+the inside of an active volcano, a single vast cone rising from a lava lake, glowing fissures webbing the crater walls, thick ember haze, deep red-black rock against a dull orange glow from below
 ```
 
-## Ice — Frozen Keel, Glacier Fortress
-
-**Far layer**
+### Magma Works  `magmaworks`  &mdash; lava kit
 ```
-a pale blue glacier cavern wall, enormous soft ice spikes hanging from above and
-rising from below, cold white light diffusing through the ice
-```
-**Mid layer**
-```
-saturated cyan ice formations, a huge diagonal glacier sheet crossing the scene,
-a frozen waterfall, crystalline facets catching light
-```
-**Near layer**
-```
-dark teal ice spikes framing the screen edges, deep blue shadowed ice, drifting
-snow particles
-```
-**Terrain set**
-```
-translucent blue ice slab platform, thick fresh snow cap along the top surface,
-crystal facets inside the ice body, icicles hanging from the underside
+the interior of a colossal iron foundry, blast furnaces and smelting towers, steel gantries and catwalks, channels of molten metal running between them, soot-stained girders, orange light and drifting smoke
 ```
 
-## Jungle — Canopy Ruins, Temple Crossing
-
-**Far layer**
+### Frozen Keel  `frozenkeel`  &mdash; ice kit
 ```
-misty teal rainforest depth, distant tree trunks fading into haze, shafts of
-green light, dense canopy silhouette high above
-```
-**Mid layer**
-```
-dense green jungle foliage, hanging vines and creepers, weathered stone temple
-ruins half swallowed by growth, warm green and jade
-```
-**Near layer**
-```
-dark foreground jungle leaves and hanging vines framing the screen edges, deep
-green silhouettes, drifting spores
-```
-**Terrain set**
-```
-weathered grey temple stone block platform, thick moss and grass cap along the
-top surface, carved stone seams and cracks, small vines trailing from the
-underside
+a glacier cavern opening onto black freezing water, immense pale blue ice cliffs on both sides, icicles hanging from an unseen ceiling, cold white light diffusing through the ice, still water reflecting it
 ```
 
-## Sky — Cloud Steps, Nimbus Reach
-
-**Far layer**
+### Glacier Fortress  `glacierfort`  &mdash; ice kit
 ```
-a bright open sky, soft cumulus cloud banks in the distance, warm sunlight, pale
-blue fading to white near the horizon
-```
-**Mid layer**
-```
-large billowing cloud formations, distant floating rock islands with green tops,
-soft golden light on the cloud tops
-```
-**Near layer**
-```
-wispy foreground clouds drifting across the screen edges, translucent white,
-soft edges
-```
-**Terrain set**
-```
-floating island platform, warm sandstone rock body tapering to a point beneath,
-bright green grass cap along the top surface, small cloud puffs clinging to the
-underside
+the interior of a vast fortress carved from glacier ice, ramparts and buttresses cut into blue ice walls, frozen arches, tattered frost-covered banners, faint green aurora light bleeding through the ceiling
 ```
 
-## Neo City — Neon Alley, Skyline Grid
-
-**Far layer**
+### Canopy Ruins  `canopyruins`  &mdash; jungle kit
 ```
-a deep indigo cyberpunk skyline at night, distant tower blocks with grids of lit
-windows, faint magenta glow on the horizon
-```
-**Mid layer**
-```
-neon signs and holographic billboards on building faces, a giant glowing
-holographic face projection, sagging power cables, cyan and magenta light
-```
-**Near layer**
-```
-dark foreground building edges framing the screen, silhouetted air conditioning
-units and antennas, falling rain streaks lit by neon
-```
-**Terrain set**
-```
-dark metal industrial platform, riveted panel body with tread plate texture,
-yellow and black hazard stripe cap along the top surface, cyan light strip
-glowing along the underside
+the interior of a towering rainforest, immense buttressed tree trunks receding into teal mist, a dense layered canopy far overhead, shafts of green light falling between the trunks, hanging creepers
 ```
 
----
+### Temple Crossing  `templecrossing`  &mdash; jungle kit
+```
+an overgrown temple clearing deep in the jungle, ruined carved stonework half swallowed by roots, distant stepped ziggurats fading into warm green mist, shafts of sunlight, drifting spores
+```
+
+### Cloud Steps  `cloudsteps`  &mdash; sky kit
+```
+a bright open sky high above the world, soft cumulus banks stacked into the distance, small floating rock islands scattered far away, warm sunlight, pale blue fading to white near the horizon
+```
+
+### Nimbus Reach  `nimbus`  &mdash; sky kit
+```
+the high altitude sky, towering thunderhead cloud columns catching golden light, distant chains of floating islands, wind-streaked cirrus, deep blue above fading to pale gold at the horizon
+```
+
+### Neon Alley  `neonalley`  &mdash; neo kit
+```
+a narrow cyberpunk alley at night, walls crowded with layered neon signage in kanji and glyphs, fire escapes and tangled cables, steam venting from grates, magenta and cyan light on wet brick
+```
+
+### Skyline Grid  `skylinegrid`  &mdash; neo kit
+```
+a cyberpunk city seen from rooftop level at night, distant tower blocks with grids of lit windows, enormous holographic billboards, sagging power cables crossing the view, falling rain lit magenta and cyan
+```
 
 ## Terrain piece breakdown
 
