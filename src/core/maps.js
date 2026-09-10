@@ -63,7 +63,6 @@ export const MAPS = {
       R(24, 12.6, 8, 2.4), R(32, 10.2, 8, 4.8),         // furnace tiers, 20% shorter, still floor-seated
       R(14, 10, 5, 0.9),                                // catwalk on the low side
       R(20, 6.5, 6, 0.9),                               // crane arm (cover over the first tier)
-      R(0, 9, 1, 6),                                    // left wall
     ],
     slopes: [S(20, 12.6, 4, 2.4, 1)],                   // ramp onto the first tier
     spawns: [[2, 14.5], [6, 14.5], [15, 14.5], [19, 14.5], [27, 12.1], [35, 9.7], [43, 14.5], [22, 14.5]],
@@ -107,7 +106,7 @@ export const MAPS = {
     terrain: [
       R(0, 17, 9, 5), R(11, 17, 26, 5), R(39, 17, 9, 5), // frozen ground with two pit holes (9..11 and 37..39)
       R(18, 11, 12, 6),                                 // the keep
-      R(21, 6.5, 6, 0.9),                               // keep roof (cover)
+      R(22.2, 6.5, 3.6, 0.9),                           // keep roof (cover), 40% shorter, still centred on 24
       R(4, 9, 5, 0.9), R(39, 9, 5, 0.9),                // watchtower tops
       R(10, 13.5, 4, 0.8), R(34, 13.5, 4, 0.8),         // wall walks
     ],
