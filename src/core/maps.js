@@ -155,7 +155,7 @@ export const MAPS = {
       R(21, 3.5, 4, 0.8),                               // altar canopy (cover on the summit)
       R(3, 11, 5, 0.9), R(38, 11, 5, 0.9),              // side tree platforms
       R(6, 6.5, 4, 0.8), R(9.2, 5.1, 0.8, 1.4),         // L-shaped floating platform above the left ledge, post at its right end
-      R(36, 6.5, 4, 0.8), R(39.2, 5.1, 0.8, 1.4),       // mirrored L above the right ledge, post at its right end
+      R(36, 6.5, 4, 0.8), R(36, 5.1, 0.8, 1.4),         // mirrored L above the right ledge, post at its left end
     ],
     slopes: [],
     spawns: [[2, 15.5], [7.2, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [39.3, 15.5], [43, 15.5], [45.5, 15.5]],
