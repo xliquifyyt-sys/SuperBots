@@ -178,7 +178,7 @@ export const MAPS = {
       R(9.5, 15.4, 4, 1.2),                             // catch platform under the low steps
     ],
     slopes: [],
-    pads: [{ x: 3, y: 11, to: [17.5, 3.1], label: 'Updraft vent' }],    // floats over the low island -> top-centre shelter
+    pads: [{ x: 21, y: 13, to: [17.5, 3.1], label: 'Updraft vent' }],   // floats in the middle gap -> top-centre shelter
     spawns: [[1.5, 12.5], [4.5, 12.5], [9.5, 10.1], [12, 10.1], [16.5, 7.7], [19, 7.7], [23.5, 5.3], [29, 3.3]],
     powerups: [[3, 7.5], [17.5, 3.1], [11.5, 14.9], [24.5, 5.3], [29, 3.3], [0.8, 12.5]],
     killFloor: { type: 'void', y: 18 },
