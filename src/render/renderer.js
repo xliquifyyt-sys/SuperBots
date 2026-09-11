@@ -465,7 +465,7 @@ export class Renderer {
       }
       if (!b.grounded) this._lastAir = this._airTime.get(b.id);
       (this._grounded || (this._grounded = new Map())).set(b.id, b.grounded);
-      drawBot(c, b.def, r * 1.67, { ...this.animState(b), facing, vx: b.vx, vy: b.vy, grounded: b.grounded, color: b.color, hp: b.hp / b.maxHp, id: b.id }, this.time);
+      drawBot(c, b.def, r * 1.67 * PHYS.botVisualScale, { ...this.animState(b), facing, vx: b.vx, vy: b.vy, grounded: b.grounded, color: b.color, hp: b.hp / b.maxHp, id: b.id }, this.time);
       c.restore();
 
       if (!b.alive) continue;

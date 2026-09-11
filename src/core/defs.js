@@ -10,16 +10,19 @@ export const PHYS = {
   groundFriction: 6,      // per second velocity damping while grounded
   airDrag: 0.05,
   botRestitution: 0.15,
-  missileSpeed: 33,       // at full power (~20% more range than before)
+  missileSpeed: 33,       // base projectile speed at full power; specials scale from it
+  missileSpeedMul: 1.25,  // the basic missile flies 25% faster than the base
+  missileKnock: 1.25,     // the basic missile shoves 25% harder than other projectiles
   jumpSpeed: 19.57,       // at full power, medium weight. Height goes as v^2, so this is 17.5 x sqrt(1.25) for +25% height
   weightJump: { light: 1.18, medium: 1.0, heavy: 0.86 },
   mass: { light: 0.7, medium: 1.0, heavy: 1.6 },   // bot-bot collisions: heavies shove, lights get shoved
   botBump: 0.35,          // restitution between bots
-  hitRadius: { light: 0.5, medium: 0.56, heavy: 0.64 },  // what projectiles and blasts have to reach: the painted sprites are wider than the 0.5 body
+  hitRadius: { light: 0.62, medium: 0.7, heavy: 0.8 },   // bots are drawn 25% larger, so the hit circles grew with them
+  botVisualScale: 1.25,   // sprite size multiplier  // what projectiles and blasts have to reach: the painted sprites are wider than the 0.5 body
   slopeGrip: 2.6,         // below this speed a bot on a ramp holds still instead of creeping down
   weightKnockback: { light: 1.3, medium: 1.0, heavy: 0.6 },
   accuracyGuide: { low: 0.3, medium: 0.55, high: 0.85 },
-  knockbackPerDamage: 0.28,
+  knockbackPerDamage: 0.336,  // 0.28 x 1.2: every damaging move shoves 20% harder
 };
 
 export const DMG = {

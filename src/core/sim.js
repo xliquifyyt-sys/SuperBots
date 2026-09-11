@@ -404,7 +404,7 @@ export class World {
   }
 
   spawnProjectile(b, aim, opts) {
-    const speed = PHYS.missileSpeed * aim.power * (opts.speedMul ?? 1) * (b.def.id === 'volt' && opts.kind === 'missile' ? 1.15 : 1);
+    const speed = PHYS.missileSpeed * aim.power * (opts.speedMul ?? 1) * (opts.kind === 'missile' ? PHYS.missileSpeedMul : 1) * (b.def.id === 'volt' && opts.kind === 'missile' ? 1.15 : 1);
     const ang = (opts.angleOffset || 0) * DEG;
     const cos = Math.cos(ang), sin = Math.sin(ang);
     const dx = aim.dx * cos - aim.dy * sin, dy = aim.dx * sin + aim.dy * cos;
@@ -420,7 +420,7 @@ export class World {
   }
 
   fireMissile(b, aim) {
-    this.spawnProjectile(b, aim, { kind: 'missile' });
+    this.spawnProjectile(b, aim, { kind: 'missile', knock: PHYS.missileKnock });
     this.emit('fire', { bot: b.id, x: b.x, y: b.y });
   }
 
@@ -1064,7 +1064,7 @@ export class World {
     const opts = this.projectileOptsFor(b, type, param);
     const savedTime = this.time;
     this.time = 1; // so the owner can be hit by reflections in preview
-    const speed = PHYS.missileSpeed * aim.power * (opts.speedMul ?? 1) * (b.def.id === 'volt' && opts.kind === 'missile' ? 1.15 : 1);
+    const speed = PHYS.missileSpeed * aim.power * (opts.speedMul ?? 1) * (opts.kind === 'missile' ? PHYS.missileSpeedMul : 1) * (b.def.id === 'volt' && opts.kind === 'missile' ? 1.15 : 1);
     const p = { x: b.x + aim.dx * 0.7, y: b.y + aim.dy * 0.7, vx: aim.dx * speed, vy: aim.dy * speed, owner: b.id, kind: opts.kind, r: opts.r ?? PROJ_R, gravity: opts.gravity ?? 1, wind: 1, life: 6, bounces: opts.bounces || 0, bounced: 0, splitAt: opts.splitAt || false, reflected: 0, trail: [], radius: opts.radius ?? DMG.missileRadius, dmg: opts.dmg ?? DMG.missile };
     for (let i = 0; i < 400; i++) {
       const res = this.stepProjectile(p, PHYS.dt, true);
