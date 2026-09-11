@@ -54,14 +54,14 @@ export const BOTS = {
     id: 'bulwark', name: 'Bulwark', cls: 'Heavy tank', hp: 140, weight: 'heavy', accuracy: 'medium',
     color: '#4f7cff', shape: 'block', desc: 'Anchors a fight. Walls off lanes and punishes clustering.',
     passive: 'Immune to knockback while Bastion Wall is up.',
-    s1: { id: 'bastionWall', name: 'Bastion Wall', cd: 3, desc: 'Deploy a 3-segment barrier toward your aim for 2 turns. Blocks projectiles; breaks after 40 damage.' },
+    s1: { id: 'bastionWall', name: 'Bastion Wall', cd: 3, target: 'point', desc: 'Place a 3-segment barrier anywhere on the map for 2 turns. Shield a teammate or block a lane. Blocks projectiles; breaks after 10 damage.', wallHp: 10 },
     s2: { id: 'siegeShell', name: 'Siege Shell', cd: 4, desc: 'Slow heavy shell: 55 damage, radius 1.5, strong knockback.', dmg: 55, radius: 1.5 },
   },
   magmaw: {
     id: 'magmaw', name: 'Magmaw', cls: 'Heavy brawler', hp: 140, weight: 'heavy', accuracy: 'low',
     color: '#ff5a1f', shape: 'jaw', desc: 'Gets in close and sets the ground on fire.',
     passive: 'Completely immune to Burn damage. Survives the first lava contact each turn.',
-    s1: { id: 'moltenSlam', name: 'Molten Slam', cd: 3, desc: 'Jump toward your aim and slam: 35 damage, radius 2.5, leaves a burning patch: 15 damage on contact.', dmg: 35, radius: 2.5 },
+    s1: { id: 'moltenSlam', name: 'Molten Slam', cd: 3, desc: 'Jump toward your aim and slam: 35 damage, radius 3.5, leaves a burning patch: 15 damage on contact.', dmg: 35, radius: 3.5 },
     s2: { id: 'emberSpit', name: 'Ember Spit', cd: 2, desc: 'Spit 3 short-range fire globs: 12 damage each, applies Burn.', dmg: 12, radius: 0.7 },
   },
   volt: {
@@ -69,7 +69,7 @@ export const BOTS = {
     color: '#ffe23a', shape: 'bolt', desc: 'The reliable marksman. Beams ignore walls.',
     passive: 'Missile speed +15%.',
     s1: { id: 'chainArc', name: 'Chain Arc', cd: 3, desc: 'Instant beam that pierces terrain and bots: 40 damage, then arcs to one more bot nearby for 15.', dmg: 40, arcDmg: 15, arcRange: 6 },
-    s2: { id: 'staticField', name: 'Static Field', cd: 4, desc: 'Drops a wide field at impact: 30 damage, bots inside are Shocked (no specials next turn).', dmg: 30, radius: 3 },
+    s2: { id: 'staticField', name: 'Static Field', cd: 4, desc: 'Drops a wide field at impact: 30 damage, bots inside are Shocked (no specials for the next 2 turns).', dmg: 30, radius: 3, shockTurns: 3 },
   },
   warden: {
     id: 'warden', name: 'Warden', cls: 'Medium defender', hp: 130, weight: 'medium', accuracy: 'medium',
@@ -82,21 +82,21 @@ export const BOTS = {
     id: 'skyla', name: 'Skyla', cls: 'Medium aerial', hp: 130, weight: 'medium', accuracy: 'high',
     color: '#8fd3ff', shape: 'wing', desc: 'Owns the air. Repositions and shoots in one move.',
     passive: 'Not affected by map wind.',
-    s1: { id: 'updraft', name: 'Updraft', cd: 2, desc: 'Leap with 2x height and rain 3 missiles straight down from the apex: 18 damage each.', dmg: 18, radius: 0.9 },
-    s2: { id: 'galeShot', name: 'Gale Shot', cd: 3, desc: 'Long wind blast that shoves bots, projectiles and power-ups: 20 damage. Jumping into the wind fights the push.', dmg: 20 },
+    s1: { id: 'updraft', name: 'Updraft', cd: 2, desc: 'Leap with 2x height and rain 5 missiles straight down from the apex: 18 damage each.', dmg: 18, radius: 0.9, missiles: 5 },
+    s2: { id: 'galeShot', name: 'Gale Shot', cd: 3, desc: 'Long wind blast that shoves bots, projectiles and power-ups: 20 damage. Jumping into the wind fights the push.', dmg: 20, reach: 15, push: 20 },
   },
   phantom: {
     id: 'phantom', name: 'Phantom', cls: 'Light assassin', hp: 120, weight: 'light', accuracy: 'high',
     color: '#c46bff', shape: 'blade', desc: 'Appears next to you, then disappears.',
     passive: 'After a kill, next special cooldown is 1 turn shorter.',
-    s1: { id: 'blinkStrike', name: 'Blink Strike', cd: 3, desc: 'Teleport to your aim point (max 60% of map width), then release 4 shards: 9 damage each.', dmg: 9, radius: 0.8 },
+    s1: { id: 'blinkStrike', name: 'Blink Strike', cd: 3, target: 'point', desc: 'Teleport to any spot on the map you pick, then release 3 shards at the nearest enemy: 8 damage each.', dmg: 8, radius: 0.8, shards: 3 },
     s2: { id: 'toxicBomb', name: 'Toxic Bomb', cd: 3, desc: 'Toxic cloud at impact: bots inside take 5 damage per tick, up to 35 this turn. The cloud clears when the turn ends.', dmg: 5, radius: 2.4 },
   },
   ricochet: {
     id: 'ricochet', name: 'Ricochet', cls: 'Light trickster', hp: 120, weight: 'light', accuracy: 'medium',
     color: '#ff4fa3', shape: 'ball', desc: 'Bank shots off everything. Map knowledge wins.',
     passive: 'Own jump bounces once off terrain.',
-    s1: { id: 'pinball', name: 'Pinball', cd: 2, desc: 'Missile that bounces up to 4 times: 30 damage per bot hit, +5 per bounce.', dmg: 30, radius: 0.9, param: { name: 'Bounces', values: [1, 2, 3, 4], default: 4 } },
+    s1: { id: 'pinball', name: 'Pinball', cd: 2, desc: 'Big missile that bounces up to 4 times: 35 damage per bot hit, +5 per bounce.', dmg: 35, radius: 0.9, r: 0.3, param: { name: 'Bounces', values: [1, 2, 3, 4], default: 4 } },
     s2: { id: 'splitShot', name: 'Split Shot', cd: 3, desc: 'Projectile splits into 4 at apex: 15 damage each.', dmg: 15, radius: 0.8 },
   },
   gravitas: {
@@ -104,7 +104,7 @@ export const BOTS = {
     color: '#9aa4b8', shape: 'orb', desc: 'Drags everyone together. Best friend of every Siege Shell.',
     passive: 'Heavy knockback resistance while keeping a Medium jump.',
     s1: { id: 'singularity', name: 'Singularity', cd: 4, desc: 'Pulls all bots within a huge radius toward the impact point for the rest of the turn.', radius: 9.1 },
-    s2: { id: 'shockwave', name: 'Shockwave', cd: 3, desc: 'Radial burst from yourself: 50 damage to all within radius 3, heavy knockback.', dmg: 50, radius: 3 },
+    s2: { id: 'shockwave', name: 'Shockwave', cd: 3, desc: 'Radial burst from yourself: 50 damage to all within radius 5, very heavy knockback.', dmg: 50, radius: 5, knock: 2.5 },
   },
 };
 export const BOT_IDS = Object.keys(BOTS);

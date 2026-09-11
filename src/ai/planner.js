@@ -220,9 +220,18 @@ export class AIPlanner {
       }
       case 'bastionWall': {
         if (!nearest || w.walls.some((x) => x.owner === b.id)) return null;
-        const dx = nearest.x - b.x;
-        const score = (b.hp < b.maxHp * 0.7 ? 16 : 6) + allEnemies.filter((e) => Math.abs(e.y - b.y) < 2.5).length * 6;
-        return this.rng.next() < iq ? { key: slot, aim: { dx: Math.sign(dx) || 1, dy: 0, power: 1 }, score, debug: 'wall' } : null;
+        // Shield whoever on the team is most exposed (self included): wall between them and their nearest enemy.
+        let guard = b, gScore = -Infinity;
+        for (const t of w.bots) {
+          if (!t.alive || !w.sameTeam(t, b)) continue;
+          const en = this.nearest(t, allEnemies); if (!en) continue;
+          const s = (1 - t.hp / t.maxHp) * 30 + allEnemies.filter((e) => Math.abs(e.y - t.y) < 2.5 && Math.abs(e.x - t.x) < 18).length * 6;
+          if (s > gScore) { gScore = s; guard = t; }
+        }
+        const en = this.nearest(guard, allEnemies);
+        const side = Math.sign(en.x - guard.x) || 1;
+        const score = (guard.hp < guard.maxHp * 0.7 ? 16 : 6) + allEnemies.filter((e) => Math.abs(e.y - guard.y) < 2.5).length * 6;
+        return this.rng.next() < iq ? { key: slot, aim: { dx: side, dy: 0, power: 1, tx: guard.x + side * 1.7, ty: guard.y - 0.6 }, score, debug: 'wall' } : null;
       }
     }
     return null;
@@ -239,8 +248,15 @@ export class AIPlanner {
     let best = null;
     const wantMove = dangerHere > 12 || b.hp < b.maxHp * 0.3 || noShot;
     const nearest = this.nearest(b, enemies);
-    for (const aim of this.aimSamples(Math.max(36, this.diff.samples * 0.6))) {
-      if (aim.dy > 0.2) continue; // jumps go up
+    let samples = this.aimSamples(Math.max(36, this.diff.samples * 0.6));
+    if (type === 'blinkStrike') {
+      // Blink picks a map point: try spots flanking each enemy plus a few safe retreats along the terrain.
+      samples = [];
+      for (const e of enemies) for (const off of [-3.2, -2.2, 2.2, 3.2]) samples.push({ dx: off < 0 ? -1 : 1, dy: 0, power: 1, tx: e.x + off, ty: e.y - 0.4 });
+      for (let i = 0; i < 6; i++) { const pt = w.randomGroundSpot(); if (pt) samples.push({ dx: 1, dy: 0, power: 1, tx: pt.x, ty: pt.y - 0.4 }); }
+    }
+    for (const aim of samples) {
+      if (aim.tx == null && aim.dy > 0.2) continue; // jumps go up
       const pv = w.previewAction(b, type, aim);
       const imp = pv.impact;
       if (!imp || imp.type !== 'land' && imp.type !== 'blink') continue;

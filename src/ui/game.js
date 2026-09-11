@@ -113,7 +113,9 @@ export class GameController {
     if (!this.me || !this.match || this.match.phase !== 'plan') return;
     const avail = this.match.world.availableActions(this.me);
     if (!avail[k]) return;
+    const wasPoint = this._pointMove();
     this.selected = k; this.locked = false; audio.ui();
+    if (wasPoint !== this._pointMove()) { this.aim = null; delete this.match.pendingActions[this.me.id]; } // a picked spot is not a drag aim, and vice versa
     this.updateActionBar();
     if (this.aim) this._submit(false);
   }
@@ -129,10 +131,17 @@ export class GameController {
 
   toggleLock() {
     if (!this.me || !this.match || this.match.phase !== 'plan') return;
-    if (!this.aim) { this.showCenter('DRAG TO AIM FIRST', 1); return; }
+    if (!this.aim) { this.showCenter(this._pointMove() ? 'PICK A SPOT FIRST' : 'DRAG TO AIM FIRST', 1); return; }
     this.locked = !this.locked; audio.ui();
     this._submit(this.locked);
     this.updateActionBar();
+  }
+
+  // Specials flagged target:'point' (Blink Strike, Bastion Wall) take a map position instead of a drag vector.
+  _pointMove() {
+    if (!this.me) return false;
+    const sp = this.selected === 's1' ? this.me.def.s1 : (this.selected === 's2' ? this.me.def.s2 : null);
+    return !!(sp && sp.target === 'point');
   }
 
   _submit(locked) {
@@ -204,7 +213,7 @@ export class GameController {
     const up = (e) => {
       const p = this.pointers.get(e.pointerId);
       this.pointers.delete(e.pointerId);
-      if (this.dragStart && p && !this.dragStart.moved && this.dragMode !== 'pinch') this._tap(e.clientX, e.clientY);
+      if (this.dragStart && p && !this.dragStart.moved && this.dragMode !== 'pinch' && !(this.dragMode === 'aim' && this._pointMove())) this._tap(e.clientX, e.clientY);
       if (this.pointers.size === 0) { this.dragMode = null; this.dragStart = null; }
     };
     c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up);
@@ -215,6 +224,15 @@ export class GameController {
 
   // Aim = direction from the drag start point, power = drag length. Aiming anywhere on screen works.
   _aimFrom(cx, cy, first) {
+    if (this._pointMove()) {
+      // Point-target move: the spot under the finger is the target. Tap or drag anywhere on the map.
+      const [wx, wy] = this.r.toWorld(cx, cy);
+      const fx = wx - this.me.x;
+      this.aim = { dx: Math.abs(fx) > 0.05 ? Math.sign(fx) : 1, dy: 0, power: 1, tx: wx, ty: wy };
+      if (this.locked) { this.locked = false; this.updateActionBar(); }
+      this._submit(false);
+      return;
+    }
     if (first) { this.aimOrigin = { x: cx, y: cy }; return; }
     const dx = cx - this.aimOrigin.x, dy = cy - this.aimOrigin.y;
     const len = Math.hypot(dx, dy);
@@ -298,11 +316,17 @@ export class GameController {
       const radius = type === 'missile' ? 1 : (this.me.def[this.selected]?.radius || 0);
       const style = this.selected === 'jump' ? 'jump' : (this.selected === 's1' || this.selected === 's2' ? 'special' : 'missile');
       const accent = style === 'special' ? ACTION_ACCENT(type) : (style === 'missile' ? ACTION_ACCENT('missile') : '#ffffff');
-      aimInfo = { points: pv.points, fraction: 1, color: this.me.color, impact: pv.impact, radius, origin: [this.me.x, this.me.y], dx: this.aim.dx, dy: this.aim.dy, power: this.aim.power, style, accent, iconKind: style === 'jump' ? 'jump' : (style === 'missile' ? 'missile' : type) };
+      const point = this._pointMove();
+      aimInfo = { points: pv.points, fraction: 1, color: this.me.color, impact: pv.impact, radius, origin: point ? null : [this.me.x, this.me.y], dx: this.aim.dx, dy: this.aim.dy, power: this.aim.power, style, accent, iconKind: style === 'jump' ? 'jump' : (style === 'missile' ? 'missile' : type) };
       facing[this.me.id] = this.aim.dx < 0 ? -1 : 1;
-      const ang = Math.round(-Math.atan2(this.aim.dy, this.aim.dx) * 180 / Math.PI);
-      this.el.readout.textContent = `${type} · angle ${ang}° · power ${Math.round(this.aim.power * 100)}%${this.locked ? ' · LOCKED' : ''}`;
-    } else if (m.phase === 'plan') this.el.readout.textContent = this.me && this.me.alive ? 'Drag anywhere to aim' : 'Spectating';
+      if (point) {
+        const moved = pv.impact && pv.impact.moved ? ' · nudged to open space' : '';
+        this.el.readout.textContent = `${type} · spot ${pv.impact ? pv.impact.x.toFixed(1) : '?'}, ${pv.impact ? pv.impact.y.toFixed(1) : '?'}${moved}${this.locked ? ' · LOCKED' : ''}`;
+      } else {
+        const ang = Math.round(-Math.atan2(this.aim.dy, this.aim.dx) * 180 / Math.PI);
+        this.el.readout.textContent = `${type} · angle ${ang}° · power ${Math.round(this.aim.power * 100)}%${this.locked ? ' · LOCKED' : ''}`;
+      }
+    } else if (m.phase === 'plan') this.el.readout.textContent = this.me && this.me.alive ? (this._pointMove() ? 'Tap the map to pick a spot' : 'Drag anywhere to aim') : 'Spectating';
     let ready = null;
     if (m.phase === 'plan') { ready = new Set(); for (const b of w.bots) if (b.alive && m.pendingActions[b.id] && (m.pendingActions[b.id].locked || b.isAI)) ready.add(b.id); }
     this.r.update(dt, { aim: aimInfo, facing, ready, selected: this.infoBot ? this.infoBot.id : (this.me ? this.me.id : -1) });

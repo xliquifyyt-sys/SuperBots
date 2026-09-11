@@ -64,7 +64,7 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
 <header class="top">
   <h1>Super Bots Ability Sheet</h1>
   <p class="sub">Every bot, its passive and both specials, with the numbers the simulation actually uses. Comment on anything you want changed: damage, radius, cooldown, how a move behaves, or a whole new idea for a slot.</p>
-  <span class="build">Build v40</span>
+  <span class="build">Build v41</span>
   <nav class="toc" aria-label="Bots"><a href="#bulwark" style="--bot:#4f7cff">Bulwark</a><a href="#magmaw" style="--bot:#ff5a1f">Magmaw</a><a href="#volt" style="--bot:#ffe23a">Volt</a><a href="#warden" style="--bot:#3ddc97">Warden</a><a href="#skyla" style="--bot:#8fd3ff">Skyla</a><a href="#phantom" style="--bot:#c46bff">Phantom</a><a href="#ricochet" style="--bot:#ff4fa3">Ricochet</a><a href="#gravitas" style="--bot:#9aa4b8">Gravitas</a></nav>
 </header>
 <section class="rules" aria-label="Shared rules">
@@ -92,9 +92,9 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
   <div class="moves">
     <section class="move passive"><header><span class="slot">Passive</span><h3>Wall immunity</h3></header><p class="how">Takes zero knockback while its Bastion Wall is standing.</p></section>
     <section class="move" aria-label="Bastion Wall">
-  <header><span class="slot">S1</span><h3>Bastion Wall</h3><span class="kind">Deploy</span><span class="cd">CD 3</span></header>
-  <dl class="stats"><div class="kv"><dt>Segments</dt><dd>3 x 0.4 x 0.85</dd></div><div class="kv"><dt>Wall HP</dt><dd>40</dd></div><div class="kv"><dt>Lasts</dt><dd>2 turns</dd></div><div class="kv"><dt>Offset</dt><dd>1.35 toward aim</dd></div></dl>
-  <p class="how">Three stacked wall segments appear 1.35 units to the aimed side. Blocks projectiles (yours pass through). Breaks after 40 damage. Bulwark ignores knockback while it stands.</p>
+  <header><span class="slot">S1</span><h3>Bastion Wall</h3><span class="kind">Place anywhere</span><span class="cd">CD 3</span></header>
+  <dl class="stats"><div class="kv"><dt>Segments</dt><dd>3 x 0.4 x 0.85</dd></div><div class="kv"><dt>Wall HP</dt><dd>10</dd></div><div class="kv"><dt>Lasts</dt><dd>2 turns</dd></div><div class="kv"><dt>Target</dt><dd>tap any spot on the map</dd></div></dl>
+  <p class="how">Tap or drag on the map to place a 3-segment column anywhere: in front of a teammate, across a lane, or beside yourself. It is nudged out of terrain if you tap inside a block. Blocks projectiles (yours pass through). Breaks after 10 damage. Bulwark ignores knockback while it stands.</p>
 </section>
     <section class="move" aria-label="Siege Shell">
   <header><span class="slot">S2</span><h3>Siege Shell</h3><span class="kind">Projectile</span><span class="cd">CD 4</span></header>
@@ -122,7 +122,7 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
     <section class="move passive"><header><span class="slot">Passive</span><h3>Fireproof</h3></header><p class="how">Immune to Burn. First lava contact each turn bounces it back up (vy -15) instead of killing it.</p></section>
     <section class="move" aria-label="Molten Slam">
   <header><span class="slot">S1</span><h3>Molten Slam</h3><span class="kind">Jump + blast</span><span class="cd">CD 3</span></header>
-  <dl class="stats"><div class="kv"><dt>Damage</dt><dd>35</dd></div><div class="kv"><dt>Radius</dt><dd>2.5</dd></div><div class="kv"><dt>Knock</dt><dd>1.3x</dd></div><div class="kv"><dt>Min power</dt><dd>60%</dd></div><div class="kv"><dt>Patch</dt><dd>4 wide, 3 turns, 15 dmg</dd></div></dl>
+  <dl class="stats"><div class="kv"><dt>Damage</dt><dd>35</dd></div><div class="kv"><dt>Radius</dt><dd>3.5</dd></div><div class="kv"><dt>Knock</dt><dd>1.5x</dd></div><div class="kv"><dt>Min power</dt><dd>60%</dd></div><div class="kv"><dt>Patch</dt><dd>4 wide, 3 turns, 15 dmg</dd></div></dl>
   <p class="how">Jumps toward the aim (never below 60% power) and explodes on landing. Leaves a burning patch that deals 15 on contact. Self-safe.</p>
 </section>
     <section class="move" aria-label="Ember Spit">
@@ -156,8 +156,8 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
 </section>
     <section class="move" aria-label="Static Field">
   <header><span class="slot">S2</span><h3>Static Field</h3><span class="kind">Projectile</span><span class="cd">CD 4</span></header>
-  <dl class="stats"><div class="kv"><dt>Damage</dt><dd>30</dd></div><div class="kv"><dt>Radius</dt><dd>3</dd></div><div class="kv"><dt>Speed</dt><dd>1.0x</dd></div><div class="kv"><dt>Effect</dt><dd>Shocked</dd></div><div class="kv"><dt>Field lasts</dt><dd>1 turn</dd></div></dl>
-  <p class="how">Explodes on impact and leaves a 3-radius field for the rest of the turn. Bots inside are Shocked: no specials next turn.</p>
+  <dl class="stats"><div class="kv"><dt>Damage</dt><dd>30</dd></div><div class="kv"><dt>Radius</dt><dd>3</dd></div><div class="kv"><dt>Speed</dt><dd>1.0x</dd></div><div class="kv"><dt>Effect</dt><dd>Shocked 2 turns</dd></div><div class="kv"><dt>Field lasts</dt><dd>1 turn</dd></div></dl>
+  <p class="how">Explodes on impact and leaves a 3-radius field for the rest of the turn. Bots inside are Shocked: no specials for the next 2 turns.</p>
 </section>
   </div>
 </article>
@@ -209,13 +209,13 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
     <section class="move passive"><header><span class="slot">Passive</span><h3>Wind-proof</h3></header><p class="how">Map wind (gusts) does not push Skyla.</p></section>
     <section class="move" aria-label="Updraft">
   <header><span class="slot">S1</span><h3>Updraft</h3><span class="kind">Jump + rain</span><span class="cd">CD 2</span></header>
-  <dl class="stats"><div class="kv"><dt>Height</dt><dd>2x vertical</dd></div><div class="kv"><dt>Missiles</dt><dd>3 x 18</dd></div><div class="kv"><dt>Radius</dt><dd>0.9</dd></div><div class="kv"><dt>Spread</dt><dd>-0.28, 0, +0.28</dd></div><div class="kv"><dt>Rain power</dt><dd>75%</dd></div></dl>
-  <p class="how">A jump with doubled vertical speed. At the apex three missiles drop straight down. Skyla keeps flying to wherever the jump lands her.</p>
+  <dl class="stats"><div class="kv"><dt>Height</dt><dd>2x vertical</dd></div><div class="kv"><dt>Missiles</dt><dd>5 x 18</dd></div><div class="kv"><dt>Radius</dt><dd>0.9</dd></div><div class="kv"><dt>Spread</dt><dd>-0.5 to +0.5 in 5 steps</dd></div><div class="kv"><dt>Rain power</dt><dd>75%</dd></div></dl>
+  <p class="how">A jump with doubled vertical speed. At the apex five missiles drop straight down in a fan. Skyla keeps flying to wherever the jump lands her.</p>
 </section>
     <section class="move" aria-label="Gale Shot">
   <header><span class="slot">S2</span><h3>Gale Shot</h3><span class="kind">Cone blast</span><span class="cd">CD 3</span></header>
-  <dl class="stats"><div class="kv"><dt>Damage</dt><dd>20</dd></div><div class="kv"><dt>Reach</dt><dd>13</dd></div><div class="kv"><dt>Cone</dt><dd>60 deg</dd></div><div class="kv"><dt>Push</dt><dd>17 x weight</dd></div><div class="kv"><dt>Also moves</dt><dd>projectiles +20, power-ups 3.5</dd></div></dl>
-  <p class="how">Instant wind cone. Every bot inside takes 20 and is shoved 17 units/s (scaled by its knockback weight). A bot already moving into the wind braces and takes as little as a quarter of the push. Also flings live projectiles and slides power-ups.</p>
+  <dl class="stats"><div class="kv"><dt>Damage</dt><dd>20</dd></div><div class="kv"><dt>Reach</dt><dd>15</dd></div><div class="kv"><dt>Cone</dt><dd>60 deg</dd></div><div class="kv"><dt>Push</dt><dd>20 x weight</dd></div><div class="kv"><dt>Also moves</dt><dd>projectiles +20, power-ups 3.5</dd></div></dl>
+  <p class="how">Instant wind cone. Every bot inside takes 20 and is shoved 20 units/s (scaled by its knockback weight). A bot already moving into the wind braces and takes as little as a quarter of the push. Also flings live projectiles and slides power-ups.</p>
 </section>
   </div>
 </article>
@@ -237,9 +237,9 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
   <div class="moves">
     <section class="move passive"><header><span class="slot">Passive</span><h3>Bloodlust</h3></header><p class="how">After a kill, the next special cast has its cooldown cut by 1 turn.</p></section>
     <section class="move" aria-label="Blink Strike">
-  <header><span class="slot">S1</span><h3>Blink Strike</h3><span class="kind">Teleport + shards</span><span class="cd">CD 3</span></header>
-  <dl class="stats"><div class="kv"><dt>Range</dt><dd>60% of map width x power</dd></div><div class="kv"><dt>Shards</dt><dd>4 x 9</dd></div><div class="kv"><dt>Radius</dt><dd>0.8</dd></div><div class="kv"><dt>Speed</dt><dd>0.85x</dd></div><div class="kv"><dt>Spread</dt><dd>-21, -7, +7, +21 deg</dd></div></dl>
-  <p class="how">Teleports along the aim line until it hits terrain or the range limit. Shards then lock on to the nearest enemy within 9 units of the arrival point (else they follow the aim).</p>
+  <header><span class="slot">S1</span><h3>Blink Strike</h3><span class="kind">Teleport anywhere + shards</span><span class="cd">CD 3</span></header>
+  <dl class="stats"><div class="kv"><dt>Range</dt><dd>whole map</dd></div><div class="kv"><dt>Shards</dt><dd>3 x 8</dd></div><div class="kv"><dt>Radius</dt><dd>0.8</dd></div><div class="kv"><dt>Speed</dt><dd>0.85x</dd></div><div class="kv"><dt>Spread</dt><dd>-14, 0, +14 deg</dd></div><div class="kv"><dt>Target</dt><dd>tap any spot on the map</dd></div></dl>
+  <p class="how">Tap or drag on the map to pick the arrival spot. If the spot is inside terrain or off the arena the nearest open space is used. Shards then lock on to the nearest enemy within 9 units of the arrival point (else they fly in the facing direction).</p>
 </section>
     <section class="move" aria-label="Toxic Bomb">
   <header><span class="slot">S2</span><h3>Toxic Bomb</h3><span class="kind">Projectile</span><span class="cd">CD 3</span></header>
@@ -267,7 +267,7 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
     <section class="move passive"><header><span class="slot">Passive</span><h3>Bouncy</h3></header><p class="how">Its own jump bounces once off terrain (1.65x rebound when landing faster than 3).</p></section>
     <section class="move" aria-label="Pinball">
   <header><span class="slot">S1</span><h3>Pinball</h3><span class="kind">Projectile</span><span class="cd">CD 2</span></header>
-  <dl class="stats"><div class="kv"><dt>Damage</dt><dd>30 (+5 per bounce)</dd></div><div class="kv"><dt>Radius</dt><dd>0.9</dd></div><div class="kv"><dt>Bounces</dt><dd>1 to 4, pick before firing</dd></div><div class="kv"><dt>Rebound</dt><dd>1.85x</dd></div><div class="kv"><dt>Size</dt><dd>0.22</dd></div></dl>
+  <dl class="stats"><div class="kv"><dt>Damage</dt><dd>35 (+5 per bounce)</dd></div><div class="kv"><dt>Radius</dt><dd>0.9</dd></div><div class="kv"><dt>Bounces</dt><dd>1 to 4, pick before firing</dd></div><div class="kv"><dt>Rebound</dt><dd>1.85x</dd></div><div class="kv"><dt>Size</dt><dd>0.3</dd></div></dl>
   <p class="how">Bounces off terrain the chosen number of times, then explodes on the next contact or on a bot. Each bounce adds 5 damage.</p>
 </section>
     <section class="move" aria-label="Split Shot">
@@ -301,14 +301,14 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
 </section>
     <section class="move" aria-label="Shockwave">
   <header><span class="slot">S2</span><h3>Shockwave</h3><span class="kind">Self blast</span><span class="cd">CD 3</span></header>
-  <dl class="stats"><div class="kv"><dt>Damage</dt><dd>50</dd></div><div class="kv"><dt>Radius</dt><dd>3</dd></div><div class="kv"><dt>Knock</dt><dd>2.3x</dd></div><div class="kv"><dt>Self damage</dt><dd>0</dd></div></dl>
-  <p class="how">Instant burst centred on Gravitas. Hits everyone within 3 for 50 with the hardest shove in the game. No aim needed.</p>
+  <dl class="stats"><div class="kv"><dt>Damage</dt><dd>50</dd></div><div class="kv"><dt>Radius</dt><dd>5</dd></div><div class="kv"><dt>Knock</dt><dd>2.5x</dd></div><div class="kv"><dt>Self damage</dt><dd>0</dd></div></dl>
+  <p class="how">Instant burst centred on Gravitas. Hits everyone within 5 for 50 with the hardest shove in the game. No aim needed.</p>
 </section>
   </div>
 </article>
 </main>
 <section class="status">
   <h2>Status effects</h2>
-  <table><thead><tr><th>Effect</th><th>What it does</th><th>Applied by</th></tr></thead><tbody><tr><th scope="row">Burn</th><td>8 damage at the start of the next turn. Magmaw is immune.</td><td>Ember Spit</td></tr><tr><th scope="row">Poison</th><td>10 damage per turn for 3 turns.</td><td>Toxin power-up</td></tr><tr><th scope="row">Shocked</th><td>No specials next turn.</td><td>Static Field, Shockwire</td></tr><tr><th scope="row">Rooted</th><td>No jump next turn.</td><td>Anchor Bolt</td></tr><tr><th scope="row">Frozen</th><td>No jump next turn.</td><td>Frost power-up</td></tr></tbody></table>
+  <table><thead><tr><th>Effect</th><th>What it does</th><th>Applied by</th></tr></thead><tbody><tr><th scope="row">Burn</th><td>8 damage at the start of the next turn. Magmaw is immune.</td><td>Ember Spit</td></tr><tr><th scope="row">Poison</th><td>10 damage per turn for 3 turns.</td><td>Toxin power-up</td></tr><tr><th scope="row">Shocked</th><td>No specials next turn (2 turns from Static Field).</td><td>Static Field, Shockwire</td></tr><tr><th scope="row">Rooted</th><td>No jump next turn.</td><td>Anchor Bolt</td></tr><tr><th scope="row">Frozen</th><td>No jump next turn.</td><td>Frost power-up</td></tr></tbody></table>
 </section>
-<p class="foot">Sizes and distances are in world units (one unit is the old bot width; bots are drawn at 1.25x). Speed multipliers are relative to the 33 units/s base projectile speed at full power. Values read from defs.js and sim.js at build v40.</p>
+<p class="foot">Sizes and distances are in world units (one unit is the old bot width; bots are drawn at 1.25x). Speed multipliers are relative to the 33 units/s base projectile speed at full power. Values read from defs.js and sim.js at build v41.</p>

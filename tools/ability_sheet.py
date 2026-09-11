@@ -2,7 +2,7 @@
 """Build the Super Bots ability sheet (HTML) from the sprite art and hand-verified numbers taken from defs.js / sim.js."""
 import base64, html, os
 SP = '/tmp/claude-0/-home-user-SuperBots/ecbb4a5a-5a11-5688-a626-127b16c03285/scratchpad'
-BUILD = 'v40'
+BUILD = 'v41'
 def uri(bid):
     with open(f'{SP}/spr/{bid}.png', 'rb') as f: return 'data:image/png;base64,' + base64.b64encode(f.read()).decode()
 
@@ -19,14 +19,14 @@ BOTS = [
  dict(id='bulwark', name='Bulwark', cls='Heavy tank', hp=140, weight='heavy', acc='medium', color='#4f7cff',
       tag='Anchors a fight. Walls off lanes and punishes clustering.',
       passive=('Wall immunity', 'Takes zero knockback while its Bastion Wall is standing.'),
-      s1=dict(name='Bastion Wall', cd=3, kind='Deploy', stats=[('Segments', '3 x 0.4 x 0.85'), ('Wall HP', '40'), ('Lasts', '2 turns'), ('Offset', '1.35 toward aim')],
-              how='Three stacked wall segments appear 1.35 units to the aimed side. Blocks projectiles (yours pass through). Breaks after 40 damage. Bulwark ignores knockback while it stands.'),
+      s1=dict(name='Bastion Wall', cd=3, kind='Place anywhere', stats=[('Segments', '3 x 0.4 x 0.85'), ('Wall HP', '10'), ('Lasts', '2 turns'), ('Target', 'tap any spot on the map')],
+              how='Tap or drag on the map to place a 3-segment column anywhere: in front of a teammate, across a lane, or beside yourself. It is nudged out of terrain if you tap inside a block. Blocks projectiles (yours pass through). Breaks after 10 damage. Bulwark ignores knockback while it stands.'),
       s2=dict(name='Siege Shell', cd=4, kind='Projectile', stats=[('Damage', '55'), ('Radius', '1.5'), ('Speed', '0.8x'), ('Knock', '2.2x'), ('Gravity', '1.15x'), ('Size', '0.3')],
               how='Slow, heavy, drops fast. Biggest single hit in the game and the strongest shove of any projectile.')),
  dict(id='magmaw', name='Magmaw', cls='Heavy brawler', hp=140, weight='heavy', acc='low', color='#ff5a1f',
       tag='Gets in close and sets the ground on fire.',
       passive=('Fireproof', 'Immune to Burn. First lava contact each turn bounces it back up (vy -15) instead of killing it.'),
-      s1=dict(name='Molten Slam', cd=3, kind='Jump + blast', stats=[('Damage', '35'), ('Radius', '2.5'), ('Knock', '1.3x'), ('Min power', '60%'), ('Patch', '4 wide, 3 turns, 15 dmg')],
+      s1=dict(name='Molten Slam', cd=3, kind='Jump + blast', stats=[('Damage', '35'), ('Radius', '3.5'), ('Knock', '1.5x'), ('Min power', '60%'), ('Patch', '4 wide, 3 turns, 15 dmg')],
               how='Jumps toward the aim (never below 60% power) and explodes on landing. Leaves a burning patch that deals 15 on contact. Self-safe.'),
       s2=dict(name='Ember Spit', cd=2, kind='Projectile x3', stats=[('Damage', '12 each'), ('Radius', '0.7'), ('Speed', '0.6x'), ('Spread', '-9, 0, +9 deg'), ('Size', '0.14'), ('Effect', 'Burn')],
               how='Three short-range globs in a narrow fan. Each hit applies Burn: 8 damage at the start of the next turn.')),
@@ -35,8 +35,8 @@ BOTS = [
       passive=('Hot barrel', 'Basic missile flies 15% faster (47.4 units/s at full power instead of 41.3).'),
       s1=dict(name='Chain Arc', cd=3, kind='Instant beam', stats=[('Damage', '40'), ('Arc', '15 to 1 more bot'), ('Arc range', '6'), ('Hit width', '0.75 circle'), ('Pierces', 'terrain, walls, bots')],
               how='Straight line from Volt in the aim direction, across the whole map. Every bot on the line takes 40, then the beam arcs to the nearest untouched bot within 6 of the first hit for 15. No knockback.'),
-      s2=dict(name='Static Field', cd=4, kind='Projectile', stats=[('Damage', '30'), ('Radius', '3'), ('Speed', '1.0x'), ('Effect', 'Shocked'), ('Field lasts', '1 turn')],
-              how='Explodes on impact and leaves a 3-radius field for the rest of the turn. Bots inside are Shocked: no specials next turn.')),
+      s2=dict(name='Static Field', cd=4, kind='Projectile', stats=[('Damage', '30'), ('Radius', '3'), ('Speed', '1.0x'), ('Effect', 'Shocked 2 turns'), ('Field lasts', '1 turn')],
+              how='Explodes on impact and leaves a 3-radius field for the rest of the turn. Bots inside are Shocked: no specials for the next 2 turns.')),
  dict(id='warden', name='Warden', cls='Medium defender', hp=130, weight='medium', acc='medium', color='#3ddc97',
       tag='Turns enemy shots around and pins targets down.',
       passive=('Top armour', 'Takes 20% less damage from projectiles that hit from above.'),
@@ -47,21 +47,21 @@ BOTS = [
  dict(id='skyla', name='Skyla', cls='Medium aerial', hp=130, weight='medium', acc='high', color='#8fd3ff',
       tag='Owns the air. Repositions and shoots in one move.',
       passive=('Wind-proof', 'Map wind (gusts) does not push Skyla.'),
-      s1=dict(name='Updraft', cd=2, kind='Jump + rain', stats=[('Height', '2x vertical'), ('Missiles', '3 x 18'), ('Radius', '0.9'), ('Spread', '-0.28, 0, +0.28'), ('Rain power', '75%')],
-              how='A jump with doubled vertical speed. At the apex three missiles drop straight down. Skyla keeps flying to wherever the jump lands her.'),
-      s2=dict(name='Gale Shot', cd=3, kind='Cone blast', stats=[('Damage', '20'), ('Reach', '13'), ('Cone', '60 deg'), ('Push', '17 x weight'), ('Also moves', 'projectiles +20, power-ups 3.5')],
-              how='Instant wind cone. Every bot inside takes 20 and is shoved 17 units/s (scaled by its knockback weight). A bot already moving into the wind braces and takes as little as a quarter of the push. Also flings live projectiles and slides power-ups.')),
+      s1=dict(name='Updraft', cd=2, kind='Jump + rain', stats=[('Height', '2x vertical'), ('Missiles', '5 x 18'), ('Radius', '0.9'), ('Spread', '-0.5 to +0.5 in 5 steps'), ('Rain power', '75%')],
+              how='A jump with doubled vertical speed. At the apex five missiles drop straight down in a fan. Skyla keeps flying to wherever the jump lands her.'),
+      s2=dict(name='Gale Shot', cd=3, kind='Cone blast', stats=[('Damage', '20'), ('Reach', '15'), ('Cone', '60 deg'), ('Push', '20 x weight'), ('Also moves', 'projectiles +20, power-ups 3.5')],
+              how='Instant wind cone. Every bot inside takes 20 and is shoved 20 units/s (scaled by its knockback weight). A bot already moving into the wind braces and takes as little as a quarter of the push. Also flings live projectiles and slides power-ups.')),
  dict(id='phantom', name='Phantom', cls='Light assassin', hp=120, weight='light', acc='high', color='#c46bff',
       tag='Appears next to you, then disappears.',
       passive=('Bloodlust', 'After a kill, the next special cast has its cooldown cut by 1 turn.'),
-      s1=dict(name='Blink Strike', cd=3, kind='Teleport + shards', stats=[('Range', '60% of map width x power'), ('Shards', '4 x 9'), ('Radius', '0.8'), ('Speed', '0.85x'), ('Spread', '-21, -7, +7, +21 deg')],
-              how='Teleports along the aim line until it hits terrain or the range limit. Shards then lock on to the nearest enemy within 9 units of the arrival point (else they follow the aim).'),
+      s1=dict(name='Blink Strike', cd=3, kind='Teleport anywhere + shards', stats=[('Range', 'whole map'), ('Shards', '3 x 8'), ('Radius', '0.8'), ('Speed', '0.85x'), ('Spread', '-14, 0, +14 deg'), ('Target', 'tap any spot on the map')],
+              how='Tap or drag on the map to pick the arrival spot. If the spot is inside terrain or off the arena the nearest open space is used. Shards then lock on to the nearest enemy within 9 units of the arrival point (else they fly in the facing direction).'),
       s2=dict(name='Toxic Bomb', cd=3, kind='Projectile', stats=[('Tick', '5 every 0.4 s'), ('Cap', '35 per bot'), ('Radius', '2.4'), ('Impact damage', '0'), ('Cloud lasts', 'rest of turn')],
               how='No blast. Leaves a cloud that ticks 5 damage on every bot inside, up to 35 each, until the turn ends.')),
  dict(id='ricochet', name='Ricochet', cls='Light trickster', hp=120, weight='light', acc='medium', color='#ff4fa3',
       tag='Bank shots off everything. Map knowledge wins.',
       passive=('Bouncy', 'Its own jump bounces once off terrain (1.65x rebound when landing faster than 3).'),
-      s1=dict(name='Pinball', cd=2, kind='Projectile', stats=[('Damage', '30 (+5 per bounce)'), ('Radius', '0.9'), ('Bounces', '1 to 4, pick before firing'), ('Rebound', '1.85x'), ('Size', '0.22')],
+      s1=dict(name='Pinball', cd=2, kind='Projectile', stats=[('Damage', '35 (+5 per bounce)'), ('Radius', '0.9'), ('Bounces', '1 to 4, pick before firing'), ('Rebound', '1.85x'), ('Size', '0.3')],
               how='Bounces off terrain the chosen number of times, then explodes on the next contact or on a bot. Each bounce adds 5 damage.'),
       s2=dict(name='Split Shot', cd=3, kind='Projectile', stats=[('Damage', '15 x 4'), ('Radius', '0.8'), ('Split speed', '1.1x'), ('Spread', '-32, -11, +11, +32 deg'), ('Child size', '0.14')],
               how='Splits into four at the top of its arc. Aim high for a wide carpet, low for a tight cluster.')),
@@ -70,14 +70,14 @@ BOTS = [
       passive=('Dense core', 'Heavy knockback resistance (0.6x) while keeping a Medium jump and Medium mass.'),
       s1=dict(name='Singularity', cd=4, kind='Projectile', stats=[('Damage', '0'), ('Pull radius', '9.1'), ('Pull', '16 units/s per s'), ('Half gravity', 'inside pull'), ('Lasts', '2.6 s')],
               how='On impact every bot within 9.1 units is dragged toward the point for 2.6 seconds, including Gravitas. Gravity is halved inside the pull so bots lift off ledges.'),
-      s2=dict(name='Shockwave', cd=3, kind='Self blast', stats=[('Damage', '50'), ('Radius', '3'), ('Knock', '2.3x'), ('Self damage', '0')],
-              how='Instant burst centred on Gravitas. Hits everyone within 3 for 50 with the hardest shove in the game. No aim needed.')),
+      s2=dict(name='Shockwave', cd=3, kind='Self blast', stats=[('Damage', '50'), ('Radius', '5'), ('Knock', '2.5x'), ('Self damage', '0')],
+              how='Instant burst centred on Gravitas. Hits everyone within 5 for 50 with the hardest shove in the game. No aim needed.')),
 ]
 
 STATUS = [
     ('Burn', '8 damage at the start of the next turn. Magmaw is immune.', 'Ember Spit'),
     ('Poison', '10 damage per turn for 3 turns.', 'Toxin power-up'),
-    ('Shocked', 'No specials next turn.', 'Static Field, Shockwire'),
+    ('Shocked', 'No specials next turn (2 turns from Static Field).', 'Static Field, Shockwire'),
     ('Rooted', 'No jump next turn.', 'Anchor Bolt'),
     ('Frozen', 'No jump next turn.', 'Frost power-up'),
 ]

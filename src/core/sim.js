@@ -475,7 +475,9 @@ export class World {
   normAim(aim) {
     if (!aim) return { dx: 1, dy: -0.5, power: 0.5 };
     const l = Math.hypot(aim.dx, aim.dy) || 1;
-    return { dx: aim.dx / l, dy: aim.dy / l, power: Math.max(0.15, Math.min(1, aim.power ?? 1)) };
+    const out = { dx: aim.dx / l, dy: aim.dy / l, power: Math.max(0.15, Math.min(1, aim.power ?? 1)) };
+    if (Number.isFinite(aim.tx) && Number.isFinite(aim.ty)) { out.tx = aim.tx; out.ty = aim.ty; }
+    return out;
   }
 
   hitRadius(b) { return PHYS.hitRadius[b.def.weight] || PHYS.botRadius; }
@@ -526,9 +528,8 @@ export class World {
     this.emit('special', { bot: b.id, name: sp.name, x: b.x, y: b.y });
     switch (sp.id) {
       case 'bastionWall': {
-        const side = aim.dx >= 0 ? 1 : -1;
-        const wx = b.x + side * 1.35 - 0.2;
-        for (let i = 0; i < 3; i++) this.walls.push({ rect: { x: wx, y: b.y + 0.7 - (i + 1) * 0.85, w: 0.4, h: 0.85 }, owner: b.id, hp: 40, turns: 3, color: b.color, seg: i });
+        const spot = this.wallSpot(b, aim);
+        for (let i = 0; i < 3; i++) this.walls.push({ rect: { x: spot.x - 0.2, y: spot.y - 1.275 + i * 0.85, w: 0.4, h: 0.85 }, owner: b.id, hp: sp.wallHp || 40, turns: 3, color: b.color, seg: i });
         b.wallImmune = true;
         break;
       }
@@ -538,17 +539,17 @@ export class World {
         for (const off of [-9, 0, 9]) this.spawnProjectile(b, aim, { kind: 'ember', dmg: sp.dmg, radius: sp.radius, speedMul: 0.6, angleOffset: off, effect: { burn: 2 }, color: '#ff8a2f', r: 0.14 });
         break;
       case 'chainArc': this.chainArc(b, aim, sp); break;
-      case 'staticField': this.spawnProjectile(b, aim, { kind: 'static', dmg: sp.dmg, radius: sp.radius, color: '#ffe23a', effect: { shocked: 2 }, onImpact: 'staticField' }); break;
+      case 'staticField': this.spawnProjectile(b, aim, { kind: 'static', dmg: sp.dmg, radius: sp.radius, color: '#ffe23a', effect: { shocked: sp.shockTurns || 2 }, onImpact: 'staticField' }); break;
       case 'deflector': b.deflector = 1; this.emit('deflector', { bot: b.id }); break;
       case 'anchorBolt': this.spawnProjectile(b, aim, { kind: 'anchor', dmg: sp.dmg, radius: sp.radius, effect: { rooted: 2 }, color: '#3ddc97', speedMul: 1.05 }); break;
       case 'updraft': this.doJump(b, aim, 1, 2); b.updraftPending = { aim }; break;
       case 'galeShot': this.galeShot(b, aim, sp); break;
       case 'blinkStrike': this.blinkStrike(b, aim, sp); break;
       case 'toxicBomb': this.spawnProjectile(b, aim, { kind: 'toxic', dmg: 0, radius: 0, color: '#9dff2f', onImpact: 'toxic' }); break;
-      case 'pinball': this.spawnProjectile(b, aim, { kind: 'pinball', dmg: sp.dmg, radius: sp.radius, bounces: param ?? 4, color: '#ff4fa3', r: 0.22 }); break;
+      case 'pinball': this.spawnProjectile(b, aim, { kind: 'pinball', dmg: sp.dmg, radius: sp.radius, bounces: param ?? 4, color: '#ff4fa3', r: sp.r || 0.22 }); break;
       case 'splitShot': this.spawnProjectile(b, aim, { kind: 'split', dmg: sp.dmg, radius: sp.radius, splitAt: true, color: '#ff4fa3' }); break;
       case 'singularity': this.spawnProjectile(b, aim, { kind: 'singularity', dmg: 0, radius: 0, color: '#9aa4b8', onImpact: 'singularity', r: 0.26 }); break;
-      case 'shockwave': this.explode(b.x, b.y, sp.radius, sp.dmg, b, { knock: 2.3, excludeSelf: true, label: 'Shockwave', color: b.color }); break;
+      case 'shockwave': this.explode(b.x, b.y, sp.radius, sp.dmg, b, { knock: sp.knock || 2.3, excludeSelf: true, label: 'Shockwave', color: b.color }); break;
     }
   }
 
@@ -583,7 +584,7 @@ export class World {
   }
 
   galeShot(b, aim, sp) {
-    const len = 13, half = Math.cos(30 * DEG);
+    const len = sp.reach || 13, half = Math.cos(30 * DEG);
     this.emit('gale', { x: b.x, y: b.y, dx: aim.dx, dy: aim.dy, len });
     const inCone = (x, y) => {
       const dx = x - b.x, dy = y - b.y, d = Math.hypot(dx, dy);
@@ -597,7 +598,7 @@ export class World {
       // Momentum matters: velocity against the wind cancels part of the shove.
       const opposing = -(o.vx * aim.dx + o.vy * aim.dy);           // >0 when moving into the wind
       const brace = Math.max(0.25, 1 - Math.max(0, opposing) / 16);
-      const k = 17 * this.knockMul(o) * brace;
+      const k = (sp.push || 17) * this.knockMul(o) * brace;
       o.vx += aim.dx * k; o.vy += aim.dy * k - 2.5; o.grounded = false;
     }
     for (const p of this.projectiles) if (inCone(p.x, p.y)) { p.vx += aim.dx * 20; p.vy += aim.dy * 20; }
@@ -651,7 +652,23 @@ export class World {
     }
   }
 
-  blinkStrike(b, aim, sp) {
+  // Nearest spot to (x,y) where this bot's body fits in open air, searched in growing rings. Falls back to (x,y).
+  freeSpotFor(b, x, y) {
+    const fits = (cx, cy) => {
+      if (cx < 0.6 || cx > this.map.width - 0.6 || cy < 0.6 || cy > this.lavaY - 0.8) return false;
+      let blocked = false; this.eachSolidHitPoly(() => placedHull(b.def, cx, cy, b.facing || 1), () => { blocked = true; }); return !blocked;
+    };
+    if (fits(x, y)) return { x, y };
+    for (let r = 0.3; r <= 6; r += 0.3) {
+      const n = Math.max(8, Math.round(r * 12));
+      for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2; const cx = x + Math.cos(a) * r, cy = y + Math.sin(a) * r; if (fits(cx, cy)) return { x: cx, y: cy }; }
+    }
+    return { x: Math.max(0.6, Math.min(this.map.width - 0.6, x)), y: Math.max(0.6, Math.min(this.lavaY - 0.8, y)) };
+  }
+
+  // Where a Blink lands: the picked map point (point-target aim) or, for AI aims, along the aim line.
+  blinkSpot(b, aim) {
+    if (aim.tx != null && aim.ty != null) return this.freeSpotFor(b, aim.tx, aim.ty);
     const maxD = this.map.width * 0.6 * aim.power;
     let tx = b.x, ty = b.y;
     for (let d = 0.25; d <= maxD; d += 0.25) {
@@ -660,6 +677,27 @@ export class World {
       { let blocked = false; this.eachSolidHitPoly(() => placedHull(b.def, cx, cy, b.facing || 1), () => { blocked = true; }); if (blocked) break; }
       tx = cx; ty = cy;
     }
+    return { x: tx, y: ty };
+  }
+
+  // Where a Bastion Wall stands: the picked map point (point-target aim) or beside the caster for AI aims.
+  // The 3-segment column is nudged out of terrain and kept inside the arena.
+  wallSpot(b, aim) {
+    let x, y;
+    if (aim.tx != null && aim.ty != null) { x = aim.tx; y = aim.ty; }
+    else { x = b.x + (aim.dx >= 0 ? 1 : -1) * 1.35; y = b.y - 0.575; }
+    x = Math.max(0.4, Math.min(this.map.width - 0.4, x)); y = Math.max(1.4, Math.min(this.lavaY - 1.4, y));
+    const col = () => rectPoly({ x: x - 0.2, y: y - 1.275, w: 0.4, h: 2.55 });
+    for (let k = 0; k < 12; k++) {
+      let moved = false;
+      this.eachSolidHitPoly(col, (h) => { x += h.nx * h.depth; y += h.ny * h.depth; moved = true; });
+      if (!moved) break;
+    }
+    return { x, y };
+  }
+
+  blinkStrike(b, aim, sp) {
+    const { x: tx, y: ty } = this.blinkSpot(b, aim);
     this.emit('blink', { from: [b.x, b.y], to: [tx, ty], color: b.color });
     b.x = tx; b.y = ty; b.vx = 0; b.vy = 0; b.grounded = false; b.airborne = true;
     // Shards lock on to the nearest enemy from the arrival point (falls back to the aim direction).
@@ -667,7 +705,8 @@ export class World {
     let nearest = null, nd = 9;
     for (const o of this.enemiesOf(b)) { const d = Math.hypot(o.x - tx, o.y - ty); if (d < nd) { nd = d; nearest = o; } }
     if (nearest) { const dx = nearest.x - tx, dy = nearest.y - ty, d = Math.hypot(dx, dy) || 1; shardAim = { dx: dx / d, dy: dy / d - 0.15, power: Math.min(1, 0.35 + d / 12) }; }
-    for (const off of [-21, -7, 7, 21]) this.spawnProjectile(b, shardAim, { kind: 'shard', dmg: sp.dmg, radius: sp.radius, speedMul: 0.85, angleOffset: off, color: '#e0a8ff', r: 0.14 });
+    const nS = sp.shards || 4, offs = nS === 3 ? [-14, 0, 14] : [-21, -7, 7, 21];
+    for (const off of offs) this.spawnProjectile(b, shardAim, { kind: 'shard', dmg: sp.dmg, radius: sp.radius, speedMul: 0.85, angleOffset: off, color: '#e0a8ff', r: 0.14 });
   }
 
   // ----- Damage -----
@@ -779,7 +818,7 @@ export class World {
         if (b.slamPending) {
           b.slamPending = false;
           const sp = b.def.s1;
-          this.explode(b.x, b.y + 0.2, sp.radius, sp.dmg, b, { excludeSelf: true, label: 'Molten Slam', knock: 1.3, color: '#ff6a1f' });
+          this.explode(b.x, b.y + 0.2, sp.radius, sp.dmg, b, { excludeSelf: true, label: 'Molten Slam', knock: 1.5, color: '#ff6a1f' });
           this.patches.push({ x: b.x, y: b.y + 0.4, w: 4, turns: 3, dmg: 15, touched: {} });
           this.emit('patch', { x: b.x, y: b.y + 0.4, w: 3 });
         }
@@ -788,7 +827,9 @@ export class World {
       if (b.updraftPending && b.vy >= 0) {
         b.updraftPending = false;
         const sp = b.def.s1;
-        for (const dx of [-0.28, 0, 0.28]) {
+        const nR = sp.missiles || 3;
+        for (let i = 0; i < nR; i++) {
+          const dx = nR === 1 ? 0 : -0.5 + (i / (nR - 1));
           this.spawnProjectile(b, { dx, dy: 1, power: 0.75 }, { kind: 'rain', dmg: sp.dmg, radius: sp.radius, color: b.color, r: 0.16 });
         }
         this.emit('fire', { bot: b.id, x: b.x, y: b.y });
@@ -1050,7 +1091,7 @@ export class World {
     for (const f of this.fields) {
       if (f.kind === 'static' && !f.applied) {
         f.applied = true;
-        for (const b of this.alive()) if (distPointPoly(f.x, f.y, this.botPoly(b)) < f.r) this.addEffect(b, 'shocked', 2);
+        for (const b of this.alive()) if (distPointPoly(f.x, f.y, this.botPoly(b)) < f.r) this.addEffect(b, 'shocked', BOTS.volt.s2.shockTurns || 2);
       }
     }
     // Cooldowns, effect timers, expiry
@@ -1144,18 +1185,16 @@ export class World {
       return { points, impact, apex };
     }
     if (type === 'blinkStrike') {
-      const maxD = this.map.width * 0.6 * aim.power;
-      let tx = b.x, ty = b.y;
-      for (let d = 0.25; d <= maxD; d += 0.25) {
-        const cx = b.x + aim.dx * d, cy = b.y + aim.dy * d;
-        if (cx < 0.6 || cx > this.map.width - 0.6 || cy < 0.6 || cy > this.lavaY - 0.8) break;
-        let blocked = false; this.eachSolidHitPoly(() => placedHull(b.def, cx, cy, aim.dx < 0 ? -1 : 1), () => { blocked = true; }); if (blocked) break;
-        tx = cx; ty = cy; points.push([cx, cy]);
-      }
-      return { points, impact: { type: 'blink', x: tx, y: ty } };
+      const spot = this.blinkSpot(b, aim);
+      if (aim.tx == null) { const n = 12; for (let i = 1; i <= n; i++) points.push([b.x + (spot.x - b.x) * i / n, b.y + (spot.y - b.y) * i / n]); }
+      return { points, impact: { type: 'blink', x: spot.x, y: spot.y, moved: aim.tx != null && Math.hypot(spot.x - aim.tx, spot.y - aim.ty) > 0.05 } };
     }
-    if (type === 'chainArc' || type === 'galeShot' || type === 'shockwave' || type === 'deflector' || type === 'bastionWall') {
-      const len = type === 'galeShot' ? 8 : (type === 'chainArc' ? 60 : 0);
+    if (type === 'bastionWall') {
+      const spot = this.wallSpot(b, aim);
+      return { points, impact: { type: 'wall', x: spot.x, y: spot.y, w: 0.4, h: 2.55 } };
+    }
+    if (type === 'chainArc' || type === 'galeShot' || type === 'shockwave' || type === 'deflector') {
+      const len = type === 'galeShot' ? (b.def.s2.reach || 8) : (type === 'chainArc' ? 60 : 0);
       for (let d = 0; d < len; d += 0.5) points.push([b.x + aim.dx * d, b.y + aim.dy * d]);
       return { points, impact: null };
     }
@@ -1209,7 +1248,7 @@ export class World {
       case 'staticField': return { kind: 'static', dmg: sp2.dmg, radius: sp2.radius };
       case 'anchorBolt': return { kind: 'anchor', dmg: sp2.dmg, radius: sp2.radius, speedMul: 1.05 };
       case 'toxicBomb': return { kind: 'toxic', dmg: 0, radius: BOTS.phantom.s2.radius };
-      case 'pinball': return { kind: 'pinball', dmg: sp1.dmg, radius: sp1.radius, bounces: param ?? 4, r: 0.22 };
+      case 'pinball': return { kind: 'pinball', dmg: sp1.dmg, radius: sp1.radius, bounces: param ?? 4, r: sp1.r || 0.22 };
       case 'splitShot': return { kind: 'split', dmg: sp2.dmg, radius: sp2.radius, splitAt: true };
       case 'singularity': return { kind: 'singularity', dmg: 0, radius: sp1.radius, r: 0.26 };
       default: return { kind: 'missile' };

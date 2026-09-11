@@ -670,7 +670,7 @@ export class Renderer {
     if (hidden) return;
     const style = aim.style || 'missile';
     const accent = aim.accent || color;
-    const n = Math.max(2, Math.floor(points.length * fraction));
+    const n = points.length ? Math.max(2, Math.min(points.length, Math.floor(points.length * fraction) || 2)) : 0;
     const step = style === 'jump' ? 4 : 3;
     for (let i = 0; i < n; i += step) {
       const [x, y] = this.toScreen(points[i][0], points[i][1]);
@@ -700,15 +700,28 @@ export class Renderer {
     }
     c.globalAlpha = 1;
     // the move's icon rides at the end of the arc (like Brawlbots)
-    { const last = points[Math.max(0, n - 1)];
+    { const last = n ? points[n - 1] : null;
       const end = impact ? [impact.x, impact.y] : last;
+      if (!end) return;
       const [ex, ey] = this.toScreen(end[0], end[1]);
       const bob = Math.sin(this.time * 5) * z * 0.05;
       drawActionIcon(c, aim.iconKind || style, ex, ey - z * 0.55 + bob, Math.max(9, z * 0.3)); }
     // landing / impact marker
     if (impact) {
       const [x, y] = this.toScreen(impact.x, impact.y);
-      if (style === 'jump') {
+      if (impact.type === 'wall') {
+        // ghost of the 3-segment wall column at the picked spot
+        const w = impact.w * z, h = impact.h * z, pulse = 0.75 + Math.sin(this.time * 5) * 0.15;
+        c.globalAlpha = pulse; c.fillStyle = accent; c.fillRect(x - w / 2, y - h / 2, w, h);
+        c.globalAlpha = 1; c.strokeStyle = '#ffffff'; c.lineWidth = 2; c.setLineDash([4, 4]); c.strokeRect(x - w / 2, y - h / 2, w, h); c.setLineDash([]);
+        c.strokeStyle = 'rgba(13,16,24,0.6)'; c.lineWidth = 1; for (let i = 1; i < 3; i++) { c.beginPath(); c.moveTo(x - w / 2, y - h / 2 + h * i / 3); c.lineTo(x + w / 2, y - h / 2 + h * i / 3); c.stroke(); }
+      } else if (impact.type === 'blink') {
+        // arrival marker: pulsing ring plus a crosshair, so a spot the sim nudged is still obvious
+        const pulse = 1 + Math.sin(this.time * 5) * 0.08, rr = Math.max(8, z * 0.9 * pulse);
+        c.strokeStyle = accent; c.lineWidth = 2.5; c.setLineDash([6, 5]); c.beginPath(); c.arc(x, y, rr, 0, Math.PI * 2); c.stroke(); c.setLineDash([]);
+        c.globalAlpha = 0.18; c.fillStyle = accent; c.beginPath(); c.arc(x, y, rr, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1;
+        c.strokeStyle = '#ffffff'; c.lineWidth = 2; c.beginPath(); c.moveTo(x - rr * 0.35, y); c.lineTo(x + rr * 0.35, y); c.moveTo(x, y - rr * 0.35); c.lineTo(x, y + rr * 0.35); c.stroke();
+      } else if (style === 'jump') {
         // landing marker: bouncing down-chevron over a ground tick
         const bob = Math.sin(this.time * 6) * z * 0.06;
         c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(2.5, z * 0.06); c.lineCap = 'round';
