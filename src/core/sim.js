@@ -289,7 +289,19 @@ export class World {
           if (this.turn > 1 && this.turn % h.every === 0) { this.lavaY -= h.amount; this.hazardAnnounce.push({ type: 'lava', text: 'The lava rises!' }); }
           else if (this.turn % h.every === h.every - 1) this.hazardAnnounce.push({ type: 'warn', text: 'Lava rises next turn' });
         } else if (h.type === 'mines') {
-          for (const mn of this.mines) if (!mn.alive) { mn.timer--; if (mn.timer <= 0) { if (h.random && !mn.fixed) this.scatterMine(mn); mn.alive = true; this.emit('mineSpawn', { x: mn.x, y: mn.y }); } }
+          if (h.every) {
+            // Timed mines: one new mine lands on a random surface every `every` turns.
+            // Detonated mines are gone for good; the field grows until someone clears it.
+            this.mines = this.mines.filter((mn) => mn.alive);
+            if (this.turn > 1 && this.turn % h.every === 0) {
+              const pt = this.randomGroundSpot();
+              if (pt) { const mn = { x: pt.x, y: pt.y - 0.15, alive: true, timer: 0 }; this.mines.push(mn); this.emit('mineSpawn', { x: mn.x, y: mn.y }); this.hazardAnnounce.push({ type: 'danger', text: `${(h.label || 'Spike mine').toUpperCase()} PLANTED` }); }
+            } else if (this.turn % h.every === h.every - 1) {
+              this.hazardAnnounce.push({ type: 'warn', text: `${h.label || 'Spike mine'} next turn` });
+            }
+          } else {
+            for (const mn of this.mines) if (!mn.alive) { mn.timer--; if (mn.timer <= 0) { if (h.random && !mn.fixed) this.scatterMine(mn); mn.alive = true; this.emit('mineSpawn', { x: mn.x, y: mn.y }); } }
+          }
         } else if (h.type === 'crusher') {
           const lbl = (h.label || 'Crusher').toUpperCase();
           if (this.turn % h.every === 0) { this.pendingHazards.push({ type: 'crusher', h }); this.hazardAnnounce.push({ type: 'danger', text: `${lbl} THIS TURN`, zone: { x: h.x, y: h.top, w: h.w, h: h.bottom - h.top } }); }

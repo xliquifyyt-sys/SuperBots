@@ -136,10 +136,10 @@ export const MAPS = {
     slopes: [],
     spawns: [[2, 13.5], [8.4, 13.5], [12.7, 13.5], [17.8, 13.5], [23, 13.5], [28, 13.5], [4, 9], [26, 9]],
     powerups: [[15, 3.5], [2.5, 3], [27.5, 3], [4, 9], [26, 9], [9, 13.5], [21, 13.5]],
-    mines: [[9.5, 7.5], [20.5, 7.5], [15, 11.8], [7, 3], [23, 3]],
+    mines: [],                                          // none at the start: one spawns every 3 turns
     killFloor: { type: 'water', y: 16.2 },
     teleporters: false,
-    hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, random: true, label: 'Spike mines' }],
+    hazards: [{ type: 'mines', every: 3, dmg: 20, radius: 1.2, label: 'Spike mine' }],
     blurb: 'Solid jungle floor under three tiers of branches. Climb for the high ground and watch the spike mines hanging in the canopy.',
   },
   // Idea: the temple. A big stepped pyramid fills the middle; flat ground either side.
@@ -158,10 +158,10 @@ export const MAPS = {
     slopes: [],
     spawns: [[2, 15.5], [7.2, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [39.3, 15.5], [43, 15.5], [45.5, 15.5]],
     powerups: [[23, 3], [23, 6.5], [5.5, 10.5], [40.5, 10.5], [14, 12.5], [32, 12.5], [2, 15.5], [44, 15.5]],
-    mines: [[6, 15.5], [30, 12.5], [23, 5.3], [23, 15.4, 'fixed']],  // the last one always sits inside the tunnel
+    mines: [],                                          // none at the start: one spawns every 3 turns
     killFloor: { type: 'water', y: 18.6 },
     teleporters: true,
-    hazards: [{ type: 'mines', respawn: 4, dmg: 20, radius: 1.2, random: true, label: 'Spike mines' }, { type: 'crusher', x: 19, w: 8, top: 1, bottom: 7, every: 5, dmg: 35, label: 'Log drop' }],
+    hazards: [{ type: 'mines', every: 3, dmg: 20, radius: 1.2, label: 'Spike mine' }, { type: 'crusher', x: 19, w: 8, top: 1, bottom: 7, every: 5, dmg: 35, label: 'Log drop' }],
     blurb: 'A stepped temple pyramid flanked by two pit holes. The summit is king of the hill, and a log drops on it every 5 turns.',
   },
 
