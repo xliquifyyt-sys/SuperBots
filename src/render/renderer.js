@@ -6,7 +6,8 @@ import { PHYS, POWERUPS, TEAM_COLORS } from '../core/defs.js';
 import { drawBot, ANIM_LENGTH } from './bots.js';
 import { paintBackdrop, paintTerrain, paintFloor, paintMine, paintCrusher } from './themes.js';
 import { drawPowerupIcon, drawActionIcon } from './icons.js';
-import { loadSprites } from './sprites.js';
+import { loadSprites, getClip } from './sprites.js';
+import { loadVfx, getVfx, drawVfxFrame } from './vfx.js';
 import { loadBackgrounds, getBackground, drawBackground } from './backgrounds.js';
 import { loadTerrain, getTerrainKit, paintPaintedTerrain } from './terrain.js';
 
@@ -26,8 +27,9 @@ export class Renderer {
     this.particles = [];
     this.numbers = [];
     this.flashes = [];
+    this.vfx = [];       // painted effect sprites in flight: { key, x, y, size, rot, flip, t, life, loop, until, blend }
     this.shake = 0;
-    loadSprites();
+    loadSprites(); loadVfx();
     loadBackgrounds();
     loadTerrain();
     this.callouts = [];
@@ -50,7 +52,7 @@ export class Renderer {
   setWorld(world) {
     this.world = world;
     this.theme = THEMES[world.map.theme];
-    this.particles = []; this.numbers = []; this.flashes = []; this.eventCursor = 0; this.deadFx.clear(); this.anims.clear();
+    this.particles = []; this.numbers = []; this.flashes = []; this.vfx = []; this.eventCursor = 0; this.deadFx.clear(); this.anims.clear();
     this.userZoom = 1; this.userPan = { x: 0, y: 0 };
     this.fitMap(true);
   }
@@ -136,13 +138,67 @@ export class Renderer {
   animState(b) {
     const a = this.anims.get(b.id);
     if (!a) return { anim: 'idle', t: 0 };
-    const t = (this.time - a.start) / (ANIM_LENGTH[a.anim] || 0.5);
+    // A painted clip plays at its own length; procedural states keep the table timings.
+    const clip = getClip(b.def.id, a.anim);
+    const t = (this.time - a.start) / (clip ? clip.duration : (ANIM_LENGTH[a.anim] || 0.5));
     if (t >= 1 && a.anim !== 'death') { this.anims.delete(b.id); return { anim: 'idle', t: 0 }; }
     return { anim: a.anim, t: Math.min(1, t) };
   }
 
+  // Spawn a painted effect if a sheet for `key` is loaded. Returns false when the
+  // procedural effect should draw instead, so partial VFX sets always degrade cleanly.
+  fx(key, x, y, opts = {}) {
+    const clip = getVfx(key);
+    if (!clip) return false;
+    const size = (opts.size ?? 1) * clip.size;
+    this.vfx.push({ key, x, y, size, rot: opts.rot || 0, flip: opts.flip || 1, t: 0, life: clip.duration, loop: clip.loop, until: opts.until, follow: opts.follow, dy: opts.dy || 0, blend: clip.blend });
+    return true;
+  }
+
+  // Painted effects that map straight onto simulation events. Each falls back to
+  // the procedural version when its sheet is missing.
+  paintedEvent(e) {
+    switch (e.type) {
+      case 'explosion': return this.fx(e.big || e.radius >= 1.4 ? 'explosion_big' : 'explosion', e.x, e.y, { size: Math.max(0.8, e.radius) });
+      case 'fire': { const b = this.world.bots[e.bot]; return this.fx('muzzle', e.x + (b ? (b.facing || 1) * 0.9 : 0), e.y - 0.15, { flip: b ? (b.facing || 1) : 1 }); }
+      case 'land': return this.fx('land_dust', e.x, e.y + 0.55, { size: e.hard ? 1.3 : 1 });
+      case 'jump': return this.fx('jump_dust', e.x, e.y + 0.5);
+      case 'blink': { const a = this.fx('blink_out', e.from[0], e.from[1]); const b = this.fx('blink_in', e.to[0], e.to[1]); return a || b; }
+      case 'gale': return this.fx('gale', e.x, e.y, { rot: Math.atan2(e.dy, e.dx), size: e.len / 13 });
+      case 'singularity': return this.fx('singularity', e.x, e.y, { size: e.r / 9.1, until: this.time + 2.6 });
+      case 'toxic': return this.fx('toxic_cloud', e.x, e.y, { size: e.r / 2.4, until: this.time + 6 });
+      case 'reflect': return this.fx('reflect', e.x, e.y);
+      case 'deflector': { const b = this.world.bots[e.bot]; return b ? this.fx('deflector', b.x, b.y, { follow: e.bot, until: this.time + 6 }) : false; }
+      case 'patch': return this.fx('molten_patch', e.x, e.y, { size: e.w / 3, until: this.time + 6 });
+      case 'teleport': { let ok = false; if (e.from) ok = this.fx('teleport_out', e.from[0], e.from[1]) || ok; if (e.to) ok = this.fx('teleport_in', e.to[0], e.to[1]) || ok; return ok; }
+      case 'mine': return this.fx('mine_blast', e.x, e.y);
+      case 'geyser': return this.fx('geyser', e.x, e.y, { size: e.r });
+      case 'wallBreak': return this.fx('wall_break', e.x, e.y);
+      case 'special': {
+        const b = this.world.bots[e.bot]; if (!b) return false;
+        const sp = b.def.s1.name === e.name ? b.def.s1 : b.def.s2;
+        if (sp.id === 'shockwave') return this.fx('shockwave', b.x, b.y, { size: sp.radius / 3 });
+        // per-special cast burst on the caster, e.g. vfx key "cast_chainArc"
+        return this.fx('cast_' + sp.id, b.x, b.y, { follow: e.bot, flip: b.facing || 1 });
+      }
+    }
+    return false;
+  }
+
+  drawVfx() {
+    const c = this.ctx, z = this.cam.zoom * this.userZoom;
+    for (const v of this.vfx) {
+      const clip = getVfx(v.key); if (!clip) continue;
+      if (v.follow !== undefined) { const b = this.world.bots[v.follow]; if (b) { v.x = b.x; v.y = b.y; } }
+      const frame = v.loop ? Math.floor(v.t * clip.fps) % clip.frames : Math.min(clip.frames - 1, Math.floor(v.t / clip.duration * clip.frames));
+      const [x, y] = this.toScreen(v.x, v.y + v.dy);
+      drawVfxFrame(c, clip, frame, x, y, v.size * z, v.rot, v.flip);
+    }
+  }
+
   handleEvent(e) {
     const T = this.theme;
+    const painted = this.paintedEvent(e);
     switch (e.type) {
       case 'jump': this.playAnim(e.bot, 'jump'); break;
       case 'fire': this.playAnim(e.bot, 'fire'); break;
@@ -153,6 +209,7 @@ export class Renderer {
     }
     switch (e.type) {
       case 'explosion': {
+        if (painted) { this.shake += e.big ? 1.2 : 0.6; break; }
         const n = e.big ? 42 : 22;
         this.emit(e.x, e.y, n, { speed: 5 + e.radius * 3, life: 0.6, size: 0.18 + e.radius * 0.1, color: e.color, gravity: 10 });
         this.emit(e.x, e.y, 10, { speed: 1.8, life: 1.1, size: 0.55, color: 'rgba(70,70,75,0.7)', gravity: -3 });
@@ -174,26 +231,26 @@ export class Renderer {
         break;
       case 'pickup': this.numbers.push({ x: e.x, y: e.y - 1, text: e.name, color: POWERUPS[e.id].color, t: 0, life: 1.3 }); this.emit(e.x, e.y, 16, { speed: 3, life: 0.6, size: 0.15, color: POWERUPS[e.id].color, gravity: -4 }); break;
       case 'jump': this.emit(e.x, e.y + 0.4, 8, { speed: 2, life: 0.4, size: 0.2, color: '#ffffff', gravity: 6 }); break;
-      case 'fire': this.emit(e.x, e.y, 6, { speed: 2, life: 0.25, size: 0.15, color: '#ffffff' }); this.flashes.push({ star: true, x: e.x, y: e.y - 0.2, r: 0.55, t: 0, life: 0.1, color: '#ffe9a8', seed: (e.x * 11) % 100 }); break;
+      case 'fire': if (painted) break; this.emit(e.x, e.y, 6, { speed: 2, life: 0.25, size: 0.15, color: '#ffffff' }); this.flashes.push({ star: true, x: e.x, y: e.y - 0.2, r: 0.55, t: 0, life: 0.1, color: '#ffe9a8', seed: (e.x * 11) % 100 }); break;
       case 'beam': this.flashes.push({ beam: true, x1: e.x1, y1: e.y1, x2: e.x2, y2: e.y2, color: e.color, t: 0, life: 0.45 }); this.shake += 0.4; break;
-      case 'blink': this.emit(e.from[0], e.from[1], 20, { speed: 3, life: 0.5, size: 0.18, color: e.color }); this.emit(e.to[0], e.to[1], 20, { speed: 3, life: 0.5, size: 0.18, color: e.color }); break;
-      case 'gale': this.flashes.push({ cone: true, x: e.x, y: e.y, dx: e.dx, dy: e.dy, len: e.len, t: 0, life: 0.5, color: '#8fd3ff' }); break;
+      case 'blink': if (painted) break; this.emit(e.from[0], e.from[1], 20, { speed: 3, life: 0.5, size: 0.18, color: e.color }); this.emit(e.to[0], e.to[1], 20, { speed: 3, life: 0.5, size: 0.18, color: e.color }); break;
+      case 'gale': if (painted) break; this.flashes.push({ cone: true, x: e.x, y: e.y, dx: e.dx, dy: e.dy, len: e.len, t: 0, life: 0.5, color: '#8fd3ff' }); break;
       case 'crusher': this.flashes.push({ crusher: true, x: e.x, w: e.w, top: e.top, bottom: e.bottom, t: 0, life: 0.9 }); this.shake += 1.2; break;
-      case 'geyser': this.emit(e.x, e.y, 50, { speed: 8, life: 0.9, size: 0.22, color: T.floorColor, gravity: 12, up: true }); this.flashes.push({ x: e.x, y: e.y, r: e.r, t: 0, life: 0.5, color: T.floorColor }); break;
+      case 'geyser': if (painted) break; this.emit(e.x, e.y, 50, { speed: 8, life: 0.9, size: 0.22, color: T.floorColor, gravity: 12, up: true }); this.flashes.push({ x: e.x, y: e.y, r: e.r, t: 0, life: 0.5, color: T.floorColor }); break;
       case 'reactorPulse': this.flashes.push({ x: e.x, y: e.y, r: e.r, t: 0, life: 0.7, color: T.light, ring: true }); this.shake += 0.6; break;
       case 'airstrike': this.numbers.push({ x: e.x, y: 1.5, text: 'AIR STRIKE', color: '#ff4d4d', t: 0, life: 1.2, big: true }); break;
       case 'splash': this.emit(e.x, e.y, 14, { speed: 4, life: 0.6, size: 0.18, color: T.floorColor, gravity: 10, up: true }); break;
-      case 'toxic': for (let i = 0; i < 30; i++) this.emit(e.x + (Math.random() - 0.5) * e.r, e.y + (Math.random() - 0.5) * e.r, 1, { speed: 0.5, life: 2.2, size: 0.7, color: '#9dff2f', gravity: -0.5 }); break;
-      case 'singularity': this.flashes.push({ x: e.x, y: e.y, r: e.r, t: 0, life: 2.6, color: '#9aa4b8', ring: true }); break;
-      case 'reflect': this.flashes.push({ x: e.x, y: e.y, r: 0.6, t: 0, life: 0.3, color: '#ffffff' }); break;
+      case 'toxic': if (painted) break; for (let i = 0; i < 30; i++) this.emit(e.x + (Math.random() - 0.5) * e.r, e.y + (Math.random() - 0.5) * e.r, 1, { speed: 0.5, life: 2.2, size: 0.7, color: '#9dff2f', gravity: -0.5 }); break;
+      case 'singularity': if (painted) break; this.flashes.push({ x: e.x, y: e.y, r: e.r, t: 0, life: 2.6, color: '#9aa4b8', ring: true }); break;
+      case 'reflect': if (painted) break; this.flashes.push({ x: e.x, y: e.y, r: 0.6, t: 0, life: 0.3, color: '#ffffff' }); break;
       case 'wallBreak': this.emit(e.x, e.y, 20, { speed: 4, life: 0.7, size: 0.2, color: '#4f7cff', gravity: 10 }); break;
       case 'bounce': this.emit(e.x, e.y, 6, { speed: 2, life: 0.3, size: 0.12, color: e.color || '#fff' }); break;
       case 'contact': this.numbers.push({ x: this.world.bots[e.to].x, y: this.world.bots[e.to].y - 1, text: e.kind.toUpperCase() + '!', color: POWERUPS[e.kind].color, t: 0, life: 1 }); break;
       case 'suddenDeath': this.shake += 1; break;
-      case 'mine': this.emit(e.x, e.y, 30, { speed: 7, life: 0.6, size: 0.2, color: '#ff4d4d', gravity: 8 }); this.flashes.push({ x: e.x, y: e.y, r: 1.2, t: 0, life: 0.35, color: '#ff8a2f' }); this.shake += 0.5; break;
+      case 'mine': if (painted) { this.shake += 0.5; break; } this.emit(e.x, e.y, 30, { speed: 7, life: 0.6, size: 0.2, color: '#ff4d4d', gravity: 8 }); this.flashes.push({ x: e.x, y: e.y, r: 1.2, t: 0, life: 0.35, color: '#ff8a2f' }); this.shake += 0.5; break;
       case 'mineSpawn': this.emit(e.x, e.y, 10, { speed: 2, life: 0.5, size: 0.15, color: '#fff' }); break;
       case 'lavaSurf': this.emit(e.x, e.y, 20, { speed: 5, life: 0.6, size: 0.2, color: '#ff5a1f', gravity: 12, up: true }); break;
-      case 'teleport': {
+      case 'teleport': { if (painted) break;
         if (e.from) { this.emit(e.from[0], e.from[1], 22, { speed: 4, life: 0.5, size: 0.16, color: '#bff6ff', gravity: -6 }); this.flashes.push({ x: e.from[0], y: e.from[1], r: 1.1, t: 0, life: 0.35, color: '#bff6ff', ring: true }); }
         if (e.to) { this.emit(e.to[0], e.to[1], 22, { speed: 4, life: 0.5, size: 0.16, color: '#ffffff', gravity: 5 }); this.flashes.push({ x: e.to[0], y: e.to[1], r: 1.1, t: 0, life: 0.45, color: '#ffffff', ring: true }); }
         break;
@@ -229,6 +286,8 @@ export class Renderer {
     this.numbers = this.numbers.filter((n) => n.t < n.life);
     for (const f of this.flashes) f.t += dt;
     this.flashes = this.flashes.filter((f) => f.t < f.life);
+    for (const v of this.vfx) v.t += dt;
+    this.vfx = this.vfx.filter((v) => v.loop ? (v.until === undefined || this.time < v.until) : v.t < v.life);
     this.draw(ctxInfo || {});
   }
 
@@ -255,6 +314,7 @@ export class Renderer {
     this.drawBots(info);
     this.drawProjectiles();
     this.drawFlashes();
+    this.drawVfx();
     this.drawParticles();
     this.drawKillFloorSurface();
     if (info.aim) this.drawAimGuide(info.aim);

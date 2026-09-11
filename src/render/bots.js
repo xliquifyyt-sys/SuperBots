@@ -1,4 +1,4 @@
-import { getSprite, drawSpriteBody } from './sprites.js';
+import { getSprite, drawSpriteBody, getClip } from './sprites.js';
 // Bot rigs, second pass: heavy painted-style vector art in the language of the
 // reference art — armoured bodies with a glowing core window, one oversized
 // weapon up front, chunky mobility parts below, gradient shading, hot rim
@@ -432,7 +432,9 @@ export const ART_SCALE = 0.78;
 
 export function drawBot(ctx, def, r, st, time) {
   const rig = RIGS[def.id] || RIGS.gravitas;
-  const tf = bodyTransform(st);
+  // A painted clip for this state carries its own motion, so only the airborne lean and the hit flash stay procedural.
+  const clip = getClip(def.id, st.anim) || (st.anim === 'idle' ? null : null);
+  const tf = clip ? bodyTransform({ ...st, anim: 'idle' }) : bodyTransform(st);
   const R = r * ART_SCALE;
   ctx.save();
   ctx.translate((tf.dx || 0) * r * (st.facing || 1), tf.dy * r + r * 0.12);
@@ -443,7 +445,10 @@ export function drawBot(ctx, def, r, st, time) {
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   // Painted sprite when one is loaded for this bot, vector rig otherwise.
   const sprite = getSprite(def.id);
-  if (sprite) drawSpriteBody(ctx, sprite, R, def.id); else rig(ctx, R, st, time);
+  if (clip) {
+    const frame = clip.loop ? Math.floor((time + (st.id || 0) * 0.37) * clip.fps) % clip.frames : Math.min(clip.frames - 1, Math.floor(clamp(st.t, 0, 0.999) * clip.frames));
+    drawSpriteBody(ctx, clip.img, R, def.id, clip.part, clip.frames, frame);
+  } else if (sprite) drawSpriteBody(ctx, sprite, R, def.id); else rig(ctx, R, st, time);
   if (st.anim === 'hit' && st.t < 0.5) { ctx.globalAlpha = 0.5 * (1 - st.t * 2); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, r * 1.3, 0, TAU); ctx.fill(); }
   ctx.restore();
 }
