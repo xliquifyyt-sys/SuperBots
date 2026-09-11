@@ -9,9 +9,10 @@ await pg.waitForTimeout(1200);   // let painted sprites load
 const ids = await pg.evaluate(async () => {
   const { BOTS, BOT_IDS, PHYS } = await import('/src/core/defs.js');
   const { drawBot } = await import('/src/render/bots.js');
+  const hulls = await import('/src/core/hulls.js');
   document.body.innerHTML = '<canvas id="hb" width="520" height="520" style="display:block"></canvas>';
   document.body.style.margin = '0';
-  window.__hb = { BOTS, BOT_IDS, PHYS, drawBot };
+  window.__hb = { BOTS, BOT_IDS, PHYS, drawBot, hulls };
   return BOT_IDS;
 });
 for (const id of ids) {
@@ -32,7 +33,7 @@ for (const id of ids) {
       c.beginPath(); c.moveTo(0, q); c.lineTo(W, q); c.stroke();
     }
     // ground line at the bottom of the collision body
-    const groundY = cy + PHYS.botRadius * PX;
+    const groundY = cy + Math.max(...window.__hb.hulls.BOT_HULLS[id].map(p => p[1])) * PX;
     c.strokeStyle = 'rgba(255,255,255,0.3)'; c.setLineDash([6, 5]); c.lineWidth = 2;
     c.beginPath(); c.moveTo(0, groundY); c.lineTo(W, groundY); c.stroke(); c.setLineDash([]);
     // the sprite, exactly as the game draws it
@@ -40,14 +41,13 @@ for (const id of ids) {
     c.save(); c.translate(cx, cy);
     drawBot(c, def, r * 1.67 * PHYS.botVisualScale, { anim: 'idle', t: 0, facing: 1, grounded: true, vx: 0, vy: 0, color: def.color, hp: 1, id: 0 }, 0.6);
     c.restore();
-    // hit circle: what projectiles and blasts must reach
-    const hr = PHYS.hitRadius[def.weight] * PX;
-    c.strokeStyle = '#ff4d4d'; c.lineWidth = 3; c.setLineDash([9, 6]);
-    c.beginPath(); c.arc(cx, cy, hr, 0, Math.PI * 2); c.stroke(); c.setLineDash([]);
-    c.fillStyle = 'rgba(255,77,77,0.10)'; c.beginPath(); c.arc(cx, cy, hr, 0, Math.PI * 2); c.fill();
-    // collision body: what terrain pushes against
-    c.strokeStyle = '#3fe9ff'; c.lineWidth = 3;
-    c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.stroke();
+    // the one body outline: what terrain pushes against AND what a shot has to reach
+    const { BOT_HULLS } = window.__hb.hulls;
+    const HULL = BOT_HULLS[id];
+    c.beginPath(); HULL.forEach(([hx, hy], i) => { const px = cx + hx * PX, py = cy + hy * PX; if (i === 0) c.moveTo(px, py); else c.lineTo(px, py); }); c.closePath();
+    c.fillStyle = 'rgba(63,233,255,0.10)'; c.fill();
+    c.strokeStyle = '#3fe9ff'; c.lineWidth = 3; c.stroke();
+    c.fillStyle = '#3fe9ff'; for (const [hx, hy] of HULL) { c.beginPath(); c.arc(cx + hx * PX, cy + hy * PX, 4, 0, Math.PI * 2); c.fill(); }
     // centre cross
     c.strokeStyle = 'rgba(255,255,255,0.8)'; c.lineWidth = 2;
     c.beginPath(); c.moveTo(cx - 9, cy); c.lineTo(cx + 9, cy); c.moveTo(cx, cy - 9); c.lineTo(cx, cy + 9); c.stroke();

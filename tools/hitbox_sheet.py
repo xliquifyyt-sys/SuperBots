@@ -1,7 +1,8 @@
 import base64, cv2, json
 SP='/tmp/claude-0/-home-user-SuperBots/ecbb4a5a-5a11-5688-a626-127b16c03285/scratchpad'
 ext=json.load(open(f'{SP}/sprite_extent.json'))
-HIT={'light':0.62,'medium':0.7,'heavy':0.8}
+import re
+hulls=json.loads(re.search(r'BOT_HULLS = (.*);', open('/home/user/SuperBots/src/core/hulls.js').read()).group(1))
 MASS={'light':'0.70','medium':'1.00','heavy':'1.60'}
 BOTS=[
  ('bulwark','Bulwark','heavy','Heavy tank',140,'#4f7cff'),
@@ -27,7 +28,9 @@ for wk, wname in GROUPS:
     for bid,name,w,cls,hp,color in BOTS:
         if w!=wk: continue
         sw,sh=ext[bid]
-        reach=HIT[w]/(sw/2)*100
+        H=hulls[bid]; xs=[q[0] for q in H]; ys=[q[1] for q in H]
+        hw=max(xs)-min(xs); hh=max(ys)-min(ys)
+        cover=hw/sw*100
         rows.append(f'''
       <article class="bot" style="--bot:{color}">
         <figure><img src="{uri(bid)}" alt="{name} with its collision body and hit circle drawn over the sprite" loading="lazy"><figcaption>{name}</figcaption></figure>
@@ -35,20 +38,19 @@ for wk, wname in GROUPS:
           <h3>{name}</h3>
           <p class="cls">{cls} &middot; {hp} HP</p>
           <dl>
-            <div><dt>Collision body</dt><dd class="c-body">0.50</dd></div>
-            <div><dt>Hit circle</dt><dd class="c-hit">{HIT[w]:.2f}</dd></div>
+            <div><dt>Outline width</dt><dd class="c-body">{hw:.2f}</dd></div>
+            <div><dt>Outline height</dt><dd class="c-body">{hh:.2f}</dd></div>
+            <div><dt>Outline points</dt><dd>{len(H)}</dd></div>
             <div><dt>Sprite width</dt><dd>{sw:.2f}</dd></div>
-            <div><dt>Sprite height</dt><dd>{sh:.2f}</dd></div>
           </dl>
-          <p class="reach"><span class="bar"><i style="width:{reach:.0f}%"></i></span><b>{reach:.0f}%</b> of the painted half-width sits inside the hit circle</p>
+          <p class="reach"><span class="bar"><i style="width:{min(100,cover):.0f}%"></i></span><b>{cover:.0f}%</b> of the painted width is inside the outline</p>
         </div>
       </article>''')
-    hr=f'{HIT[wk]:.2f}'
     sections.append(f'''
   <section class="group" id="{wk}">
     <div class="group-head">
       <h2>{wname}</h2>
-      <p>Hit circle <b class="c-hit">{hr}</b> &middot; collision body <b class="c-body">0.50</b> &middot; mass &times;{MASS[wk]}</p>
+      <p>mass &times;{MASS[wk]} &middot; one outline per bot, used for terrain, other bots, shots and blasts</p>
     </div>
     <div class="grid">{''.join(rows)}</div>
   </section>''')
@@ -132,34 +134,34 @@ footer code{{font-family:var(--mono);font-size:13px;background:var(--sunk);paddi
 </style>
 <div class="wrap">
 <header>
-  <div class="eyebrow">Super Bots &middot; collision reference &middot; build v37</div>
+  <div class="eyebrow">Super Bots &middot; collision reference &middot; build v38</div>
   <h1>Every bot, measured</h1>
-  <p>Two circles decide what happens to a bot. One stops it against terrain, the other is what a shot has to reach. They are not the same size, and neither matches the painted art. All figures are in world units, where one unit is one grid square on the map sheet.</p>
+  <p>One outline decides everything that happens to a bot. It is the convex shape of the bot's own painted body, and it is what terrain pushes against, what other bots bump, and what a shot or blast has to reach. It flips with the bot's facing. All figures are in world units, where one unit is one grid square on the map sheet.</p>
 </header>
 
 <div class="legend">
   <img src="{legend_img}" alt="Warden drawn at 150 pixels per world unit with both circles and a half-unit grid">
   <div class="keys">
-    <div class="key"><span class="swatch body"></span><div><b>Collision body, solid cyan</b><p>Radius 0.50 for every bot. This is what platforms, ramps and walls push against, and what decides whether a gap is passable.</p></div></div>
-    <div class="key"><span class="swatch hit"></span><div><b>Hit circle, dashed red</b><p>What a missile, blast or mine must reach to deal damage. It scales with weight class, so heavier bots are easier to hit.</p></div></div>
+    <div class="key"><span class="swatch body"></span><div><b>Body outline, cyan</b><p>The one collider. Platforms, ramps and walls push against it, bots bump each other with it, and a missile, blast or mine must reach it to deal damage. The dots are its corners.</p></div></div>
+    <div class="key"><span class="swatch hit"></span><div><b>Derived from the art</b><p>Each outline is traced from the sprite's own pixels, so a wide bot like Warden is wide to hit and wide to fit. Regenerate with the hull tool after any sprite change.</p></div></div>
     <div class="key"><span class="swatch art"></span><div><b>Grid and ground line</b><p>Faint lines are half a unit apart. The dashed horizontal line is where the bot rests on a surface.</p></div></div>
   </div>
 </div>
 
 <dl class="constants">
-  <div><dt>Collision radius</dt><dd>0.50</dd></div>
-  <div><dt>Hit radius, light</dt><dd class="c-hit">0.62</dd></div>
-  <div><dt>Hit radius, medium</dt><dd class="c-hit">0.70</dd></div>
-  <div><dt>Hit radius, heavy</dt><dd class="c-hit">0.80</dd></div>
+  <div><dt>Narrowest body</dt><dd class="c-body">1.50</dd></div>
+  <div><dt>Widest body</dt><dd class="c-body">2.99</dd></div>
+  <div><dt>Body height</dt><dd class="c-body">1.25 &ndash; 1.51</dd></div>
+  <div><dt>Pits and gaps</dt><dd>3.20</dd></div>
   <div><dt>Sprite scale</dt><dd>1.25&times;</dd></div>
 </dl>
 {''.join(sections)}
 
 <footer>
   <h2>Reading the sheet</h2>
-  <p>The painted sprites are wider than both circles, by design: a cannon barrel, a wing or a shield emitter can overlap an enemy without either bot registering a touch. The bar on each card shows how far the hit circle reaches across the sprite's own half-width, so a low number means more of what you see is cosmetic.</p>
-  <p>Ricochet reads truest at 82%, because it is drawn as a ball. Warden reads loosest at 46%, since its shield emitter and harpoon stretch well past the body. If shots look like they should connect and do not, that gap is why.</p>
-  <p>Both radii live in <code>PHYS</code> in <code>src/core/defs.js</code>. The collision radius is shared by every bot; the hit radii are keyed to weight class in <code>PHYS.hitRadius</code>.</p>
+  <p>Because the outline is the painted body, a cannon barrel or a shield emitter that touches an enemy is a real contact, and a shot that visibly crosses a bot connects. The trade is that bots are now two to three units wide, so every pit and gap on the maps was widened to 3.2 units: the narrowest body fits with room and the widest just drops through.</p>
+  <p>The bar on each card shows how much of the sprite's pixel width the outline covers; the remainder is thin detail such as antennae and mist that the trace deliberately ignores so it cannot snag on terrain.</p>
+  <p>The outlines live in <code>src/core/hulls.js</code> and are regenerated from the sprites by <code>tools/gen_hulls.py</code>.</p>
 </footer>
 </div>
 '''

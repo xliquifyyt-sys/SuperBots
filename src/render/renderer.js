@@ -444,7 +444,7 @@ export class Renderer {
       if (!b.alive) { const a = this.anims.get(b.id); if (!a || a.anim !== 'death' || this.time - a.start > ANIM_LENGTH.death) continue; }
       const [x, y] = this.toScreen(b.x, b.y);
       const r = PHYS.botRadius * z;
-      const facing = info.facing && info.facing[b.id] !== undefined ? info.facing[b.id] : (b.vx < -0.1 ? -1 : 1);
+      const facing = info.facing && info.facing[b.id] !== undefined ? info.facing[b.id] : (b.facing || 1);
       const isSel = info.selected === b.id;
       c.save(); c.translate(x, y);
       // shadow

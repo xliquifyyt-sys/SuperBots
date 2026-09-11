@@ -38,13 +38,13 @@ export const MAPS = {
     id: 'emberpit', name: 'Ember Pit', theme: 'lava', size: 'standard', width: 30, height: 17,
     minPlayers: 2, maxPlayers: 4, recommended: 2,
     terrain: [
-      R(0, 13, 14.1, 4), R(15.9, 13, 14.1, 4),          // ground, split by the crater shaft (14.1..15.9)
-      R(12, 9, 2.1, 4), R(15.9, 9, 2.1, 4),             // volcano summit, split by the same shaft
+      R(0, 13, 13.4, 4), R(16.6, 13, 13.4, 4),          // ground, split by the crater shaft (13.4..16.6): 3.2 wide so any body drops through
+      R(11.3, 9, 2.1, 4), R(16.6, 9, 2.1, 4),             // volcano summit, split by the same shaft
       R(13.5, 3.5, 3, 0.8),                             // rim perch above the crater (cover)
       R(8.5, 6, 3, 0.7), R(18.5, 6, 3, 0.7),            // floating steps: summit -> perch, one each side
       R(0, 9, 3.6, 0.8), R(26.4, 9, 3.6, 0.8),          // side ledges, anchored to the walls
     ],
-    slopes: [S(6, 9, 6, 4, 1), S(18, 9, 6, 4, -1)],     // mountain flanks: 4 up over 6 across
+    slopes: [S(5.3, 9, 6, 4, 1), S(18.7, 9, 6, 4, -1)],     // mountain flanks: 4 up over 6 across
     spawns: [[1.5, 12.5], [4.5, 12.5], [9, 12.5], [13, 8.5], [17, 8.5], [21, 12.5], [25.5, 12.5], [28.5, 12.5]],
     powerups: [[15, 3], [1.8, 8.5], [28.2, 8.5], [10, 12.5], [20, 12.5], [13, 8.5]],
     killFloor: { type: 'lava', y: 15.4 },
@@ -104,7 +104,7 @@ export const MAPS = {
     id: 'glacierfort', name: 'Glacier Fortress', theme: 'ice', size: 'battle', width: 48, height: 22,
     minPlayers: 2, maxPlayers: 8, recommended: 8,
     terrain: [
-      R(0, 17, 9, 5), R(11, 17, 26, 5), R(39, 17, 9, 5), // frozen ground with two pit holes (9..11 and 37..39)
+      R(0, 17, 8.4, 5), R(11.6, 17, 24.8, 5), R(39.6, 17, 8.4, 5), // frozen ground with two pit holes (8.4..11.6 and 36.4..39.6)
       R(18, 11, 12, 6),                                 // the keep
       R(22.2, 6.5, 3.6, 0.9),                           // keep roof (cover), 40% shorter, still centred on 24
       R(4, 9, 5, 0.9), R(39, 9, 5, 0.9),                // watchtower tops
@@ -239,7 +239,7 @@ export const MAPS = {
     minPlayers: 2, maxPlayers: 8, recommended: 6,
     terrain: [
       R(0, 12, 14, 8),                                  // tall building (left)
-      R(16, 16, 14, 4),                                 // low building (middle)
+      R(17.2, 16, 11.6, 4),                             // low building (middle): 3.2-wide gaps either side
       R(32, 10.5, 14, 9.5),                             // tallest building (right), lowered 1.5
       // the two alleys between buildings are open pit holes down to the rail
       R(19, 12, 8, 0.8),                                // billboard deck over the low roof (cover)

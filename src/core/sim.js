@@ -6,6 +6,7 @@
 //   endTurn()    -> pickups, cooldown ticks, expiry
 // All randomness goes through this.rng so replays are deterministic.
 
+import { BOT_HULLS } from './hulls.js';
 import { PHYS, DMG, TURN, BOTS, POWERUPS, POWERUP_IDS } from './defs.js';
 import { RNG } from './rng.js';
 
@@ -32,6 +33,74 @@ function circleRectPush(cx, cy, r, rect) {
 }
 
 function pointInRect(x, y, rc) { return x >= rc.x && x <= rc.x + rc.w && y >= rc.y && y <= rc.y + rc.h; }
+
+// ---- Body outlines ----
+// Every bot collides as the convex outline of its own sprite (BOT_HULLS), flipped
+// with its facing. The same outline is used for terrain, other bots, projectiles
+// and blasts, so what you see is exactly what can be hit and what gets stopped.
+const FALLBACK_HULL = [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]];
+function hullOf(def) { return BOT_HULLS[def.id] || FALLBACK_HULL; }
+function hullExtents(def) {
+  const H = hullOf(def); let l = 0, r = 0, t = 0, b = 0;
+  for (const [x, y] of H) { if (x < l) l = x; if (x > r) r = x; if (y < t) t = y; if (y > b) b = y; }
+  return { l, r, t, b };
+}
+function placedHull(def, x, y, facing) { const f = facing < 0 ? -1 : 1; return hullOf(def).map(([hx, hy]) => [x + hx * f, y + hy]); }
+function rectPoly(rc) { return [[rc.x, rc.y], [rc.x + rc.w, rc.y], [rc.x + rc.w, rc.y + rc.h], [rc.x, rc.y + rc.h]]; }
+function polyCentre(P) { let x = 0, y = 0; for (const [px, py] of P) { x += px; y += py; } return [x / P.length, y / P.length]; }
+// Separating-axis test between two convex polygons. Returns the smallest push that
+// moves A out of B as { nx, ny, depth } (pointing from B toward A), or null.
+function polyPush(A, B) {
+  let best = null;
+  const test = (P) => {
+    for (let i = 0; i < P.length; i++) {
+      const [x1, y1] = P[i], [x2, y2] = P[(i + 1) % P.length];
+      const ex = x2 - x1, ey = y2 - y1, len = Math.hypot(ex, ey); if (len < 1e-9) continue;
+      const ax = -ey / len, ay = ex / len;
+      let minA = Infinity, maxA = -Infinity, minB = Infinity, maxB = -Infinity;
+      for (const [px, py] of A) { const d = px * ax + py * ay; if (d < minA) minA = d; if (d > maxA) maxA = d; }
+      for (const [px, py] of B) { const d = px * ax + py * ay; if (d < minB) minB = d; if (d > maxB) maxB = d; }
+      const o1 = maxA - minB, o2 = maxB - minA;
+      if (o1 <= 0 || o2 <= 0) return false;
+      const overlap = Math.min(o1, o2);
+      if (!best || overlap < best.depth) best = { nx: o1 < o2 ? -ax : ax, ny: o1 < o2 ? -ay : ay, depth: overlap };
+    }
+    return true;
+  };
+  if (!test(A) || !test(B)) return null;
+  return best;
+}
+// Ramps sit on ground and against walls, so their bottom and back edges are not real
+// faces. A body inside the wedge is pushed out through the sloped face only.
+function slopePush(P, tri) {
+  const [ax, ay] = tri.pts[0], [bx, by] = tri.pts[1];
+  const ex = bx - ax, ey = by - ay, len = Math.hypot(ex, ey) || 1;
+  const nx = ey / len, ny = -ex / len;            // outward normal of the sloped face
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, depth = 0;
+  for (const [px, py] of P) {
+    if (px < minX) minX = px; if (px > maxX) maxX = px; if (py < minY) minY = py; if (py > maxY) maxY = py;
+    const d = (ax - px) * nx + (ay - py) * ny;     // how far this point sits behind the face
+    if (d > depth) depth = d;
+  }
+  if (depth <= 0) return null;
+  const s = tri.slope;
+  if (maxX <= s.x || minX >= s.x + s.w || maxY <= s.y || minY >= s.y + s.h) return null;
+  return { nx, ny, depth };
+}
+function distPointPoly(px, py, P) {
+  let inside = true, best = Infinity;
+  for (let i = 0; i < P.length; i++) {
+    const [ax, ay] = P[i], [bx, by] = P[(i + 1) % P.length];
+    const ex = bx - ax, ey = by - ay, len2 = ex * ex + ey * ey || 1e-9;
+    const t = Math.max(0, Math.min(1, ((px - ax) * ex + (py - ay) * ey) / len2));
+    const d = Math.hypot(px - (ax + ex * t), py - (ay + ey * t));
+    if (d < best) best = d;
+    if ((px - ax) * ey - (py - ay) * ex > 0) inside = false;
+  }
+  // winding can go either way once flipped, so test both senses
+  if (!inside) { inside = true; for (let i = 0; i < P.length; i++) { const [ax, ay] = P[i], [bx, by] = P[(i + 1) % P.length]; if ((px - ax) * (by - ay) - (py - ay) * (bx - ax) < 0) { inside = false; break; } } }
+  return inside ? 0 : best;
+}
 
 // Slopes collide as real right triangles: { pts: [[x,y] x3] } wound clockwise on screen
 // (y down). Returns the push that moves a circle out of the triangle, like circleRectPush.
@@ -109,7 +178,7 @@ export class World {
         deflector: 0, wallImmune: false, lavaImmune: 0, lavaTouched: false, cdBonus: 0,
         action: null, bounceLeft: 0, slamPending: false, updraftPending: false, reflectorUsed: false,
         sdLast: null, killsTurn: 0,
-        stats: { dealt: 0, taken: 0, kills: 0, turnsAlive: 0, specials: 0 },
+        stats: { dealt: 0, taken: 0, kills: 0, turnsAlive: 0, specials: 0 }, facing: 1,
       };
     });
     this.settle();
@@ -122,6 +191,15 @@ export class World {
   sameTeam(a, b) { return this.teamsMode && a.team === b.team; }
   solids() { return this.map.terrain.concat(this.walls.map((w) => w.rect)); }
   // Every solid a circle can be pushed out of: blocks, walls and slope triangles. Calls fn(hit, solid) per contact.
+  botPoly(b) { return placedHull(b.def, b.x, b.y, b.facing || 1); }
+  botExtents(b) { const e = hullExtents(b.def); return b.facing < 0 ? { l: -e.r, r: -e.l, t: e.t, b: e.b } : e; }
+  // Same sweep as eachSolidHit, for a convex polygon; getPoly is re-read per solid
+  // because the caller moves the body between contacts.
+  eachSolidHitPoly(getPoly, fn) {
+    for (const rc of this.physTerrain) { const h = polyPush(getPoly(), rectPoly(rc)); if (h) fn(h, rc); }
+    for (const w of this.walls) { const h = polyPush(getPoly(), rectPoly(w.rect)); if (h) fn(h, w.rect, w); }
+    for (const tri of this.slopeTris) { const h = slopePush(getPoly(), tri); if (h) fn(h, tri); }
+  }
   eachSolidHit(cx, cy, r, fn) {
     for (const rc of this.physTerrain) { const h = circleRectPush(cx, cy, r, rc); if (h) fn(h, rc); }
     for (const w of this.walls) { const h = circleRectPush(cx, cy, r, w.rect); if (h) fn(h, w.rect, w); }
@@ -148,7 +226,7 @@ export class World {
   resolveBotTerrain(b) {
     let touchedGround = false;
     b.onSlope = false;
-    this.eachSolidHit(b.x, b.y, PHYS.botRadius, (hit, solid) => {
+    this.eachSolidHitPoly(() => this.botPoly(b), (hit, solid) => {
       b.x += hit.nx * hit.depth; b.y += hit.ny * hit.depth;
       const vn = b.vx * hit.nx + b.vy * hit.ny;
       if (vn < 0) {
@@ -165,7 +243,7 @@ export class World {
       let inside = null;
       for (const rc of this.physTerrain.concat(this.walls.map((w) => w.rect))) { if (b.x > rc.x && b.x < rc.x + rc.w && b.y > rc.y && b.y < rc.y + rc.h) { inside = rc; break; } }
       if (!inside) break;
-      b.y = inside.y - PHYS.botRadius;
+      b.y = inside.y - this.botExtents(b).b;
       if (b.vy > 0) b.vy = 0;
       touchedGround = true;
     }
@@ -319,7 +397,8 @@ export class World {
         const h = ph.h;
         this.emit('crusher', { x: h.x, w: h.w, top: h.top, bottom: h.bottom });
         for (const b of this.alive()) {
-          if (b.x > h.x - PHYS.botRadius && b.x < h.x + h.w + PHYS.botRadius && b.y > h.top && b.y < h.bottom + 0.6) {
+          const ex = this.botExtents(b);
+          if (b.x + ex.r > h.x && b.x + ex.l < h.x + h.w && b.y > h.top && b.y < h.bottom + 0.6) {
             this.applyDamage(b, h.dmg, { type: 'hazard', label: 'Crusher' });
             b.vx += (b.x < h.x + h.w / 2 ? -1 : 1) * 6; b.vy += 3;
           }
@@ -328,7 +407,7 @@ export class World {
         for (const [gx, gy] of ph.points) {
           this.emit('geyser', { x: gx, y: gy, r: ph.h.radius });
           for (const b of this.alive()) {
-            if (Math.hypot(b.x - gx, b.y - gy) < ph.h.radius + PHYS.botRadius) {
+            if (distPointPoly(gx, gy, this.botPoly(b)) < ph.h.radius) {
               this.applyDamage(b, ph.h.dmg, { type: 'hazard', label: 'Geyser' });
               b.vy -= 12; b.vx += (b.x - gx) * 3;
             }
@@ -338,7 +417,7 @@ export class World {
         const h = ph.h;
         this.emit('reactorPulse', { x: h.x, y: h.y, r: h.r });
         for (const b of this.alive()) {
-          if (Math.hypot(b.x - h.x, b.y - h.y) < h.r + PHYS.botRadius) {
+          if (distPointPoly(h.x, h.y, this.botPoly(b)) < h.r) {
             this.applyDamage(b, h.dmg, { type: 'hazard', label: 'Reactor' });
             const d = Math.hypot(b.x - h.x, b.y - h.y) || 1;
             b.vx += (b.x - h.x) / d * 7; b.vy += (b.y - h.y) / d * 7 - 2;
@@ -373,6 +452,7 @@ export class World {
       const a = b.action || { type: 'skip' };
       if (a.type === 'skip') continue;
       const aim = this.normAim(a.aim);
+      if (Math.abs(aim.dx) > 0.05) b.facing = aim.dx < 0 ? -1 : 1;
       if (a.type === 'jump') this.doJump(b, aim, 1, 1);
       else if (a.type === 'missile') this.fireMissile(b, aim);
       else if (a.type === 's1' || a.type === 's2') this.useSpecial(b, a.type, aim, a.param);
@@ -545,7 +625,7 @@ export class World {
     for (const rc of this.map.terrain) {
       if (b.x >= rc.x - 0.1 && b.x <= rc.x + rc.w + 0.1 && (top === null || rc.y < top)) top = rc.y;
     }
-    if (top !== null) { b.y = top - PHYS.botRadius - 0.02; b.vy = Math.min(0, b.vy); b.grounded = false; }
+    if (top !== null) { b.y = top - this.botExtents(b).b - 0.02; b.vy = Math.min(0, b.vy); b.grounded = false; }
   }
 
   dropToGround(obj) {
@@ -565,7 +645,7 @@ export class World {
     for (let d = 0.25; d <= maxD; d += 0.25) {
       const cx = b.x + aim.dx * d, cy = b.y + aim.dy * d;
       if (cx < 0.6 || cx > this.map.width - 0.6 || cy < 0.6 || cy > this.lavaY - 0.8) break;
-      if (this.solids().some((rc) => circleRectPush(cx, cy, PHYS.botRadius * 0.9, rc))) break;
+      { let blocked = false; this.eachSolidHitPoly(() => placedHull(b.def, cx, cy, b.facing || 1), () => { blocked = true; }); if (blocked) break; }
       tx = cx; ty = cy;
     }
     this.emit('blink', { from: [b.x, b.y], to: [tx, ty], color: b.color });
@@ -639,7 +719,7 @@ export class World {
       if (opts.excludeSelf && b === source) continue;
       if (opts.enemiesOnly && source && this.sameTeam(b, source) && b !== source) continue;
       const d = Math.hypot(b.x - x, b.y - y);
-      if (d > radius + this.hitRadius(b)) continue;
+      if (distPointPoly(x, y, this.botPoly(b)) > radius) continue;
       const nx = d > 0.01 ? (b.x - x) / d : 0, ny = d > 0.01 ? (b.y - y) / d : -1;
       let applied = 0;
       if (dmg > 0) applied = this.applyDamage(b, dmg, { type: 'blast', bot: source, label: opts.label, fromAbove: opts.fromAbove, depth: opts.depth || 0 });
@@ -674,8 +754,9 @@ export class World {
         onGround = this.resolveBotTerrain(b) || onGround;
       }
       if (this.map.teleporters) { if (b.x < 0) { b.x += this.map.width; this.landAfterWrap(b); this.emit('teleport', { bot: b.id }); } else if (b.x > this.map.width) { b.x -= this.map.width; this.landAfterWrap(b); this.emit('teleport', { bot: b.id }); } }
-      else { if (b.x < PHYS.botRadius) { b.x = PHYS.botRadius; b.vx = Math.abs(b.vx) * 0.3; } if (b.x > this.map.width - PHYS.botRadius) { b.x = this.map.width - PHYS.botRadius; b.vx = -Math.abs(b.vx) * 0.3; } }
+      else { const ex = this.botExtents(b); if (b.x + ex.l < 0) { b.x = -ex.l; b.vx = Math.abs(b.vx) * 0.3; } if (b.x + ex.r > this.map.width) { b.x = this.map.width - ex.r; b.vx = -Math.abs(b.vx) * 0.3; } }
       b.grounded = onGround;
+      if (Math.abs(b.vx) > 1.5) b.facing = b.vx < 0 ? -1 : 1;
       if (onGround) {
         const f = Math.max(0, 1 - PHYS.groundFriction * dt); b.vx *= f;
         if (b.onSlope) { b.vy *= f; if (Math.hypot(b.vx, b.vy) < PHYS.slopeGrip) { b.vx = 0; b.vy = 0; } } // rolling friction along the ramp, then static friction holds
@@ -701,9 +782,9 @@ export class World {
         this.emit('fire', { bot: b.id, x: b.x, y: b.y });
       }
       // kill floor
-      if (b.y + PHYS.botRadius > this.lavaY) {
+      if (b.y + this.botExtents(b).b > this.lavaY) {
         if (this.map.killFloor.type === 'lava' && b.def.id === 'magmaw' && b.lavaImmune <= 0 && !b.lavaTouched) {
-          b.lavaTouched = true; b.lavaImmune = 2; b.vy = -15; b.y = this.lavaY - PHYS.botRadius - 0.05;
+          b.lavaTouched = true; b.lavaImmune = 2; b.vy = -15; b.y = this.lavaY - this.botExtents(b).b - 0.05;
           this.emit('lavaSurf', { bot: b.id, x: b.x, y: b.y });
         } else {
           this.kill(b, null, 'fell', 0);
@@ -719,7 +800,7 @@ export class World {
         f.tickTimer -= 0.4;
         const fOwner = f.owner !== null && f.owner !== undefined ? this.bots[f.owner] : null;
         for (const b of this.alive()) {
-          if (Math.hypot(b.x - f.x, b.y - f.y) > f.r + PHYS.botRadius) continue;
+          if (distPointPoly(f.x, f.y, this.botPoly(b)) > f.r) continue;
           if ((f.hits[b.id] || 0) >= 7) continue;
           f.hits[b.id] = (f.hits[b.id] || 0) + 1;
           this.applyDamage(b, 5, { type: 'status', bot: fOwner && fOwner !== b ? fOwner : null, label: 'Toxic' });
@@ -730,7 +811,8 @@ export class World {
     for (const pch of this.patches) {
       for (const b of this.alive()) {
         if (b.def.id === 'magmaw') continue;
-        if (Math.abs(b.x - pch.x) < pch.w / 2 + PHYS.botRadius && Math.abs(b.y - pch.y) < 1.1 && b.grounded) {
+        const pex = this.botExtents(b);
+        if (b.x + pex.r > pch.x - pch.w / 2 && b.x + pex.l < pch.x + pch.w / 2 && Math.abs(b.y - pch.y) < 1.1 && b.grounded) {
           pch.touched = pch.touched || {};
           if (pch.touched[b.id]) continue;
           pch.touched[b.id] = true;
@@ -743,7 +825,7 @@ export class World {
     for (const b of this.alive()) {
       if (b.padCd > 0) { b.padCd -= dt; continue; }
       for (const pad of this.pads) {
-        if (Math.hypot(b.x - pad.x, b.y - pad.y) < 0.75 + PHYS.botRadius) {
+        if (distPointPoly(pad.x, pad.y, this.botPoly(b)) < 0.75) {
           this.emit('teleport', { bot: b.id, from: [b.x, b.y], to: pad.to });
           b.x = pad.to[0]; b.y = pad.to[1];
           b.vx = 0; b.vy = 0; b.grounded = false; b.padCd = 0.8;
@@ -755,21 +837,21 @@ export class World {
     for (const b of this.alive()) {
       for (let i = this.powerups.length - 1; i >= 0; i--) {
         const pu = this.powerups[i];
-        if (Math.hypot(b.x - pu.x, b.y - pu.y) < PHYS.botRadius + 0.6) { this.powerups.splice(i, 1); this.applyPowerup(b, pu.id); }
+        if (distPointPoly(pu.x, pu.y, this.botPoly(b)) < 0.6) { this.powerups.splice(i, 1); this.applyPowerup(b, pu.id); }
       }
     }
     // Mines: bots that touch one set it off
     if (this.settings.hazards) for (const mn of this.mines) {
       if (!mn.alive) continue;
-      for (const b of this.alive()) if (Math.hypot(b.x - mn.x, b.y - mn.y) < PHYS.botRadius + 0.45) { this.detonateMine(mn, null); break; }
+      for (const b of this.alive()) if (distPointPoly(mn.x, mn.y, this.botPoly(b)) < 0.45) { this.detonateMine(mn, null); break; }
     }
     // Bot-bot collisions and contact effects
     const alive = this.alive();
     for (let i = 0; i < alive.length; i++) for (let j = i + 1; j < alive.length; j++) {
       const a = alive[i], c = alive[j];
-      const dx = c.x - a.x, dy = c.y - a.y, d = Math.hypot(dx, dy), min = PHYS.botRadius * 2;
-      if (d >= min || d < 1e-6) continue;
-      const nx = dx / d, ny = dy / d, overlap = min - d;
+      const hit = polyPush(this.botPoly(c), this.botPoly(a));   // push moving c away from a
+      if (!hit) continue;
+      const nx = hit.nx, ny = hit.ny, overlap = hit.depth;
       const ma = PHYS.mass[a.def.weight] || 1, mc = PHYS.mass[c.def.weight] || 1, mt = ma + mc;
       a.x -= nx * overlap * (mc / mt); a.y -= ny * overlap * (mc / mt); c.x += nx * overlap * (ma / mt); c.y += ny * overlap * (ma / mt);
       const rel = (c.vx - a.vx) * nx + (c.vy - a.vy) * ny;
@@ -862,8 +944,8 @@ export class World {
     for (const b of this.bots) {
       if (!b.alive) continue;
       if (b.id === p.owner && p.reflected === 0 && this.time - (p.born || 0) < 0.3) continue; // don't hit yourself at launch
-      const hitR = this.hitRadius(b) + p.r + (b.deflector ? 0.55 : 0);
-      if (Math.hypot(b.x - p.x, b.y - p.y) < hitR) {
+      const hitR = p.r + (b.deflector ? 0.55 : 0);
+      if (distPointPoly(p.x, p.y, this.botPoly(b)) < hitR) {
         if (b.deflector || (this.hasEffect(b, 'reflector') && !b.reflectorUsed)) {
           if (!ghost) {
             if (!b.deflector) b.reflectorUsed = true;
@@ -952,7 +1034,7 @@ export class World {
     for (const f of this.fields) {
       if (f.kind === 'static' && !f.applied) {
         f.applied = true;
-        for (const b of this.alive()) if (Math.hypot(b.x - f.x, b.y - f.y) < f.r + PHYS.botRadius) this.addEffect(b, 'shocked', 2);
+        for (const b of this.alive()) if (distPointPoly(f.x, f.y, this.botPoly(b)) < f.r) this.addEffect(b, 'shocked', 2);
       }
     }
     // Cooldowns, effect timers, expiry
@@ -1007,7 +1089,8 @@ export class World {
     const points = [];
     let impact = null;
     if (type === 'jump' || type === 'moltenSlam' || type === 'updraft') {
-      const ghost = { x: b.x, y: b.y, vx: 0, vy: 0, def: b.def, airborne: true, bounceLeft: b.def.id === 'ricochet' ? 1 : 0, grounded: false };
+      const ghost = { x: b.x, y: b.y, vx: 0, vy: 0, def: b.def, airborne: true, bounceLeft: b.def.id === 'ricochet' ? 1 : 0, grounded: false, facing: Math.abs(aim.dx) > 0.05 ? (aim.dx < 0 ? -1 : 1) : (b.facing || 1) };
+      const gex = this.botExtents(ghost);
       const s = PHYS.jumpSpeed * (type === 'moltenSlam' ? Math.max(aim.power, 0.6) : aim.power) * this.jumpMul(b);
       ghost.vx = aim.dx * s; ghost.vy = aim.dy * s * (type === 'updraft' ? 2 : 1);
       if (ghost.vy > -2) ghost.vy = -2;
@@ -1022,7 +1105,7 @@ export class World {
         let landed = false, onSlopeG = false;
         for (let ss = 0; ss < sub; ss++) {
           ghost.x += (ghost.vx * PHYS.dt) / sub; ghost.y += (ghost.vy * PHYS.dt) / sub;
-          this.eachSolidHit(ghost.x, ghost.y, PHYS.botRadius, (h, solid) => {
+          this.eachSolidHitPoly(() => this.botPoly(ghost), (h, solid) => {
             if (h.ny < -0.5 && solid.pts) onSlopeG = true;
             ghost.x += h.nx * h.depth; ghost.y += h.ny * h.depth;
             const vn = ghost.vx * h.nx + ghost.vy * h.ny;
@@ -1035,12 +1118,12 @@ export class World {
         }
         if (!apex && ghost.vy >= 0) apex = [ghost.x, ghost.y];
         if (this.map.teleporters) { if (ghost.x < 0) ghost.x += this.map.width; else if (ghost.x > this.map.width) ghost.x -= this.map.width; }
-        else { if (ghost.x < PHYS.botRadius) { ghost.x = PHYS.botRadius; ghost.vx = Math.abs(ghost.vx) * 0.3; } if (ghost.x > this.map.width - PHYS.botRadius) { ghost.x = this.map.width - PHYS.botRadius; ghost.vx = -Math.abs(ghost.vx) * 0.3; } }
+        else { if (ghost.x + gex.l < 0) { ghost.x = -gex.l; ghost.vx = Math.abs(ghost.vx) * 0.3; } if (ghost.x + gex.r > this.map.width) { ghost.x = this.map.width - gex.r; ghost.vx = -Math.abs(ghost.vx) * 0.3; } }
         if (landed) { const f = Math.max(0, 1 - PHYS.groundFriction * PHYS.dt); ghost.vx *= f; if (onSlopeG) { ghost.vy *= f; if (Math.hypot(ghost.vx, ghost.vy) < PHYS.slopeGrip) { ghost.vx = 0; ghost.vy = 0; } } else if (ghost.vy > 0) ghost.vy = 0; }
         points.push([ghost.x, ghost.y]);
         if (landed && Math.hypot(ghost.vx, ghost.vy) < 3) restFrames++; else restFrames = 0;
         if (restFrames >= 2) { impact = { type: 'land', x: ghost.x, y: ghost.y }; break; }
-        if (ghost.y + PHYS.botRadius > this.lavaY) { impact = { type: 'floor', x: ghost.x, y: ghost.y }; break; }
+        if (ghost.y + gex.b > this.lavaY) { impact = { type: 'floor', x: ghost.x, y: ghost.y }; break; }
       }
       return { points, impact, apex };
     }
@@ -1050,7 +1133,7 @@ export class World {
       for (let d = 0.25; d <= maxD; d += 0.25) {
         const cx = b.x + aim.dx * d, cy = b.y + aim.dy * d;
         if (cx < 0.6 || cx > this.map.width - 0.6 || cy < 0.6 || cy > this.lavaY - 0.8) break;
-        let blocked = false; this.eachSolidHit(cx, cy, PHYS.botRadius * 0.9, () => { blocked = true; }); if (blocked) break;
+        let blocked = false; this.eachSolidHitPoly(() => placedHull(b.def, cx, cy, aim.dx < 0 ? -1 : 1), () => { blocked = true; }); if (blocked) break;
         tx = cx; ty = cy; points.push([cx, cy]);
       }
       return { points, impact: { type: 'blink', x: tx, y: ty } };
@@ -1127,3 +1210,4 @@ export class World {
 }
 
 export { circleRectPush, pointInRect };
+export { polyPush, distPointPoly, placedHull };
