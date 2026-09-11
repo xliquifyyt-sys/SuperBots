@@ -152,7 +152,6 @@ export const MAPS = {
       R(13, 13, 20, 0.8), R(16, 10, 14, 3), R(19, 7, 8, 3), // pyramid steps; the base is a lintel over a through tunnel (13..33)
       R(21, 3.5, 4, 0.8),                               // altar canopy (cover on the summit)
       R(3, 11, 5, 0.9), R(38, 11, 5, 0.9),              // side tree platforms
-      R(13, 15, 1, 1), R(32, 15, 1, 1),                 // stair blocks at the tunnel mouths: one hop out of the tunnel
       R(6, 6.5, 4, 0.8), R(9.2, 5.1, 0.8, 1.4),         // L-shaped floating platform above the left ledge, post at its right end
       R(36, 6.5, 4, 0.8), R(36, 5.1, 0.8, 1.4),         // mirrored L above the right ledge, post at its left end
     ],
