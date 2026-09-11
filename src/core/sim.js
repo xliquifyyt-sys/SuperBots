@@ -955,9 +955,13 @@ export class World {
     // bots
     for (const b of this.bots) {
       if (!b.alive) continue;
-      if (b.id === p.owner && p.reflected === 0 && this.time - (p.born || 0) < 0.3) continue; // don't hit yourself at launch
       const hitR = p.r + (b.deflector ? 0.55 : 0);
-      if (distPointPoly(p.x, p.y, this.botPoly(b)) < hitR) {
+      const dPoly = distPointPoly(p.x, p.y, this.botPoly(b));
+      if (b.id === p.owner && p.reflected === 0 && !p.leftOwner) { // a shot can't hit its owner until it has cleared the owner's body
+        if (dPoly >= hitR + 0.05) p.leftOwner = true;
+        continue;
+      }
+      if (dPoly < hitR) {
         if (b.deflector || (this.hasEffect(b, 'reflector') && !b.reflectorUsed)) {
           if (!ghost) {
             if (!b.deflector) b.reflectorUsed = true;
