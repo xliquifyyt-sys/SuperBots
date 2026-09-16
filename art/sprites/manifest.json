@@ -46,6 +46,34 @@
       "file": "bot_volt_full.png",
       "scale": 1.205,
       "dy": -0.092
+    },
+    "anim_fire": {
+      "file": "bot_volt_fire.webp",
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "scale": 1.469
+    },
+    "anim_idle": {
+      "file": "bot_volt_idle.webp",
+      "frames": 8,
+      "fps": 8,
+      "loop": true,
+      "scale": 1.469
+    },
+    "anim_s1": {
+      "file": "bot_volt_s1.webp",
+      "frames": 10,
+      "fps": 14,
+      "loop": false,
+      "scale": 1.469
+    },
+    "anim_s2": {
+      "file": "bot_volt_s2.webp",
+      "frames": 6,
+      "fps": 14,
+      "loop": false,
+      "scale": 1.469
     }
   },
   "warden": {

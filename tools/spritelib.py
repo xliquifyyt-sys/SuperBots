@@ -8,7 +8,7 @@ def to_bgra(img):
     return img
 
 
-def key_backdrop(img, tol=18):
+def key_backdrop(img, tol=18, despill=True):
     """Remove a flat backdrop by flood-filling inward from the border, so light
     highlights inside the artwork survive. Images that already carry alpha are
     returned untouched."""
@@ -28,7 +28,28 @@ def key_backdrop(img, tol=18):
     a = np.where(outside, 0, 255).astype(np.uint8)
     a = cv2.GaussianBlur(a, (3, 3), 0)
     a = np.where(a > 200, 255, np.where(a < 60, 0, a)).astype(np.uint8)
-    return np.dstack([bgr, a])
+    out = np.dstack([bgr, a])
+    if despill: out = despill_green(out, backdrop)
+    return out
+
+
+def despill_green(img, backdrop):
+    """Glows and soft edges that blended into a green backdrop keep a green cast
+    after keying. Where a kept pixel leans toward the backdrop hue, pull its green
+    down to the other channels and fade its alpha by how backdrop-like it is."""
+    b, g, r, a = [img[:, :, i].astype(np.float32) for i in range(4)]
+    bb, bg, br = [float(v) for v in backdrop]
+    if not (bg > br + 40 and bg > bb + 40): return img   # only a green backdrop spills green
+    excess = g - np.maximum(r, b)                        # how much greener than any other channel
+    back_excess = max(1.0, bg - max(br, bb))
+    k = np.clip((excess - 12) / (back_excess - 12), 0, 1) # 0 = clean pixel, 1 = pure backdrop colour
+    inside = a > 0
+    g2 = np.where(inside & (excess > 12), np.maximum(r, b) + np.minimum(excess, 12), g)
+    a2 = np.where(inside, a * (1 - np.clip(k * 1.7, 0, 1)), a)   # steep: a pixel that is half backdrop is mostly gone
+    out = img.copy()
+    out[:, :, 1] = np.clip(g2, 0, 255).astype(np.uint8)
+    out[:, :, 3] = np.clip(a2, 0, 255).astype(np.uint8)
+    return out
 
 
 def alpha_bbox(img, thresh=8):

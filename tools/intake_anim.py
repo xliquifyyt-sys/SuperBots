@@ -122,8 +122,11 @@ for bot in only:
             ex, ey = min(nw, canvas - dx), min(nh, canvas - dy)
             if ex <= sx0 or ey <= sy0: continue
             strip[dy + sy0:dy + ey, i * canvas + dx + sx0:i * canvas + dx + ex] = rs[sy0:ey, sx0:ex]
-        fn = f"bot_{bot}_{clip}.png"
-        cv2.imwrite(os.path.join(OUT, fn), strip, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        # WebP with alpha: 5 to 8x smaller than PNG, which matters because the single-file build inlines every strip.
+        fn = f"bot_{bot}_{clip}.webp"
+        cv2.imwrite(os.path.join(OUT, fn), strip, [cv2.IMWRITE_WEBP_QUALITY, 92])
+        old_png = os.path.join(OUT, f"bot_{bot}_{clip}.png")
+        if os.path.exists(old_png): os.remove(old_png)
         prev = manifest.setdefault(bot, {}).get("anim_" + clip, {})
         fps, loop = CLIPS[clip]
         entry = {"file": fn, "frames": len(items), "fps": prev.get("fps", fps), "loop": prev.get("loop", loop)}

@@ -3,3 +3,6 @@ package-lock.json
 .DS_Store
 *.log
 test/*.png
+art/sprites/raw/anim/*/
+art/vfx/raw/*/
+tools/__pycache__/
