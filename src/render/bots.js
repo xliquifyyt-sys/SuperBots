@@ -1,4 +1,5 @@
 import { getSprite, drawSpriteBody, getClip } from './sprites.js';
+import { getCutout, drawCutout } from './cutout.js';
 // Bot rigs, second pass: heavy painted-style vector art in the language of the
 // reference art — armoured bodies with a glowing core window, one oversized
 // weapon up front, chunky mobility parts below, gradient shading, hot rim
@@ -433,19 +434,23 @@ export const ART_SCALE = 0.78;
 export function drawBot(ctx, def, r, st, time) {
   const rig = RIGS[def.id] || RIGS.gravitas;
   // A painted clip for this state carries its own motion, so only the airborne lean and the hit flash stay procedural.
-  const clip = getClip(def.id, st.anim) || (st.anim === 'idle' ? null : null);
-  const tf = clip ? bodyTransform({ ...st, anim: 'idle' }) : bodyTransform(st);
+  // A cut-out rig (parts tweened in code) wins over painted clips; either carries its own motion,
+  // so only the airborne lean and the hit flash stay procedural.
+  const rig2 = getCutout(def.id);
+  const clip = rig2 ? null : getClip(def.id, st.anim);
+  const tf = (rig2 || clip) ? bodyTransform({ ...st, anim: 'idle' }) : bodyTransform(st);
   const R = r * ART_SCALE;
   ctx.save();
   ctx.translate((tf.dx || 0) * r * (st.facing || 1), tf.dy * r + r * 0.12);
   ctx.rotate(tf.rot * (st.facing || 1));
   ctx.scale(tf.sx * (st.facing || 1), tf.sy);
   ctx.translate(0, -r * 0.12);
-  if (st.anim === 'death') ctx.globalAlpha = 1 - st.t * 0.9;
+  if (st.anim === 'death' && !rig2) ctx.globalAlpha = 1 - st.t * 0.9;
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   // Painted sprite when one is loaded for this bot, vector rig otherwise.
   const sprite = getSprite(def.id);
-  if (clip) {
+  if (rig2) drawCutout(ctx, rig2, R, def.id, st, time);
+  else if (clip) {
     const frame = clip.loop ? Math.floor((time + (st.id || 0) * 0.37) * clip.fps) % clip.frames : Math.min(clip.frames - 1, Math.floor(clamp(st.t, 0, 0.999) * clip.frames));
     drawSpriteBody(ctx, clip.img, R, def.id, clip.part, clip.frames, frame);
   } else if (sprite) drawSpriteBody(ctx, sprite, R, def.id); else rig(ctx, R, st, time);

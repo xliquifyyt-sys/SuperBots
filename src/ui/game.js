@@ -302,6 +302,7 @@ export class GameController {
     // camera during playback
     if (m.phase === 'resolve') {
       this.r.consumeEvents();
+      m.timeScale = this.speed > 1 ? 1 : this.r.timeScale;
       const pts = [];
       for (const b of w.bots) if (b.alive) pts.push([b.x, b.y]);
       for (const p of w.projectiles) pts.push([p.x, p.y]);

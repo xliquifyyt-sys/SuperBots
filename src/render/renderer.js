@@ -15,6 +15,41 @@ function rgbaHex(h, a) { const n = parseInt(h.slice(1), 16); return `rgba(${n >>
 const EFFECT_ICONS = { poison: '☠', burn: '🔥', frozen: '❄', rooted: '⚓', shocked: '⚡', smoked: '☁', amp: '▲', plating: '◆', thrusters: '⇈', reflector: '◐', rally: '★' };
 const EFFECT_COLORS = { poison: '#9dff2f', burn: '#ff8a2f', frozen: '#b5f4ff', rooted: '#3ddc97', shocked: '#ffe23a', smoked: '#c8c8d8', amp: '#ff7a2f', plating: '#c0c8d8', thrusters: '#ffd84f', reflector: '#e8f0ff', rally: '#ff9cf0' };
 
+// Jagged lightning between two screen points: a main bolt with a soft additive
+// glow and a couple of branches. `seed` keeps a bolt stable within a frame while
+// `jitterT` re-rolls its shape a few times a second so it crackles.
+function drawBolt(c, x1, y1, x2, y2, color, width, alpha, seed, jitterT, branches = 2) {
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy); if (len < 2) return;
+  const nx = -dy / len, ny = dx / len;
+  const segs = Math.max(6, Math.min(40, Math.floor(len / 14)));
+  let s = (seed * 9301 + Math.floor(jitterT * 12) * 49297) % 233280;
+  const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280 - 0.5; };
+  const pts = [[x1, y1]];
+  for (let i = 1; i < segs; i++) { const f = i / segs; const off = rnd() * width * 3.2 * Math.sin(f * Math.PI) ; pts.push([x1 + dx * f + nx * off, y1 + dy * f + ny * off]); }
+  pts.push([x2, y2]);
+  c.save(); c.globalCompositeOperation = 'lighter'; c.lineCap = 'round'; c.lineJoin = 'round';
+  const path = () => { c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); };
+  c.globalAlpha = alpha * 0.35; c.strokeStyle = color; c.lineWidth = width * 4; path(); c.stroke();
+  c.globalAlpha = alpha * 0.8; c.lineWidth = width * 1.6; path(); c.stroke();
+  c.globalAlpha = alpha; c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(1, width * 0.6); path(); c.stroke();
+  for (let b = 0; b < branches; b++) {
+    const at = pts[Math.max(1, Math.floor((0.25 + 0.5 * (rnd() + 0.5)) * pts.length))];
+    const bl = len * (0.12 + 0.18 * (rnd() + 0.5)), ang = Math.atan2(dy, dx) + (rnd() > 0 ? 1 : -1) * (0.5 + 0.6 * (rnd() + 0.5));
+    const bx = at[0] + Math.cos(ang) * bl, by = at[1] + Math.sin(ang) * bl;
+    c.globalAlpha = alpha * 0.7; c.strokeStyle = color; c.lineWidth = width * 0.9;
+    c.beginPath(); c.moveTo(at[0], at[1]); const mx = (at[0] + bx) / 2 + nx * rnd() * width * 2, my = (at[1] + by) / 2 + ny * rnd() * width * 2; c.lineTo(mx, my); c.lineTo(bx, by); c.stroke();
+  }
+  c.restore();
+}
+
+// Soft additive glow disc.
+function glowDisc(c, x, y, r, color, alpha) {
+  if (r <= 0) return;
+  const g = c.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, color); g.addColorStop(0.5, color); g.addColorStop(1, 'rgba(0,0,0,0)');
+  c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = alpha; c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); c.restore();
+}
+
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -29,6 +64,9 @@ export class Renderer {
     this.flashes = [];
     this.vfx = [];       // painted effect sprites in flight: { key, x, y, size, rot, flip, t, life, loop, until, blend }
     this.shake = 0;
+    this.punch = null;    // camera punch-in on a kill: { x, y, t, life }
+    this.timeScale = 1;   // requested playback scale (hit-stop, kill slow motion); the match reads it each frame
+    this.slow = null;     // { factor, until }
     loadSprites(); loadVfx();
     loadBackgrounds();
     loadTerrain();
@@ -217,14 +255,19 @@ export class Renderer {
         this.flashes.push({ star: true, x: e.x, y: e.y, r: Math.max(1, e.radius * 1.15), t: 0, life: 0.14, color: '#ffffff', seed: (e.x * 7 + e.y * 13) % 100 });
         this.flashes.push({ ring2: true, x: e.x, y: e.y, r: Math.max(1, e.radius * 1.25), t: 0, life: 0.42, color: e.color });
         this.flashes.push({ x: e.x, y: e.y, r: e.radius * 0.8, t: 0, life: 0.3, color: e.color });
+        this.flashes.push({ fire: true, x: e.x, y: e.y, r: Math.max(0.9, e.radius * 1.1), t: 0, life: 0.55, color: e.color, seed: (e.x * 3 + e.y * 5) % 100 });
+        this.emit(e.x, e.y, e.big ? 12 : 7, { speed: 7 + e.radius * 2, life: 0.9, size: 0.22, color: '#2a2622', gravity: 22, chunk: true });
         this.shake += e.big ? 1.1 : 0.5;
         break;
       }
       case 'damage':
+        if (e.amount >= 40 && !(this.slow && this.time < this.slow.until)) this.slow = { factor: 0.08, until: this.time + 0.09 };
         if (e.amount > 0) this.numbers.push({ x: e.x, y: e.y - 0.8, text: `-${e.amount}`, color: e.crit ? '#ff4d4d' : '#ffffff', t: 0, life: 1.1, big: e.crit });
         else this.numbers.push({ x: e.x, y: e.y - 0.8, text: e.label || 'blocked', color: '#a0a8b8', t: 0, life: 0.9 });
         break;
       case 'eliminated':
+        this.punch = { x: e.x, y: e.y, t: 0, life: 1.1 };
+        this.slow = { factor: 0.22, until: this.time + 0.75 };
         this.emit(e.x, e.y, 60, { speed: 9, life: 1.2, size: 0.25, color: this.world.bots[e.bot].color, gravity: 14 });
         this.numbers.push({ x: e.x, y: e.y - 1.4, text: this.world.bots[e.bot].name + ' KO', color: '#ff4d4d', t: 0, life: 1.6, big: true });
         this.shake += 1;
@@ -280,6 +323,12 @@ export class Renderer {
     this.cam.y += (this.camTarget.y - this.cam.y) * k;
     this.cam.zoom += (this.camTarget.zoom - this.cam.zoom) * k;
     this.shake = Math.max(0, this.shake - dt * 3);
+    if (this.punch) {
+      const p = this.punch; p.t += dt;
+      if (p.t > p.life) this.punch = null;
+      else { const w = p.t < 0.12 ? p.t / 0.12 : (p.t > p.life - 0.35 ? (p.life - p.t) / 0.35 : 1); const f = 0.35 * w; this.cam.x += (p.x - this.cam.x) * f; this.cam.y += (p.y - this.cam.y) * f; this.cam.zoom += (this.camTarget.zoom * 1.4 - this.cam.zoom) * f; }
+    }
+    this.timeScale = this.slow && this.time < this.slow.until ? this.slow.factor : 1;
     for (const p of this.particles) { p.t += dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 1 - dt * 1.5; }
     this.particles = this.particles.filter((p) => p.t < p.life);
     for (const n of this.numbers) { n.t += dt; n.y -= dt * 0.9; }
@@ -448,7 +497,12 @@ export class Renderer {
     for (const f of w.fields) {
       const [x, y] = this.toScreen(f.x, f.y);
       if (f.kind === 'toxic') { for (let i = 0; i < 10; i++) { c.fillStyle = i % 2 ? 'rgba(125,210,30,0.4)' : 'rgba(60,120,20,0.45)'; c.beginPath(); c.arc(x + Math.cos(i * 0.7 + this.time) * f.r * z * 0.55, y + Math.sin(i * 1.3 + this.time * 0.7) * f.r * z * 0.5, f.r * z * 0.5, 0, Math.PI * 2); c.fill(); } c.fillStyle = 'rgba(180,255,90,0.8)'; for (let i = 0; i < 6; i++) { const a = this.time * 2 + i * 1.05; c.beginPath(); c.arc(x + Math.cos(a) * f.r * z * 0.6, y + Math.sin(a * 1.4) * f.r * z * 0.5, z * 0.06, 0, Math.PI * 2); c.fill(); } }
-      else { c.strokeStyle = '#ffe23a'; c.lineWidth = 2; c.setLineDash([4, 4]); c.beginPath(); c.arc(x, y, f.r * z, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); c.fillStyle = 'rgba(255,226,58,0.15)'; c.fill(); for (let i = 0; i < 5; i++) { const a = this.time * 9 + i * 1.3; c.strokeStyle = '#ffe23a'; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * f.r * z, y + Math.sin(a) * f.r * z * 0.8); c.stroke(); } }
+      else {
+        glowDisc(c, x, y, f.r * z, '#ffe23a', 0.16 + 0.05 * Math.sin(this.time * 20));
+        c.strokeStyle = '#ffe23a'; c.lineWidth = 2; c.setLineDash([4, 4]); c.beginPath(); c.arc(x, y, f.r * z, 0, Math.PI * 2); c.stroke(); c.setLineDash([]);
+        const seed = Math.floor(f.x * 13 + f.y * 7);
+        for (let i = 0; i < 4; i++) { const a = this.time * 7 + i * 1.6, b = a + 1.1 + Math.sin(this.time * 3 + i); const R = f.r * z; drawBolt(c, x + Math.cos(a) * R, y + Math.sin(a) * R * 0.85, x + Math.cos(b) * R * 0.3, y + Math.sin(b) * R * 0.3, '#ffe23a', Math.max(1.5, z * 0.07), 0.9, seed + i, this.time + i, 1); }
+      }
     }
     if (w.singularity && w.singularity.t > 0) {
       const [x, y] = this.toScreen(w.singularity.x, w.singularity.y);
@@ -642,8 +696,10 @@ export class Renderer {
         c.stroke(); c.globalAlpha = 1;
       }
       const [x, y] = this.toScreen(p.x, p.y);
+      glowDisc(c, x, y, Math.max(6, p.r * z * 3.2), p.color, 0.55);
       c.fillStyle = p.color; c.strokeStyle = '#0d1018'; c.lineWidth = 2;
       c.beginPath(); c.arc(x, y, Math.max(3, p.r * z * 1.2), 0, Math.PI * 2); c.fill(); c.stroke();
+      c.fillStyle = '#ffffff'; c.beginPath(); c.arc(x - p.r * z * 0.3, y - p.r * z * 0.3, Math.max(1.2, p.r * z * 0.4), 0, Math.PI * 2); c.fill();
       if (p.kind === 'bomb') { c.fillStyle = '#ff4d4d'; c.beginPath(); c.moveTo(x, y - 12); c.lineTo(x + 6, y - 4); c.lineTo(x - 6, y - 4); c.closePath(); c.fill(); }
     }
   }
@@ -652,7 +708,14 @@ export class Renderer {
     const c = this.ctx, z = this.cam.zoom * this.userZoom;
     for (const f of this.flashes) {
       const k = f.t / f.life;
-      if (f.beam) { const [x1, y1] = this.toScreen(f.x1, f.y1), [x2, y2] = this.toScreen(f.x2, f.y2); c.strokeStyle = f.color; c.globalAlpha = 1 - k; c.lineWidth = z * 0.35 * (1 - k) + 2; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); c.globalAlpha = 1; continue; }
+      if (f.beam) {
+        const [x1, y1] = this.toScreen(f.x1, f.y1), [x2, y2] = this.toScreen(f.x2, f.y2);
+        const a = k < 0.15 ? 1 : 1 - (k - 0.15) / 0.85;
+        drawBolt(c, x1, y1, x2, y2, f.color, Math.max(2, z * 0.16), a, Math.floor(f.x1 * 31 + f.y2 * 17), this.time, 3);
+        glowDisc(c, x1, y1, z * 1.2 * (1 - k), f.color, 0.8 * a);
+        glowDisc(c, x2, y2, z * 0.9 * (1 - k), '#ffffff', 0.6 * a);
+        continue;
+      }
       if (f.cone) { const [x, y] = this.toScreen(f.x, f.y); const a = Math.atan2(f.dy, f.dx); c.fillStyle = f.color; c.globalAlpha = 0.35 * (1 - k); c.beginPath(); c.moveTo(x, y); c.arc(x, y, f.len * z * Math.min(1, k * 3), a - 0.56, a + 0.56); c.closePath(); c.fill(); c.globalAlpha = 1; continue; }
       if (f.crusher) { const [x, y, W] = this.rectScreen({ x: f.x, y: f.top, w: f.w, h: 1 }); const drop = Math.min(1, k * 3); const [, yb] = this.toScreen(0, f.bottom); const h = (yb - y) * drop; paintCrusher(c, this.theme, x, y, W, h, k, z); continue; }
       const [x, y] = this.toScreen(f.x, f.y);
@@ -663,6 +726,15 @@ export class Renderer {
         c.beginPath();
         for (let i = 0; i < pts * 2; i++) { const a = (i / (pts * 2)) * Math.PI * 2 + (f.seed || 0); const rr = i % 2 === 0 ? R : R * 0.42; const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr; i === 0 ? c.moveTo(px, py) : c.lineTo(px, py); }
         c.closePath(); c.fill();
+        c.globalAlpha = 1; continue;
+      }
+      if (f.fire) {
+        // layered fireball: hot core, orange body, dark smoke lobes, all fading as it expands
+        const R = f.r * z * (0.5 + k * 0.9), a = 1 - k;
+        glowDisc(c, x, y, R * 1.6, f.color, 0.55 * a);
+        c.globalAlpha = a * 0.9;
+        for (let i = 0; i < 6; i++) { const ang = f.seed + i * 1.05 + k * 0.6, rr = R * (0.55 + 0.25 * Math.sin(f.seed * 3 + i * 2.1)); const px = x + Math.cos(ang) * R * 0.45, py = y + Math.sin(ang) * R * 0.4 - k * z * 0.4; c.fillStyle = i % 2 ? '#ff9a3c' : '#ff5a1f'; c.beginPath(); c.arc(px, py, rr * (1 - k * 0.3), 0, Math.PI * 2); c.fill(); }
+        c.fillStyle = '#fff3c4'; c.globalAlpha = a * (1 - k) ; c.beginPath(); c.arc(x, y - k * z * 0.3, R * 0.45 * (1 - k * 0.5), 0, Math.PI * 2); c.fill();
         c.globalAlpha = 1; continue;
       }
       if (f.ring2) {
@@ -684,7 +756,8 @@ export class Renderer {
     for (const p of this.particles) {
       const [x, y] = this.toScreen(p.x, p.y);
       c.globalAlpha = 1 - p.t / p.life; c.fillStyle = p.color;
-      c.fillRect(x - p.size * z / 2, y - p.size * z / 2, p.size * z, p.size * z);
+      if (p.chunk) { c.save(); c.translate(x, y); c.rotate(p.t * 9 + p.x); c.fillRect(-p.size * z / 2, -p.size * z / 3, p.size * z, p.size * z * 0.66); c.restore(); }
+      else c.fillRect(x - p.size * z / 2, y - p.size * z / 2, p.size * z, p.size * z);
     }
     c.globalAlpha = 1;
   }

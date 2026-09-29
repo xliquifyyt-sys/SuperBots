@@ -158,7 +158,7 @@ export class Match {
       case 'resolve': {
         if (this.skipRequested) { this.world.runToEnd(); this.beginCleanup(); break; }
         // step the sim in fixed increments at playbackSpeed
-        this.acc = (this.acc || 0) + dt * this.playbackSpeed;
+        this.acc = (this.acc || 0) + dt * this.playbackSpeed * (this.timeScale || 1);
         let finished = false;
         let guard = 0;
         while (this.acc >= PHYS.dt && guard++ < 12) {
