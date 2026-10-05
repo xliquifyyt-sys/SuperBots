@@ -213,7 +213,7 @@ function onMatchOver(m) {
   const won = me && m.winner && m.winner.ids.includes(me.id);
   record.games++; if (me) { if (won) record.wins++; else record.losses++; }
   save('superbots.record', record);
-  $('result-title').textContent = m.winner.type === 'draw' ? 'DRAW' : (won ? 'VICTORY' : (me ? 'DEFEAT' : 'GAME OVER'));
+  $('result-title').textContent = m.winner.type === 'draw' ? (m.winner.shared ? 'SHARED WIN' : 'DRAW') : (won ? 'VICTORY' : (me ? 'DEFEAT' : 'GAME OVER'));
   $('result-title').className = won ? 'win' : 'lose';
   const winnerNames = m.winner.ids.map((id) => m.world.bots[id].name).join(', ');
   $('result-sub').textContent = `${m.winner.type === 'team' ? TEAM_NAMES[m.winner.team % 4] + ' team' : winnerNames} · ${m.map.name} · ${m.turn} turns${m.winner.byCap ? ' · turn cap' : ''}`;

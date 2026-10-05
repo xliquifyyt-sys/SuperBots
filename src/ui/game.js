@@ -1,7 +1,7 @@
 // In-game controller: drives Match + Renderer, handles aim/touch input, camera
 // gestures and the HUD.
 
-import { PHYS, POWERUPS } from '../core/defs.js';
+import { PHYS, POWERUPS, playerAimGuide } from '../core/defs.js';
 import { iconCanvas, actionIconCanvas, ACTION_ACCENT } from '../render/icons.js';
 import { audio } from '../audio.js';
 
@@ -85,7 +85,7 @@ export class GameController {
     } else if (p === 'over') {
       this.el.plan.classList.add('hidden'); this.el.playback.classList.add('hidden');
       const won = this.me && m.winner && m.winner.ids.includes(this.me.id);
-      this.showCenter(m.winner.type === 'draw' ? 'DRAW' : (won ? 'VICTORY!' : (this.me ? 'DEFEAT' : 'GAME OVER')), 2.2, won ? 'comic' : 'comic red');
+      this.showCenter(m.winner.type === 'draw' ? (m.winner.shared ? 'SHARED WIN' : 'DRAW') : (won ? 'VICTORY!' : (this.me ? 'DEFEAT' : 'GAME OVER')), 2.2, won ? 'comic' : 'comic red');
       if (won) audio.win(); else audio.lose();
       // Only hand this match over if it is still the one on screen: a match started
       // during the banner must not be torn down by the previous match's timer.
@@ -313,12 +313,12 @@ export class GameController {
     if (m.phase === 'plan' && this.me && this.me.alive && this.aim) {
       const type = this.selected === 's1' || this.selected === 's2' ? SPECIAL_TYPE(this.me, this.selected) : this.selected;
       const pv = w.previewAction(this.me, type, this.aim, this.selected === 's1' ? this.param : undefined);
-      const frac = PHYS.accuracyGuide[this.me.def.accuracy];
+      const point = this._pointMove();
+      const guide = playerAimGuide(pv.points, this.me.def.accuracy, { pointTarget: !!point });
       const radius = type === 'missile' ? 1 : (this.me.def[this.selected]?.radius || 0);
       const style = this.selected === 'jump' ? 'jump' : (this.selected === 's1' || this.selected === 's2' ? 'special' : 'missile');
       const accent = style === 'special' ? ACTION_ACCENT(type) : (style === 'missile' ? ACTION_ACCENT('missile') : '#ffffff');
-      const point = this._pointMove();
-      aimInfo = { points: pv.points, fraction: 1, color: this.me.color, impact: pv.impact, radius, origin: point ? null : [this.me.x, this.me.y], dx: this.aim.dx, dy: this.aim.dy, power: this.aim.power, style, accent, iconKind: style === 'jump' ? 'jump' : (style === 'missile' ? 'missile' : type) };
+      aimInfo = { points: pv.points, fraction: guide.fraction, color: this.me.color, impact: guide.reachesImpact ? pv.impact : null, radius: guide.reachesImpact ? radius : 0, origin: point ? null : [this.me.x, this.me.y], dx: this.aim.dx, dy: this.aim.dy, power: this.aim.power, style, accent, iconKind: style === 'jump' ? 'jump' : (style === 'missile' ? 'missile' : type) };
       facing[this.me.id] = this.aim.dx < 0 ? -1 : 1;
       if (point) {
         const moved = pv.impact && pv.impact.moved ? ' · nudged to open space' : '';
