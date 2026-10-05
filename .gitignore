@@ -1,5 +1,7 @@
 node_modules/
 package-lock.json
+server/data/
+.env
 .DS_Store
 *.log
 test/*.png

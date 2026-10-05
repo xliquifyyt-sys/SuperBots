@@ -26,6 +26,23 @@ for (let i = 0; i < 90; i++) {
     }
   } catch (e) { errors++; console.log('ERROR', i, e.stack.split('\n').slice(0, 3).join(' | ')); }
 }
+// A same-turn wipe is a shared win, so this batch may never see Sudden Death.
+// The remaining trigger is a turn-cap tie. Cover it explicitly.
+{
+  const m = new Match(
+    [{ name: 'A', botId: 'volt', team: 0, isAI: true }, { name: 'B', botId: 'warden', team: 1, isAI: true }],
+    { map: 'emberpit', hazards: false, powerups: 'off', airStrikes: 'off', turnCap: 1, onTurnCap: 'suddenDeath' },
+    1,
+  );
+  m.start();
+  m.turn = 2;
+  m.world.bots[0].hp = 50;
+  m.world.bots[1].hp = 50;
+  m.checkWin();
+  if (m.world.suddenDeath && m.world.events.some((e) => e.type === 'suddenDeath')) seen.events.add('suddenDeath');
+  else { errors++; console.log('ERROR turn-cap tie did not enter Sudden Death'); }
+}
+
 const allSpecials = BOT_IDS.flatMap((id) => [BOTS[id].s1.name, BOTS[id].s2.name]);
 const missingSpecials = allSpecials.filter((s) => !seen.specials.has(s));
 const missingPowerups = POWERUP_IDS.filter((p) => !seen.powerups.has(p));

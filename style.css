@@ -180,3 +180,18 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; letter-
 #phase-timer { background: linear-gradient(180deg, #262d3d, #12161f); border: 2px solid #3a4358; border-radius: 12px; padding: 2px 14px; box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12); }
 #phase-timer.urgent { border-color: var(--red); box-shadow: 0 0 14px rgba(255,77,77,0.5), 0 3px 8px rgba(0,0,0,0.5); }
 #center-msg.comic, #center-msg.comic.red { text-shadow: none; }
+
+/* ===== Online ===== */
+#toasts { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 30; display: flex; flex-direction: column; gap: 8px; width: min(440px, 94vw); pointer-events: auto; }
+.toast { background: var(--panel2); border: 1px solid var(--cyan); border-radius: 10px; padding: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toast span { flex: 1 1 180px; }
+.online-card { width: min(560px, 100%); display: flex; flex-direction: column; gap: 10px; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; letter-spacing: 1px; color: var(--muted); }
+input, select { background: #0d1018; color: var(--text); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 8px; font: inherit; min-height: 40px; }
+.person { display: flex; align-items: center; gap: 8px; background: var(--panel); border-radius: 8px; padding: 8px; margin-top: 6px; }
+.person .who { flex: 1; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #667; flex: 0 0 auto; }
+.dot.online { background: var(--green); }
+.dot.lobby, .dot.playing { background: var(--yellow); }
+#online-code { color: var(--cyan); letter-spacing: 4px; }
+#online-settings .setting { margin-bottom: 8px; }

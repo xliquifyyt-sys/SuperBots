@@ -59,11 +59,14 @@
       <div class="menu-buttons">
         <button class="btn primary big" id="btn-quick">QUICK 1v1</button>
         <button class="btn big" data-go="menu-lobby">CUSTOM GAME</button>
+        <button class="btn big" id="btn-online" data-go="menu-online">PLAY ONLINE</button>
+        <button class="btn" id="btn-friends" data-go="menu-friends">FRIENDS</button>
         <button class="btn" data-go="menu-botpedia">BOTPEDIA</button>
         <button class="btn" data-go="menu-help">HOW TO PLAY</button>
       </div>
+      <p id="account-chip" class="record">Not signed in</p>
       <p id="record" class="record"></p>
-      <p class="footer">Local play against AI · v0.1 prototype of the Super Bots GDD</p>
+      <p class="footer">Offline vs AI, or online with friends · one web build for browser, Android and iOS</p>
     </section>
 
     <section id="menu-lobby" class="screen hidden wide">
@@ -94,6 +97,71 @@
       </div>
     </section>
 
+    <div id="toasts"></div>
+
+    <section id="menu-online" class="screen hidden wide">
+      <h2>ONLINE</h2>
+      <div id="auth-box" class="online-card">
+        <p class="hint">Guest sign-in works for local play. Google and Apple use the same account on web, Android and iOS once the owner adds client ids.</p>
+        <label class="field">Username<input id="auth-username" maxlength="16" autocomplete="username" placeholder="3–16 letters or numbers"></label>
+        <button class="btn primary" id="btn-guest" type="button">CONTINUE AS GUEST</button>
+        <div class="row gap wrap">
+          <button class="btn" id="btn-google" type="button">GOOGLE</button>
+          <button class="btn" id="btn-apple" type="button">APPLE</button>
+        </div>
+        <p id="auth-note" class="hint"></p>
+      </div>
+      <div id="online-home" class="hidden online-card">
+        <p id="profile-line"></p>
+        <p class="hint">Friend code <b id="profile-code"></b></p>
+        <div class="row gap wrap">
+          <button class="btn primary" id="btn-online-create" type="button">CREATE LOBBY</button>
+          <input id="join-code" maxlength="5" placeholder="CODE" autocomplete="off">
+          <button class="btn" id="btn-online-join" type="button">JOIN</button>
+        </div>
+      </div>
+      <div id="online-lobby" class="hidden lobby">
+        <div class="lobby-col">
+          <h2>LOBBY <span id="online-code"></span></h2>
+          <div id="online-slots"></div>
+          <div class="row gap wrap">
+            <button class="btn small" id="btn-online-add-ai" type="button">+ ADD BOT</button>
+            <button class="btn" id="btn-online-ready" type="button">READY</button>
+            <button class="btn primary" id="btn-online-start" type="button">START MATCH</button>
+          </div>
+          <h3>YOUR BOT</h3>
+          <div id="online-bots" class="cards small-cards"></div>
+          <h3>INVITE FRIENDS</h3>
+          <div id="online-invites"></div>
+        </div>
+        <div class="lobby-col settings-col">
+          <h2>HOST SETTINGS</h2>
+          <div id="online-settings" class="settings-grid"></div>
+          <p id="online-error" class="hint"></p>
+        </div>
+      </div>
+      <div class="menu-buttons horizontal">
+        <button class="btn" id="btn-online-back" type="button">BACK</button>
+        <button class="btn" id="btn-sign-out" type="button">SIGN OUT</button>
+      </div>
+    </section>
+
+    <section id="menu-friends" class="screen hidden wide">
+      <h2>FRIENDS</h2>
+      <div class="online-card">
+        <div class="row gap wrap">
+          <input id="friend-search" maxlength="16" placeholder="Username or friend code" autocomplete="off">
+          <button class="btn primary" id="btn-friend-add" type="button">ADD</button>
+        </div>
+        <div id="friend-results"></div>
+        <h3>REQUESTS</h3>
+        <div id="friend-incoming"></div>
+        <h3>YOUR FRIENDS</h3>
+        <div id="friend-list"></div>
+      </div>
+      <div class="menu-buttons"><button class="btn" data-go="menu-main">BACK</button></div>
+    </section>
+
     <section id="menu-botpedia" class="screen hidden wide">
       <h2>BOTPEDIA</h2>
       <div id="botpedia" class="cards"></div>
@@ -107,15 +175,15 @@
       <div class="help">
         <p><b>Everyone acts at once.</b> Each turn every bot picks one action, then all actions resolve together and you watch the playback.</p>
         <ul>
-          <li><b>Aim:</b> drag anywhere on the arena. The dotted line previews your trajectory. Its length depends on your bot's accuracy.</li>
+          <li><b>Aim:</b> drag anywhere on the arena. The dotted line previews your trajectory. Higher accuracy draws a longer line: about 30% of the flight for low accuracy, 55% for medium, and 85% for high.</li>
           <li><b>Actions:</b> Jump and Missile are always available. Your two Specials have multi-turn cooldowns.</li>
           <li><b>Fire:</b> tap FIRE to lock your action. When the timer runs out, your current aim is used (or you skip if you never aimed).</li>
           <li><b>Camera:</b> mouse wheel or pinch to zoom, two-finger drag or right-drag to pan, ⌖ to recenter.</li>
           <li><b>Elimination:</b> reach 0 HP, fall into the kill floor, or leave the map. Bots self-destruct on death and damage nearby enemies.</li>
           <li><b>Power-ups</b> appear on the map. Touch one to grab it instantly, even mid-jump; buffs apply the same turn and last 4 turns. Tap a bot to see what it is holding.</li>
           <li><b>Hazards</b> are announced one turn ahead: air strikes, crushers, geysers, rising lava, gusts, reactor pulses.</li>
-          <li><b>Sudden Death:</b> if everyone left dies in the same turn, they respawn with 60 HP, no specials, and must alternate Jump and Missile.</li>
-          <li><b>Win:</b> last bot (or team) standing. Optional turn cap: highest HP wins.</li>
+          <li><b>Sudden Death:</b> only a tied turn cap (when the host picks that tiebreak) starts it. Those bots respawn with 60 HP, no specials, and must alternate Jump and Missile.</li>
+          <li><b>Win:</b> last bot (or team) standing. If everyone still alive dies on the same turn, they share the win. Optional turn cap: highest HP wins, or Sudden Death on a tie.</li>
         </ul>
       </div>
       <div class="menu-buttons"><button class="btn" data-go="menu-main">BACK</button></div>
@@ -135,7 +203,7 @@
       <div id="result-table"></div>
       <div class="menu-buttons horizontal">
         <button class="btn primary" id="btn-rematch">REMATCH</button>
-        <button class="btn" data-go="menu-lobby">LOBBY</button>
+        <button class="btn" id="btn-result-lobby" data-go="menu-lobby">LOBBY</button>
         <button class="btn" data-go="menu-main">MENU</button>
       </div>
     </section>

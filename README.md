@@ -12,7 +12,14 @@ cd SuperBots
 python3 -m http.server 8000      # any static server works
 ```
 
-Open <http://localhost:8000>. A static server is required because the game uses ES modules.
+Open <http://localhost:8000>. A static server is required because the game uses ES modules. This offline server is Quick 1v1 and Custom Game only.
+
+Online accounts, friends, and custom games are the Node server. See [docs/ONLINE.md](docs/ONLINE.md).
+
+```bash
+npm install
+npm start          # game + accounts + match server at http://localhost:8080
+```
 
 - **Quick 1v1** drops you on a Standard map against a random bot.
 - **Custom Game** is the host lobby: up to 8 players, teams, map choice, and every host setting from the GDD (plan timer, turn cap, power-up level and pool, air strikes, hazards, starting HP, damage, cooldowns, bot restrictions, friendly fire) plus the Classic / Chaos / Tactical / Mirror presets.
@@ -47,7 +54,7 @@ The dotted trajectory shows 30 / 55 / 85 % of the flight for low / medium / high
 | Ricochet | Pinball (bounce count parameter) | Split Shot | jump bounces once |
 | Gravitas | Singularity | Shockwave | heavy knockback resistance |
 
-**Rules.** Jump and Missile every turn, cooldown specials, elimination by HP, kill floor or leaving the map, self-destruct blasts with chain kills, ten power-ups with the GDD stacking rules, Sudden Death (respawn at 50 HP, no specials, alternating Jump/Missile), turn cap with highest-HP or Sudden Death tiebreak, teams with friendly-fire toggle and Rally Beacon.
+**Rules.** Jump and Missile every turn, cooldown specials, elimination by HP, kill floor or leaving the map, self-destruct blasts with chain kills, ten power-ups with the GDD stacking rules, Sudden Death only on a turn-cap tie (respawn at 60 HP, no specials, alternating Jump/Missile), a same-turn wipe is a shared win, turn cap with highest-HP or Sudden Death tiebreak, teams with friendly-fire toggle and Rally Beacon.
 
 **Maps.** Ten maps across five theme kits, one Standard and one Battle map each: Lava (Ember Pit, Magma Works), Ice (Frost Hollow, Glacier Fortress), Jungle (Canopy Ruins, Temple Crossing), Sky (Cloud Steps, Nimbus Reach) and Neo City (Neon Alley, Skyline Grid). Hazards: rising lava, geysers, falling icicles, blizzard gusts, spike mines, log drops, wind, EMP pulses, teleporter edges. Air strikes give a one-turn warning with no location, then standard missiles rain across the whole map, so overhead cover matters.
 
@@ -69,6 +76,9 @@ src/ai/planner.js         AI action planner
 src/render/renderer.js    Canvas renderer, camera, particles, aim guide
 src/ui/game.js            In-game controller: input, HUD, playback
 src/audio.js              Procedural WebAudio sound
+src/net/sync.js           Client mirror of an authoritative online turn
+src/ui/online.js          Sign-in, friends, lobby, invites
+server/                   Node match server, SQLite accounts, websocket
 test/                     Headless simulation tests (Node, no browser needed)
 docs/GDD-v0.1.md          The design document this build implements
 ```

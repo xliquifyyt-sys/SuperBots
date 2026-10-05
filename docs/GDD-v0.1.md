@@ -38,7 +38,7 @@ Distilled from the Brawlbots public rules, as a shared reference for the team. W
 |---|---|
 | Turn structure | Simultaneous. All players choose an action, then all actions resolve at once. |
 | Bot definition | Health points, weight, accuracy. |
-| Accuracy | Determines the length of the aim guide (dotted trajectory preview). |
+| Accuracy | Determines the length of the aim guide (dotted trajectory preview): 30% / 55% / 85% of the flight for low / medium / high. |
 | Default actions (every turn) | Jump; medium missile. |
 | Special weapons | Two per bot, each with a multi-turn cooldown. |
 | Aiming | Drag on screen; dotted line shows trajectory. Some weapons have a secondary parameter button. |
@@ -85,20 +85,20 @@ Lobby → Bot select → [Turn loop] → Results → Rematch / Back to lobby
 
 ### 3.4 Win conditions
 
-- **Free-for-all:** last bot alive. If all remaining bots die in the same turn → **Sudden Death** (§3.5).
-- **Teams:** last team with ≥ 1 living bot. If all remaining teams are wiped in the same turn → Sudden Death between the bots that died that turn.
+- **Free-for-all:** last bot alive. If all remaining bots die in the same turn, they share the win (a draw among everyone eliminated that turn). This matches live Brawl Bots and does not start Sudden Death.
+- **Teams:** last team with ≥ 1 living bot. If every remaining team is wiped in the same turn, the bots eliminated that turn share the win.
 - **Turn cap (optional):** host sets 20/30/40 turns. On cap: team/player with highest total HP remaining wins; if tied, Sudden Death between the tied players/teams.
 
 ### 3.5 Sudden Death
 
-Triggered when the match would otherwise end with no bot standing.
+Triggered by a turn-cap tie when the host chose that tiebreak. A same-turn wipeout is a shared win, not Sudden Death.
 
 - All bots that died in that final turn **respawn** on their original spawn pads with 50 HP (no status effects, no power-up buffs).
 - Bots eliminated in earlier turns stay out.
 - **Power-ups and air strikes are disabled.** Existing power-ups on the map are removed. Map hazards (lava, wind, teleporters) remain active.
 - **Specials are disabled.** Only Jump and the standard Missile are available.
 - **Alternating cooldown:** Jump and Missile each have a 1-turn cooldown. Using Missile on turn N means only Jump is available on turn N+1, and vice versa. On the first Sudden Death turn both are available.
-- Sudden Death continues until one bot (or team) is left. If another simultaneous wipe occurs, Sudden Death repeats with the bots from that turn.
+- Sudden Death continues until one bot (or team) is left. A simultaneous wipe during Sudden Death is a shared win for the bots eliminated that turn. It does not start another Sudden Death round.
 - HUD: "SUDDEN DEATH" banner, red vignette, the unavailable action button greyed with a "1" cooldown badge.
 
 Design note: the alternating cooldown forces a read on the opponent — if they fired last turn, they must move this turn, so you can lead your shot. If they jumped, they will fire, so reposition.
