@@ -6,6 +6,7 @@ import { Renderer } from './render/renderer.js';
 import { drawBot } from './render/bots.js';
 import { iconCanvas, actionIconCanvas } from './render/icons.js';
 import { GameController } from './ui/game.js';
+import { mountOnline } from './ui/online.js';
 import { audio } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
@@ -30,7 +31,7 @@ window.addEventListener('resize', () => { renderer.resize(); if (renderer.world)
 let currentMatch = null;
 let lastSetup = null;
 const game = new GameController(canvas, renderer, {
-  onPause: () => { paused = true; showScreen('menu-pause'); },
+  onPause: () => { paused = !(currentMatch && currentMatch.clock === 'client'); showScreen('menu-pause'); },
   onOver: (m) => onMatchOver(m),
 });
 let paused = false;
@@ -38,7 +39,7 @@ let lastT = 0;
 function frame(t) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (t - lastT) / 1000 || 0); lastT = t;
-  if (currentMatch && !paused) game.update(dt);
+  if (currentMatch && (!paused || currentMatch.clock === 'client')) game.update(dt);
   else if (currentMatch) renderer.update(0, {});
   else renderer.update(dt, {});
 }
@@ -49,7 +50,7 @@ $('btn-sound').addEventListener('click', () => { prefs.muted = !prefs.muted; aud
 window.__superbots = { get match() { return currentMatch; }, game, renderer, Match, startMatch, settings, slots };
 
 // ---------- screens ----------
-const screens = ['menu-main', 'menu-lobby', 'menu-botpedia', 'menu-help', 'menu-pause', 'menu-result'];
+const screens = ['menu-main', 'menu-lobby', 'menu-online', 'menu-friends', 'menu-botpedia', 'menu-help', 'menu-pause', 'menu-result'];
 function showScreen(id) {
   for (const s of screens) $(s).classList.toggle('hidden', s !== id);
   $('ui').classList.toggle('hidden', !id);
@@ -204,12 +205,28 @@ $('btn-quick').addEventListener('click', () => {
   startMatch([{ name: prefs.name || 'You', botId: prefs.botId || 'volt', team: 0, isAI: false }, { name: AI_NAMES[Math.floor(Math.random() * AI_NAMES.length)], botId: enemy, team: 1, isAI: true }],
     { ...settings, mode: 'ffa', map: std[Math.floor(Math.random() * std.length)] });
 });
-$('btn-rematch').addEventListener('click', () => { if (lastSetup) startMatch(lastSetup.players, lastSetup.sets); });
+$('btn-rematch').addEventListener('click', () => {
+  if ($('btn-rematch').textContent === 'LOBBY') { showScreen('menu-online'); return; }
+  if (lastSetup) startMatch(lastSetup.players, lastSetup.sets);
+});
 $('btn-resume').addEventListener('click', () => { paused = false; showScreen(null); audio.ui(); });
-$('btn-quit').addEventListener('click', () => { game.stop(); currentMatch = null; paused = false; showScreen('menu-main'); });
+$('btn-quit').addEventListener('click', () => { if (game.net) game.net.leaveMatch(); game.stop(); currentMatch = null; paused = false; showScreen('menu-main'); });
+
+function beginOnlineMatch(match, net) {
+  audio.init(); audio.resume();
+  lastSetup = null;
+  currentMatch = match;
+  paused = false;
+  showScreen(null);
+  game.startMatch(match, { net, alreadyStarted: true });
+}
+mountOnline({ showScreen, beginOnlineMatch });
 
 function onMatchOver(m) {
-  const me = m.world.bots.find((b) => b.human);
+  const online = m.clock === 'client';
+  $('btn-rematch').textContent = online ? 'LOBBY' : 'REMATCH';
+  $('btn-result-lobby').dataset.go = online ? 'menu-online' : 'menu-lobby';
+  const me = (game.me && m.world.bots.find((b) => b.id === game.me.id)) || m.world.bots.find((b) => b.human);
   const won = me && m.winner && m.winner.ids.includes(me.id);
   record.games++; if (me) { if (won) record.wins++; else record.losses++; }
   save('superbots.record', record);
@@ -217,7 +234,7 @@ function onMatchOver(m) {
   $('result-title').className = won ? 'win' : 'lose';
   const winnerNames = m.winner.ids.map((id) => m.world.bots[id].name).join(', ');
   $('result-sub').textContent = `${m.winner.type === 'team' ? TEAM_NAMES[m.winner.team % 4] + ' team' : winnerNames} · ${m.map.name} · ${m.turn} turns${m.winner.byCap ? ' · turn cap' : ''}`;
-  const rows = m.world.bots.map((b) => `<tr class="${m.winner.ids.includes(b.id) ? 'winner' : ''}"><td>${b.name}${b.human ? ' (you)' : ''}</td><td>${b.def.name}</td><td>${Math.ceil(b.hp)}</td><td>${b.stats.dealt}</td><td>${b.stats.taken}</td><td>${b.stats.kills}</td><td>${b.stats.specials}</td><td>${b.alive ? '—' : b.diedTurn}</td></tr>`).join('');
+  const rows = m.world.bots.map((b) => `<tr class="${m.winner.ids.includes(b.id) ? 'winner' : ''}"><td>${b.name}${me && b.id === me.id ? ' (you)' : ''}</td><td>${b.def.name}</td><td>${Math.ceil(b.hp)}</td><td>${b.stats.dealt}</td><td>${b.stats.taken}</td><td>${b.stats.kills}</td><td>${b.stats.specials}</td><td>${b.alive ? '—' : b.diedTurn}</td></tr>`).join('');
   $('result-table').innerHTML = `<table><tr><th>Player</th><th>Bot</th><th>HP</th><th>Dealt</th><th>Taken</th><th>KOs</th><th>Specials</th><th>Died</th></tr>${rows}</table>`;
   if (currentMatch === m) { game.stop(); currentMatch = null; }
   showScreen('menu-result');

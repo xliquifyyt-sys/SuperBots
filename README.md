@@ -12,7 +12,14 @@ cd SuperBots
 python3 -m http.server 8000      # any static server works
 ```
 
-Open <http://localhost:8000>. A static server is required because the game uses ES modules.
+Open <http://localhost:8000>. A static server is required because the game uses ES modules. This offline server is Quick 1v1 and Custom Game only.
+
+Online accounts, friends, and custom games are the Node server. See [docs/ONLINE.md](docs/ONLINE.md).
+
+```bash
+npm install
+npm start          # game + accounts + match server at http://localhost:8080
+```
 
 - **Quick 1v1** drops you on a Standard map against a random bot.
 - **Custom Game** is the host lobby: up to 8 players, teams, map choice, and every host setting from the GDD (plan timer, turn cap, power-up level and pool, air strikes, hazards, starting HP, damage, cooldowns, bot restrictions, friendly fire) plus the Classic / Chaos / Tactical / Mirror presets.
@@ -69,6 +76,9 @@ src/ai/planner.js         AI action planner
 src/render/renderer.js    Canvas renderer, camera, particles, aim guide
 src/ui/game.js            In-game controller: input, HUD, playback
 src/audio.js              Procedural WebAudio sound
+src/net/sync.js           Client mirror of an authoritative online turn
+src/ui/online.js          Sign-in, friends, lobby, invites
+server/                   Node match server, SQLite accounts, websocket
 test/                     Headless simulation tests (Node, no browser needed)
 docs/GDD-v0.1.md          The design document this build implements
 ```

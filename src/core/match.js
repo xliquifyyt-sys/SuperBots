@@ -52,6 +52,10 @@ export class Match {
     this.ai = new AIPlanner(this.world, this.diff, new RNG(this.seed ^ 0x51ed27));
     this.announceInfo = [];
     this.humans = this.world.bots.filter((b) => b.human);
+    // 'local' runs the whole turn loop. 'client' only plays back the resolve;
+    // the server owns announce, plan, and cleanup timing.
+    this.clock = 'local';
+    this.onPlayed = null;
   }
 
   start() { this.beginAnnounce(); }
@@ -71,6 +75,8 @@ export class Match {
     this.phaseTime = this.settings.planTimer;
     this.planDeadline = this.settings.planTimer;
     // AI decisions are computed now (they're deterministic given the world) and submitted at the deadline.
+    // A network client does not plan: the server's action list is authoritative.
+    if (this.clock === 'client') return;
     for (const b of this.world.bots) {
       if (!b.alive || !b.isAI) continue;
       this.pendingActions[b.id] = this.ai.plan(b);
@@ -85,7 +91,29 @@ export class Match {
   }
 
   allHumansLocked() {
-    return this.humans.filter((b) => b.alive).every((b) => this.pendingActions[b.id] && this.pendingActions[b.id].locked);
+    return this.world.bots.filter((b) => b.alive && b.human).every((b) => this.pendingActions[b.id] && this.pendingActions[b.id].locked);
+  }
+
+  // Client playback of one authoritative turn. Actions are the ones the server resolved.
+  beginPlayback(actions) {
+    if (this.phase === 'announce') this.beginPlan();
+    for (const b of this.world.bots) {
+      if (!b.alive) continue;
+      const a = actions[b.id] ?? actions[String(b.id)] ?? { type: 'skip' };
+      this.world.submit(b.id, packAction(a));
+    }
+    this.world.resolve();
+    this.skipRequested = false;
+    this.acc = 0;
+    this.setPhase('resolve');
+  }
+
+  finishPlayback() {
+    if (this.phase !== 'resolve') return;
+    this.world.runToEnd();
+    this.acc = 0;
+    this.phase = 'played';
+    if (this.onPlayed) this.onPlayed();
   }
 
   beginResolve() {
@@ -146,6 +174,7 @@ export class Match {
 
   // Called every frame by the app with real elapsed seconds.
   update(dt) {
+    if (this.clock === 'client') { this._stepClient(dt); return; }
     switch (this.phase) {
       case 'announce':
         this.phaseTime -= dt;
@@ -175,6 +204,19 @@ export class Match {
     }
   }
 
+  _stepClient(dt) {
+    if (this.phase !== 'resolve') return;
+    if (this.skipRequested) { this.finishPlayback(); return; }
+    this.acc = (this.acc || 0) + dt * this.playbackSpeed * (this.timeScale || 1);
+    let finished = false;
+    let guard = 0;
+    while (this.acc >= PHYS.dt && guard++ < 12) {
+      this.acc -= PHYS.dt;
+      if (this.world.step(PHYS.dt)) { finished = true; break; }
+    }
+    if (finished) { this.acc = 0; this.phase = 'played'; if (this.onPlayed) this.onPlayed(); }
+  }
+
   // Headless: play the whole match with AI for everyone (humans auto-skip). Returns result summary.
   static simulateHeadless(players, settings, seed, maxTurns = 120) {
     const m = new Match(players.map((p) => ({ ...p, isAI: true })), settings, seed);
@@ -188,4 +230,27 @@ export class Match {
     }
     return { winner: m.winner, turns: m.turn, map: m.map.id, bots: m.world.bots.map((b) => ({ name: b.name, botId: b.botId, hp: b.hp, alive: b.alive, stats: b.stats, diedTurn: b.diedTurn })), log: m.log };
   }
+}
+
+const ACTION_TYPES = new Set(['skip', 'jump', 'missile', 's1', 's2']);
+
+// The action both the server and the client submit, with no client-only fields.
+export function packAction(a) {
+  if (!a || !ACTION_TYPES.has(a.type)) return { type: 'skip' };
+  let aim;
+  if (a.aim && Number.isFinite(Number(a.aim.dx)) && Number.isFinite(Number(a.aim.dy))) {
+    aim = { dx: Number(a.aim.dx), dy: Number(a.aim.dy), power: Number(a.aim.power) };
+    if (Number.isFinite(Number(a.aim.tx))) aim.tx = Number(a.aim.tx);
+    if (Number.isFinite(Number(a.aim.ty))) aim.ty = Number(a.aim.ty);
+  }
+  const out = { type: a.type, locked: !!a.locked };
+  if (aim) out.aim = aim;
+  if (Number.isFinite(Number(a.param))) out.param = Number(a.param);
+  return out;
+}
+
+// Compact world fingerprint so a client can tell it resolved the same turn as the server.
+export function worldDigest(world) {
+  const bots = world.bots.map((b) => [b.id, b.alive ? 1 : 0, Math.round(b.hp), Math.round(b.x * 100), Math.round(b.y * 100)].join(',')).join(';');
+  return `${world.turn}|${world.suddenDeath ? 1 : 0}|${bots}`;
 }

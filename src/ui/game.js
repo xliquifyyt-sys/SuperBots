@@ -33,27 +33,39 @@ export class GameController {
     this.r.onEvent = (e) => this._sound(e);
   }
 
-  startMatch(match) {
+  startMatch(match, opts = {}) {
     this.match = match;
-    this.me = match.world.bots.find((b) => b.human) || null;
+    this.net = opts.net || null;
+    this._ackedTurn = -1;
+    this.me = match.world.bots.find((b) => b.human && (!this.net || b.id === this.net.yourBotId)) || match.world.bots.find((b) => b.human) || null;
     this.r.setWorld(match.world);
     this.locked = false; this.aim = null; this.selected = 'missile'; this.lastPhase = null; this.infoBot = null;
     this.el.hud.classList.remove('hidden');
     this.el.info.classList.add('hidden');
     match.playbackSpeed = this.speed;
     match.onPhase = (p) => this._onPhase(p);
-    match.start();
+    if (this.net) {
+      match.onPlayed = () => {
+        if (this._ackedTurn === match.turn) return;
+        this._ackedTurn = match.turn;
+        this.net.playbackDone(match.turn);
+      };
+    }
+    if (!opts.alreadyStarted) match.start();
+    else this._onPhase(match.phase);
     this.showCenter('BATTLE START!', 1.6, 'comic'); audio.battleStart();
   }
 
-  stop() { this.match = null; this.el.hud.classList.add('hidden'); }
+  stop() { this.match = null; this.net = null; this.el.hud.classList.add('hidden'); }
 
   // ----- phases -----
   _onPhase(p) {
     const m = this.match, w = m.world;
-    this.el.phase.textContent = { announce: 'ANNOUNCE', plan: 'PLAN', resolve: 'PLAYBACK', cleanup: 'CLEANUP', over: 'GAME OVER' }[p] || p.toUpperCase();
+    this.el.phase.textContent = { announce: 'ANNOUNCE', plan: 'PLAN', resolve: 'PLAYBACK', played: 'PLAYBACK', cleanup: 'CLEANUP', over: 'GAME OVER' }[p] || p.toUpperCase();
     this.el.turn.textContent = `TURN ${m.turn}${m.settings.turnCap ? ' / ' + m.settings.turnCap : ''}`;
     if (p === 'announce') {
+      this.el.plan.classList.add('hidden');
+      this.el.playback.classList.add('hidden');
       this.renderAnnouncements();
       this.r.fitMap();
       if (w.hazardAnnounce.some((a) => a.type === 'danger')) audio.warn();
@@ -146,7 +158,9 @@ export class GameController {
 
   _submit(locked) {
     if (!this.me || !this.aim) return;
-    this.match.submitAction(this.me.id, { type: this.selected, aim: { ...this.aim }, param: this.selected === 's1' && this.me.def.s1.param ? this.param : undefined, locked });
+    const action = { type: this.selected, aim: { ...this.aim }, param: this.selected === 's1' && this.me.def.s1.param ? this.param : undefined, locked };
+    if (this.net) this.net.sendAction(action);
+    else this.match.submitAction(this.me.id, action);
   }
 
   updateActionBar() {
@@ -186,7 +200,7 @@ export class GameController {
   _bindInput() {
     const c = this.canvas;
     c.addEventListener('pointerdown', (e) => {
-      c.setPointerCapture(e.pointerId);
+      try { c.setPointerCapture(e.pointerId); } catch { /* pointer already gone, or a synthetic event */ }
       this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY });
       if (this.pointers.size === 2) { const [a, b] = [...this.pointers.values()]; this.pinchDist = Math.hypot(a.x - b.x, a.y - b.y); this.dragMode = 'pinch'; return; }
       const canAim = this.match && this.match.phase === 'plan' && this.me && this.me.alive && e.button === 0;
@@ -289,6 +303,7 @@ export class GameController {
     const m = this.match;
     if (!m) return;
     m.update(dt);
+    if (this.net && this.net.deadline && m.phase === 'plan') m.phaseTime = Math.max(0, (this.net.deadline - Date.now()) / 1000);
     const w = m.world;
     // timer
     if (m.phase === 'plan') {
@@ -341,7 +356,8 @@ export class GameController {
     const m = this.match, w = m.world;
     const rows = w.bots.map((b) => {
       const locked = m.phase === 'plan' && m.pendingActions[b.id] && (m.pendingActions[b.id].locked || b.isAI);
-      return `<div class="ros ${b.alive ? '' : 'dead'} ${b.human ? 'me' : ''}" style="border-left-color:${b.color}"><span class="lock">${locked ? '✓' : ''}</span><span class="n">${b.name}${b.human ? ' (you)' : ''}</span><span class="bar"><i style="width:${Math.max(0, Math.min(100, b.hp / b.maxHp * 100))}%;background:${b.hp / b.maxHp > 0.5 ? '#5cff7a' : (b.hp / b.maxHp > 0.25 ? '#ffd84f' : '#ff4d4d')}"></i></span><span class="hp">${Math.ceil(b.hp)}</span></div>`;
+      const you = this.me && b.id === this.me.id;
+      return `<div class="ros ${b.alive ? '' : 'dead'} ${you ? 'me' : ''}" style="border-left-color:${b.color}"><span class="lock">${locked ? '✓' : ''}</span><span class="n">${b.name}${you ? ' (you)' : ''}</span><span class="bar"><i style="width:${Math.max(0, Math.min(100, b.hp / b.maxHp * 100))}%;background:${b.hp / b.maxHp > 0.5 ? '#5cff7a' : (b.hp / b.maxHp > 0.25 ? '#ffd84f' : '#ff4d4d')}"></i></span><span class="hp">${Math.ceil(b.hp)}</span></div>`;
     }).join('');
     if (rows !== this._lastRoster) { this.el.roster.innerHTML = rows; this._lastRoster = rows; }
   }
