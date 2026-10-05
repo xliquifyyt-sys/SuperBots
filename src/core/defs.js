@@ -25,6 +25,28 @@ export const PHYS = {
   knockbackPerDamage: 0.336,  // 0.28 x 1.2: every damaging move shoves 20% harder
 };
 
+// Fraction of a trajectory the human aim guide draws. Higher accuracy, longer arc.
+export function aimPreviewFraction(accuracy) {
+  return PHYS.accuracyGuide[accuracy] ?? PHYS.accuracyGuide.medium;
+}
+
+// How many preview samples are drawn. Point-target moves pass fraction 1.
+// Shared by the HUD and drawAimGuide so the on-screen arc cannot drift from this rule.
+export function aimPreviewCount(pointCount, fraction) {
+  if (!pointCount) return 0;
+  const f = fraction == null ? 1 : fraction;
+  return Math.max(2, Math.min(pointCount, Math.floor(pointCount * f) || 2));
+}
+
+// What the player is allowed to see of a preview. reachesImpact is false when the
+// dotted line stops short, so the landing ring must not give away the rest.
+export function playerAimGuide(points, accuracy, { pointTarget = false } = {}) {
+  const fraction = pointTarget ? 1 : aimPreviewFraction(accuracy);
+  const count = aimPreviewCount(points ? points.length : 0, fraction);
+  const reachesImpact = !points || points.length === 0 || count >= points.length;
+  return { fraction, count, reachesImpact };
+}
+
 export const DMG = {
   missile: 25,
   missileRadius: 1.0,

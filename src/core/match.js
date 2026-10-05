@@ -117,10 +117,10 @@ export class Match {
       return;
     }
     if (standing === 0) {
-      // Everyone died this turn -> Sudden Death among those who died this turn.
-      const sdBots = w.bots.filter((b) => !b.alive && b.diedTurn === w.turn - 1);
-      if (w.sdRound < 6 && sdBots.length >= 2 && (!teams || new Set(sdBots.map((b) => b.team)).size >= 2)) { w.enterSuddenDeath(sdBots); this.announceInfo.unshift({ type: 'sudden', text: 'SUDDEN DEATH' }); return; }
-      this.winner = { type: 'draw', ids: sdBots.map((b) => b.id) };
+      // Same-turn wipeout: everyone still in the match died on this resolve.
+      // Shared win for those bots (Brawl Bots). Do not start Sudden Death.
+      const wiped = w.bots.filter((b) => !b.alive && b.diedTurn === w.turn - 1);
+      this.winner = { type: 'draw', ids: wiped.map((b) => b.id), shared: true };
       return;
     }
     // Turn cap

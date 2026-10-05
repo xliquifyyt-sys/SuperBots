@@ -47,7 +47,7 @@ The dotted trajectory shows 30 / 55 / 85 % of the flight for low / medium / high
 | Ricochet | Pinball (bounce count parameter) | Split Shot | jump bounces once |
 | Gravitas | Singularity | Shockwave | heavy knockback resistance |
 
-**Rules.** Jump and Missile every turn, cooldown specials, elimination by HP, kill floor or leaving the map, self-destruct blasts with chain kills, ten power-ups with the GDD stacking rules, Sudden Death (respawn at 50 HP, no specials, alternating Jump/Missile), turn cap with highest-HP or Sudden Death tiebreak, teams with friendly-fire toggle and Rally Beacon.
+**Rules.** Jump and Missile every turn, cooldown specials, elimination by HP, kill floor or leaving the map, self-destruct blasts with chain kills, ten power-ups with the GDD stacking rules, Sudden Death only on a turn-cap tie (respawn at 60 HP, no specials, alternating Jump/Missile), a same-turn wipe is a shared win, turn cap with highest-HP or Sudden Death tiebreak, teams with friendly-fire toggle and Rally Beacon.
 
 **Maps.** Ten maps across five theme kits, one Standard and one Battle map each: Lava (Ember Pit, Magma Works), Ice (Frost Hollow, Glacier Fortress), Jungle (Canopy Ruins, Temple Crossing), Sky (Cloud Steps, Nimbus Reach) and Neo City (Neon Alley, Skyline Grid). Hazards: rising lava, geysers, falling icicles, blizzard gusts, spike mines, log drops, wind, EMP pulses, teleporter edges. Air strikes give a one-turn warning with no location, then standard missiles rain across the whole map, so overhead cover matters.
 

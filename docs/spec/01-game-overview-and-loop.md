@@ -75,7 +75,7 @@ On elimination by damage (not a fall) the bot **self-destructs**: a blast of 30 
 
 Checked at the start of every announce.
 - **FFA**: one living bot left wins. **Teams**: one team with a living bot left wins.
-- **Zero standing**: all remaining bots died in the same turn. If at least two of them (from at least two teams in Teams mode) died that turn and fewer than 6 Sudden Death rounds have happened, Sudden Death begins between them. Otherwise it is a draw between those bots.
+- **Zero standing**: all remaining bots died in the same turn. Those bots share the win (`winner.type === 'draw'`, `shared: true`). This does not start Sudden Death, including a wipe that happens during a Sudden Death round already started by a turn-cap tie.
 - **Turn cap** (host setting 20, 30, 40 or off): once `turn > cap`, the player or team with the highest total HP wins. On a tie, the `onTurnCap` setting decides: `hp` picks the first tied entry; `suddenDeath` eliminates everyone else and runs Sudden Death among the tied bots.
 
 ## Sudden Death
@@ -83,7 +83,7 @@ Checked at the start of every announce.
 - The bots that died in the deciding turn respawn on their original spawn pads with 60 HP, no effects, no contact power-up, no deflector. Everyone eliminated earlier stays out.
 - Rising lava resets to the map's base kill floor. Power-ups on the field, walls, fields, patches and projectiles are cleared. Air strikes and power-up spawns stop. Map hazards stop (hazards block is skipped while suddenDeath is true).
 - Specials are disabled. Jump and Missile alternate: after using Missile only Jump is available next turn, and after Jump only Missile. On the first Sudden Death turn both are available.
-- Up to 6 rounds; a further simultaneous wipe repeats Sudden Death with that turn's dead. HUD shows a SUDDEN DEATH banner and a red vignette.
+- Started only by a turn-cap tie (`onTurnCap: 'suddenDeath'`). HUD shows a SUDDEN DEATH banner and a red vignette. A later simultaneous wipe ends as a shared win.
 
 ## Turn log and stats
 
