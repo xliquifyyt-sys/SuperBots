@@ -4,6 +4,8 @@
 **Build audited:** `945c615` on `claude/upbeat-fermat-r7uyry` (the only branch in the repository)
 **Scope:** Audit only. No game code was changed. Screenshots from a headless Chrome playthrough are listed at the end.
 
+**Follow-up, same day:** the two rule gaps below now match live Brawl Bots, on `cursor/wipe-aim-rules-522a`. A same-turn wipe is a shared win for everyone eliminated that turn, and does not start Sudden Death. Sudden Death remains for a turn-cap tie. The human aim guide draws 30% / 55% / 85% of the flight for low / medium / high accuracy, and hides the true landing when the line stops short. The findings underneath are the audit as it was written.
+
 ## Verdict
 
 The prototype already plays the genre. A match is a real simultaneous-turn artillery fight: aim, lock, watch everyone move at once, take damage, die, and see a result. All eight bots, both specials, the ten power-ups, the ten maps, and the host rules exist and the sim survives hundreds of automated matches.
