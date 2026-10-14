@@ -29,7 +29,6 @@ Last measured AI-versus-AI 1v1 round robin before the v41 ability pass: Warden 7
 
 - Occasional AI-versus-AI stalemates where two bots mirror jumps until the turn cap (seen once in 300 games).
 - The vector rigs in `bots.js` are a fallback only and lag the painted designs.
-- Turn-cap HP tiebreak with `onTurnCap: hp` picks the first tied entry rather than declaring a draw.
 
 ## Suggested order of remaining work
 

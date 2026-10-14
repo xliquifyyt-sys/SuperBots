@@ -157,13 +157,16 @@ export class Match {
       if (teams) {
         const totals = {}; for (const b of alive) totals[b.team] = (totals[b.team] || 0) + score(b);
         const best = Math.max(...Object.values(totals)); const top = Object.keys(totals).filter((t) => totals[t] === best).map(Number);
-        if (top.length === 1 || this.settings.onTurnCap === 'hp') { this.winner = { type: 'team', team: top[0], ids: alive.filter((b) => b.team === top[0]).map((b) => b.id), byCap: true }; return; }
+        if (top.length === 1) { this.winner = { type: 'team', team: top[0], ids: alive.filter((b) => b.team === top[0]).map((b) => b.id), byCap: true }; return; }
+        // HP tiebreak with a tie at the top is a draw between the tied teams (spec 01), not the first entry.
+        if (this.settings.onTurnCap === 'hp') { this.winner = { type: 'draw', teams: top, ids: alive.filter((b) => top.includes(b.team)).map((b) => b.id), byCap: true }; return; }
         const tied = alive.filter((b) => top.includes(b.team));
         for (const b of w.bots) if (!tied.includes(b)) b.alive = false;
         w.enterSuddenDeath(tied); this.announceInfo.unshift({ type: 'sudden', text: 'TURN CAP: SUDDEN DEATH' });
       } else {
         const best = Math.max(...alive.map(score)); const top = alive.filter((b) => score(b) === best);
-        if (top.length === 1 || this.settings.onTurnCap === 'hp') { this.winner = { type: 'player', ids: [top[0].id], byCap: true }; return; }
+        if (top.length === 1) { this.winner = { type: 'player', ids: [top[0].id], byCap: true }; return; }
+        if (this.settings.onTurnCap === 'hp') { this.winner = { type: 'draw', ids: top.map((b) => b.id), byCap: true }; return; }
         for (const b of w.bots) if (!top.includes(b)) b.alive = false;
         w.enterSuddenDeath(top); this.announceInfo.unshift({ type: 'sudden', text: 'TURN CAP: SUDDEN DEATH' });
       }
