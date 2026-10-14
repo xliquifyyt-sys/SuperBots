@@ -37,3 +37,15 @@ Agents write the exact specs as tasks M1-01 and M1-02 run; entries appear below.
 | D-4 | Phantom s2: Toxic Bomb (current) or Smoke Bomb that hides aim guides (GDD)? | keep Toxic Bomb |
 | D-5 | Destructible terrain in alpha? | yes, for Gravitas/Magmaw specials only (M3) |
 | D-6 | Roster for alpha: current 8 bots, or add more? | current 8 |
+
+## Approvals
+
+### H-04 Approve one protected-test change for M0-06 (turn-cap HP tie → draw)
+- **What:** PR #8 (branch `agent/M0-06-turncap-tie-draw`) changes one existing line in `test/rules.mjs`
+  (the "HP tiebreak does not start Sudden Death" check: `m.winner.type === 'player'` → `'draw'`). Everything
+  else in the PR only adds lines.
+- **Why:** a 40/40 tie at the turn cap currently gives the win to whoever is listed first. The fix makes it a
+  draw, which the old assertion forbids. The guard blocks any edited line in a gate test without a human.
+- **Do:** open the M0-06 PR, read the one-line test diff. If you agree, add the label `human-approved` and remove
+  `hold`; CI re-runs and auto-merges. If you prefer "first listed wins", close the PR and mark M0-06 `done` with
+  a note that ties stay as they are.
