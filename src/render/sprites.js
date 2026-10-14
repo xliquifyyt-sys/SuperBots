@@ -14,11 +14,19 @@ const BASE = 'art/sprites/';
 const images = new Map();   // "bulwark:full" -> HTMLImageElement (loaded only)
 let manifest = null;
 let loading = false;
+const listeners = new Set();  // called whenever the manifest or another image lands
+const notify = () => { for (const fn of listeners) { try { fn(); } catch (err) { console.error(err); } } };
 
 export function spritesReady() { return manifest !== null; }
 
-// Kick off loading. Safe to call more than once; never throws.
+// Subscribe to sprite arrivals (manifest parsed, each image loaded), so UI that
+// painted the vector fallback before the art landed can redraw. Returns an unsubscribe.
+export function onSpritesChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }
+
+// Kick off loading. Safe to call more than once; never throws. Every caller's
+// onChange is kept, not only the first caller's.
 export function loadSprites(onChange) {
+  if (onChange) listeners.add(onChange);
   if (loading) return;
   loading = true;
   // Single-file builds inline the art as data URIs, since there is no art/ dir.
@@ -30,7 +38,7 @@ export function loadSprites(onChange) {
         const uri = inlined.data[`${bot}:${part}`];
         if (!uri) continue;
         const img = new Image();
-        img.onload = () => { images.set(`${bot}:${part}`, img); if (onChange) onChange(); };
+        img.onload = () => { images.set(`${bot}:${part}`, img); notify(); };
         img.onerror = () => {};
         img.src = uri;
       }
@@ -49,12 +57,12 @@ export function loadSprites(onChange) {
           const file = typeof spec === 'string' ? spec : spec && spec.file;
           if (!file) continue;
           const img = new Image();
-          img.onload = () => { images.set(`${bot}:${part}`, img); if (onChange) onChange(); };
+          img.onload = () => { images.set(`${bot}:${part}`, img); notify(); };
           img.onerror = () => {};
           img.src = BASE + file;
         }
       }
-      if (onChange) onChange();
+      notify();
     })
     .catch(() => { manifest = {}; });
 }

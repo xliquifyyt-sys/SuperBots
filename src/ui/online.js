@@ -5,6 +5,9 @@ import { BOTS, BOT_IDS } from '../core/defs.js';
 import { Mirror } from '../net/sync.js';
 
 const $ = (id) => document.getElementById(id);
+// index.html ships content="static"; the game server rewrites it. On a plain
+// file server there is no /api, so skip the requests instead of logging 404s.
+const HAS_SERVER = (document.querySelector('meta[name="superbots-host"]')?.content || 'server') !== 'static';
 
 const SETTING_FIELDS = [
   ['mode', 'Mode', { ffa: 'Free-for-all', teams: 'Teams' }],
@@ -61,7 +64,7 @@ class Online {
   }
 
   async boot() {
-    try {
+    if (HAS_SERVER) try {
       const res = await fetch('/api/config');
       if (res.ok) this.config = await res.json();
     } catch { /* offline static server */ }
@@ -375,6 +378,7 @@ class Online {
   note(text) { const el = $('auth-note'); if (el) el.textContent = text || ''; }
 
   async api(path, body, auth = true, method) {
+    if (!HAS_SERVER) return null;
     try {
       const res = await fetch(path, {
         method: method || (body ? 'POST' : 'GET'),

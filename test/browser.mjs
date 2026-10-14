@@ -84,3 +84,32 @@ console.log('ERRORS', errors.length ? errors : 'none');
 await browser.close();
 // Uncaught exceptions fail the gate. Console noise (e.g. a missing optional asset) is reported only.
 if (errors.some((e) => e.startsWith('pageerror'))) process.exit(1);
+// M0-01: any 404 on load or during play fails the gate, and Botpedia must show painted portraits.
+const notFound = errors.filter((e) => /\b404\b/.test(e));
+if (notFound.length) { console.error('FAIL console 404s:', notFound); process.exit(1); }
+{
+  const b2 = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}), args: ['--no-sandbox'] });
+  const missing = [];
+  for (const [w, h] of [[390, 844], [844, 390], [1280, 720]]) {
+    const p2 = await b2.newPage({ viewport: { width: w, height: h } });
+    p2.on('response', (r) => { if (r.status() === 404) missing.push(r.url()); });
+    p2.on('console', (m) => { if (m.type() === 'error' && /\b404\b/.test(m.text())) missing.push(m.text()); });
+    await p2.goto((process.env.BASE_URL || 'http://localhost:8123') + '/index.html');
+    await p2.waitForSelector('#btn-quick');
+    await p2.click('[data-go="menu-botpedia"]');
+    const expected = await p2.evaluate(() => document.querySelectorAll('#botpedia .card').length);
+    if (expected < 8) { console.error('FAIL botpedia shows', expected, 'cards'); process.exit(1); }
+    try {
+      await p2.waitForFunction((n) => document.querySelectorAll('#botpedia canvas.portrait[data-painted="1"]').length === n, expected, { timeout: 10000 });
+    } catch {
+      const st = await p2.evaluate(() => [...document.querySelectorAll('#botpedia canvas.portrait')].map((c) => c.dataset.bot + '=' + c.dataset.painted));
+      console.error('FAIL botpedia portraits not painted at', w + 'x' + h, st); process.exit(1);
+    }
+    await p2.waitForTimeout(200);
+    await p2.screenshot({ path: `test/shot-botpedia-${w}x${h}.png`, fullPage: true });
+    console.log('botpedia painted portraits', w + 'x' + h, expected);
+    await p2.close();
+  }
+  await b2.close();
+  if (missing.length) { console.error('FAIL 404s on load:', missing); process.exit(1); }
+}
