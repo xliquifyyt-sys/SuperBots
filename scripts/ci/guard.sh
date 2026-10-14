@@ -9,15 +9,19 @@ BASE="${1:-origin/main}"
 LABELS="${PR_LABELS:-}"
 PROTECTED_RE='^(\.github/|scripts/ci/|test/(determinism|features|bughunt|rules|online|online-browser|browser|stress|headless)\.mjs$|CLAUDE\.md$|\.claude/agents/reviewer\.md$|docs/alpha/ALPHA\.md$)'
 if [[ ",$LABELS," == *",human-approved,"* ]]; then echo "guard: human-approved label present, skipping"; exit 0; fi
+# Fail closed: if the base cannot be resolved, the diff cannot be trusted.
+git rev-parse --verify --quiet "$BASE" >/dev/null || { echo "guard: base $BASE not found"; exit 2; }
+NUMSTAT="$(git diff --numstat "$BASE"...HEAD)"
+NAMESTAT="$(git diff --name-status "$BASE"...HEAD)"
 bad=0
 while IFS=$'\t' read -r add del path; do
   [[ -z "${path:-}" ]] && continue
   if [[ "$path" =~ $PROTECTED_RE ]] && [[ "$del" != "0" ]]; then
     echo "guard: $path removes $del line(s). Protected files may only grow without the human-approved label."; bad=1
   fi
-done < <(git diff --numstat "$BASE"...HEAD)
+done <<< "$NUMSTAT"
 while IFS=$'\t' read -r status path rest; do
   [[ "$status" =~ ^(D|R) ]] && [[ "$path" =~ $PROTECTED_RE ]] && { echo "guard: $path deleted/renamed"; bad=1; }
-done < <(git diff --name-status "$BASE"...HEAD)
+done <<< "$NAMESTAT"
 # Gameplay numbers changed? Require the balance report to be attached in the PR (checked by CI balance job).
 exit $bad
