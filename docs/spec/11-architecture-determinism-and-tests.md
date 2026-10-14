@@ -61,18 +61,25 @@ docs/                        GDD, roadmap, status, this spec
 
 | Command | Purpose |
 |---|---|
+| `node test/determinism.mjs 6` | same seed and actions produce identical worlds (gate; online play depends on it) |
+| `node test/rules.mjs` | targeted rule assertions (gate) |
+| `node test/online.mjs` | scripted clients against the real server: friends, invite, full match, reconnect |
+| `node test/online-browser.mjs` | two Chromium windows through the real online menus (needs `CHROMIUM_PATH`) |
+| `node test/bughunt.mjs 5` | 8-bot invariant checks on every map (gate runs `2`) |
 | `node test/headless.mjs 40` | batch of AI matches, mixed sizes, modes and maps; win rates |
 | `node test/features.mjs` | asserts every special, power-up, hazard and rule fires at least once |
 | `node test/balance.mjs 3` | 1v1 round robin of all 56 bot pairings |
 | `node test/stress.mjs 250` | randomised host settings |
-| `node test/browser.mjs` | Playwright smoke test (needs a static server on port 8123) |
+| `node test/browser.mjs` | Playwright smoke test (needs a static server on port 8123 or `BASE_URL`, and `CHROMIUM_PATH`) |
 | `node tools/bughunt.mjs 10` | per-turn invariants on every map: embedded or stuck bots, lost pickups, flow stats |
-| `node test/trace.mjs phantom volt frosthollow 7 hard` | turn-by-turn trace of one duel |
+| `node test/trace.mjs phantom volt frozenkeel 7 hard` | turn-by-turn trace of one duel (an unknown map id silently falls back to a random eligible map) |
 | `python3 tools/gen_hulls.py` | regenerate body outlines from sprites |
 | `python3 tools/gen_spec.py` | regenerate the data-driven spec files |
 | `tools/rigview.html` | rig state viewer |
 
 Current state at build v44: 100-game sweep 0 errors, 0 draws, 0 turn-cap hits; bug hunt no invariant violations; browser sweep no page errors.
+
+Update 14 October 2026 (`main` at 06ac459): `node test/bughunt.mjs 2` reports no issues, but `node test/bughunt.mjs 4` and above report 7 "bot embedded in terrain" hits, all Ricochet against a glacierfort step rect. See [M0-05](../alpha/tasks/M0-05.md).
 
 ## Performance notes
 
