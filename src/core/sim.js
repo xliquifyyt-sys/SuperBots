@@ -582,7 +582,7 @@ export class World {
     for (const o of this.alive()) {
       if (o === b) continue;
       // Body-outline test (spec 03): the beam segment against the bot's placed hull.
-      if (distSegPoly(b.x, b.y, ex, ey, this.botPoly(o)) > (sp.beamHalfWidth ?? 0.15)) continue;
+      if (distSegPoly(b.x, b.y, ex, ey, this.botPoly(o)) > sp.beamHalfWidth) continue;
       const t = Math.max(0, ((o.x - b.x) * aim.dx + (o.y - b.y) * aim.dy));
       hit.push({ o, t });
     }
@@ -733,7 +733,7 @@ export class World {
   // ----- Damage -----
   // Bulwark's passive only holds while it stands by one of its own walls (spec 03).
   wallGuarded(b) {
-    const range = b.def.s1.guardRange ?? 2.5;
+    const range = b.def.s1.guardRange;
     return this.walls.some((w) => w.owner === b.id && w.hp > 0 && distPointPoly(b.x, b.y, rectPoly(w.rect)) <= range);
   }
 
