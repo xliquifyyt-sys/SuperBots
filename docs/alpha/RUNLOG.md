@@ -42,3 +42,56 @@ Builder, QA and producer runs append here.
   91–125 s, browser 43–55 s. `bughunt 5` ≈ 333–368 s.
 - **Note:** two workers picked the same new task id (M0-12) in parallel; producer renumbered one
   to M0-13. Future runs: producer assigns follow-up ids up front.
+
+## 2026-10-14 (night) — nightly QA run (qa)
+- **Main:** 153192f. 2-core cloud sandbox, suites run one at a time (wall times below).
+
+| suite | result | wall |
+|---|---|---|
+| determinism 12 | PASS | 132 s |
+| rules | PASS | 1 s |
+| stress 250 | PASS (0 errors, 0 no-winner, 1 sudden death, avg 9.9 turns) | 774 s |
+| bughunt 5 | **FAIL**: `bot embedded in terrain` x8, e.g. glacierfort T1 ricochet depth 0.32 (known: M0-05 / M0-12) | 197 s |
+| features | PASS (90 matches, all specials/power-ups/events seen) | 371 s |
+| headless 60 | PASS (0 errors, 5 draws) | 163 s |
+| balance 4 | ran (report only; table below) | 183 s |
+| online | PASS | 50 s |
+| online-browser | PASS | 59 s |
+| browser (static :8123) | PASS (no console errors, Botpedia painted at 3 sizes) | 43 s |
+| online-maps | PASS | 3 s |
+| **online-8p** (new, 4 ws clients + 4 AI) | **FAIL**: all 4 clients' digests diverge from the server at turn 4 (nimbus, skylinegrid) → QA-1 | 47 s / 41 s |
+| **net-parity 2** (new) | **FAIL**: 10/20 desynced, every match with an AI Phantom → QA-1 | 22 s |
+| ai-selfkill (new, report) | 43 undamaged self-eliminations in 280 hard 1v1s (15.4%) → QA-3 | 186 s |
+| qa-playthrough (new) | 5 matches through the real UI, 0 page errors; HUD/results issues → QA-4/5/6 | ~4 min |
+
+No perf/swarm/ai-usage tests exist yet.
+
+**1v1 balance (`balance.mjs 4`, 224 duels, avg 7.2 turns)**
+
+| bot | win rate | avg dmg/game |
+|---|---|---|
+| bulwark | 70% | 107 |
+| magmaw | 45% | 63 |
+| volt | 54% | 107 |
+| warden | 63% | 100 |
+| skyla | 13% | 51 |
+| phantom | 23% | 47 |
+| ricochet | 57% | 97 |
+| gravitas | 29% | 70 |
+
+Only magmaw, volt and ricochet are inside the 40–60% alpha target. Skyla is 3 points above the
+10% CI floor. In headless 60 (2–8 player FFA/teams), Skyla won 1 of 35 games (3%) and Phantom 4 of 39 (10%).
+Balance itself is already tracked (M2-03/M2-04). QA-2 (Frozen Keel 1v1 spawns are asymmetric) and QA-3 (AI
+self-eliminations) both skew these numbers.
+
+- **UI playthroughs** (`test/qa-playthrough.mjs`): Volt v Magmaw on emberpit at 390x844, Bulwark v
+  Phantom+Skyla on frozenkeel at 1280x720, Ricochet v Gravitas on canopyruins at 390x844, Warden in a 6-bot teams game on
+  templecrossing at 1280x720, Skyla in a 4p FFA on neonalley at 390x844. All reached the results screen. Evidence is in
+  `docs/alpha/qa/2026-10-14/`.
+- **Filed:** QA-1 (P0, M0, gameplay): online desync from the AI Blink RNG draw. QA-2 (P1, M0,
+  gameplay): pickSpawns puts bots adjacent, and the Frozen Keel 1v1 spawn is asymmetric. QA-3 (P1, M2,
+  gameplay): AI self-eliminations. QA-4 (P2, M1, client-ui): results table clipped at 390. QA-5 (P2, M1,
+  client-ui): turn label wraps at 390. QA-6 (P2, M1, client-ui): phone plan view hides opponents and the
+  roster can't be opened.
+- **New tests (additions only, not in CI yet):** `test/net-parity.mjs`, `test/online-8p.mjs`,
+  `test/ai-selfkill.mjs`, `test/qa-playthrough.mjs`. QA-1 asks for net-parity to be wired into CI.
