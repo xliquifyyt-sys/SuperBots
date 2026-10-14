@@ -79,6 +79,8 @@ docs/                        GDD, roadmap, status, this spec
 
 Current state at build v44: 100-game sweep 0 errors, 0 draws, 0 turn-cap hits; bug hunt no invariant violations; browser sweep no page errors.
 
+Update 14 October 2026 (`main` at 06ac459): `node test/bughunt.mjs 2` reports no issues, but `node test/bughunt.mjs 4` and above report 7 "bot embedded in terrain" hits, all Ricochet against a glacierfort step rect. See [M0-05](../alpha/tasks/M0-05.md).
+
 ## Performance notes
 
 Backgrounds are drawn as one image per frame; terrain kits are tiled per rectangle; effects use additive blending. A mid-range phone holds 60 fps on Standard maps; Battle maps with 8 bots and many particles can dip. Caching the background and terrain layers to offscreen canvases and capping device pixel ratio at 2 (already done) are the known next steps.
