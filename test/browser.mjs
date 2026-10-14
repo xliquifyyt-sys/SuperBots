@@ -17,7 +17,7 @@ await page.screenshot({ path: 'test/shot-lobby.png', fullPage: true });
 await page.click('[data-go="menu-main"]');
 await page.click('#btn-quick');
 // wait for plan phase
-const waitPhase = async (ph, ms=20000) => { const t0=Date.now(); while (Date.now()-t0<ms) { const p = await page.evaluate(() => window.__superbots.match?.phase); if (p===ph) return true; await page.waitForTimeout(100);} throw new Error('phase '+ph+' not reached'); };
+const waitPhase = async (ph, ms=20000) => { const t0=Date.now(); while (Date.now()-t0<ms) { const p = await page.evaluate(() => window.__superbots.match?.phase); if (p===ph) return true; if (p == null && Date.now()-t0 > 1500) return false; /* match finished */ await page.waitForTimeout(100);} const last = await page.evaluate(() => { const m = window.__superbots.match; return m ? m.phase + ' turn ' + m.turn + ' winner ' + JSON.stringify(m.winner) : 'no match'; }); throw new Error('phase '+ph+' not reached; last state: '+last); };
 await waitPhase('plan');
 await page.waitForTimeout(400);
 await page.screenshot({ path: 'test/shot-plan.png' });
@@ -30,20 +30,30 @@ await page.click('#btn-fire');
 await waitPhase('resolve');
 await page.waitForTimeout(700);
 await page.screenshot({ path: 'test/shot-resolve.png' });
-await waitPhase('plan', 30000);
-// choose special 1 and aim
-await page.click('#act-s1');
+// A quick 1v1 against a random bot on a random map can legitimately end on turn 1.
+let alive1v1 = await waitPhase('plan', 30000);
+if (alive1v1) {
+// choose special 1 and aim (it can be legitimately disabled: Sudden Death, EMP, status effects)
+if (await page.isEnabled('#act-s1')) await page.click('#act-s1'); else console.log('special 1 unavailable this turn');
 await page.mouse.move(640, 400); await page.mouse.down(); await page.mouse.move(520, 320, { steps: 6 }); await page.mouse.up();
 await page.screenshot({ path: 'test/shot-special.png' });
 await page.click('#btn-fire');
 await waitPhase('resolve');
 await page.click('#btn-skip');
-await waitPhase('plan', 30000);
+alive1v1 = await waitPhase('plan', 30000);
+}
+if (alive1v1) {
 const st = await page.evaluate(() => { const m = window.__superbots.match; return { turn: m.turn, bots: m.world.bots.map(b => ({ n: b.name, hp: b.hp, alive: b.alive })) }; });
 console.log('state', JSON.stringify(st));
 // Pause & quit
 await page.click('#btn-pause'); await page.waitForTimeout(200);
 await page.click('#btn-quit'); await page.waitForTimeout(200);
+} else {
+console.log('quick 1v1 finished early; continuing from the results screen');
+await page.waitForSelector('#menu-result:not(.hidden)', { timeout: 15000 });
+await page.screenshot({ path: 'test/shot-result.png' });
+await page.click('#menu-result [data-go="menu-main"]'); await page.waitForTimeout(200);
+}
 // Custom 8 player teams game on a battle map
 await page.click('[data-go="menu-lobby"]');
 await page.click('#btn-fill');
@@ -56,6 +66,8 @@ await page.waitForTimeout(300);
 await page.screenshot({ path: 'test/shot-8p.png' });
 // play several turns quickly via skip and auto aim
 for (let i = 0; i < 6; i++) {
+  // The human bot can be eliminated in an 8-bot match; FIRE is hidden while spectating.
+  if (!(await page.isVisible('#btn-fire'))) { console.log('human eliminated at loop', i); break; }
   await page.mouse.move(640, 400); await page.mouse.down(); await page.mouse.move(700 - i*40, 300, { steps: 4 }); await page.mouse.up();
   await page.click('#btn-fire');
   await waitPhase('resolve', 30000);
