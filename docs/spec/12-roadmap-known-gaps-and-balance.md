@@ -27,8 +27,6 @@ Last measured AI-versus-AI 1v1 round robin before the v41 ability pass: Warden 7
 
 ## Known issues and inconsistencies
 
-- Chain Arc hit test uses a 0.75 circle around each bot instead of the body outline.
-- Bulwark's knockback immunity applies wherever its wall stands, even far away.
 - Occasional AI-versus-AI stalemates where two bots mirror jumps until the turn cap (seen once in 300 games).
 - The vector rigs in `bots.js` are a fallback only and lag the painted designs.
 - Turn-cap HP tiebreak with `onTurnCap: hp` picks the first tied entry rather than declaring a draw.

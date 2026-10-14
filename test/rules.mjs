@@ -138,5 +138,46 @@ const ffa = [
   check(drawSrc.includes('aimPreviewCount(') && drawSrc.includes('shownImpact'), 'the renderer draws the shortened arc and drops the true impact');
 }
 
+// --- M0-03: Chain Arc hits the body outline, not a 0.75 circle ---
+{
+  const m = match([{ name: 'Ada', botId: 'volt', team: 0, isAI: true }, { name: 'Bea', botId: 'bulwark', team: 1, isAI: true }], {}, 21);
+  const [volt, bul] = m.world.bots;
+  const aim = { dx: 1, dy: 0, power: 1 };
+  volt.x = 8; volt.y = 6; volt.facing = 1;
+  // Bulwark's hull top reaches 0.9 above its centre: the centre is 0.9 below the beam (outside the old 0.75 circle) but the outline touches it.
+  bul.x = 16; bul.y = 6.9; bul.facing = 1;
+  const before = bul.hp;
+  m.world.chainArc(volt, aim, BOTS.volt.s1);
+  check(bul.hp < before, 'Chain Arc hits a bot whose outline crosses the beam even when its centre is outside 0.75');
+  // Hull bottom (+0.614) sits 0.4 above the beam: clear miss.
+  bul.hp = before; bul.y = 6 - 0.614 - 0.4;
+  m.world.chainArc(volt, aim, BOTS.volt.s1);
+  check(bul.hp === before, 'Chain Arc misses a bot whose outline stays clear of the beam');
+  // A Volt aimed away does not hit a bot behind it.
+  bul.y = 6; bul.x = 3;
+  m.world.chainArc(volt, aim, BOTS.volt.s1);
+  check(bul.hp === before, 'Chain Arc does not hit a bot behind the caster');
+}
+
+// --- M0-03: Bulwark is knockback-immune only beside its own wall ---
+{
+  const m = match([{ name: 'Ada', botId: 'bulwark', team: 0, isAI: true }, { name: 'Bea', botId: 'volt', team: 1, isAI: true }], {}, 22);
+  const w = m.world, bul = w.bots[0];
+  bul.x = 16; bul.y = 6; bul.vx = 0; bul.vy = 0;
+  const seg = (x) => ({ rect: { x: x - 0.2, y: bul.y - 1.275, w: 0.4, h: 0.85 }, owner: bul.id, hp: 10, turns: 3, color: bul.color, seg: 0 });
+  check(BOTS.bulwark.s1.guardRange > 0, 'guard range lives in defs');
+  w.walls = [seg(bul.x + 1.4)]; bul.wallImmune = true;
+  check(w.knockMul(bul) === 0, 'Bulwark beside its wall takes no knockback');
+  w.explode(bul.x - 1.2, bul.y, 1.5, 20, w.bots[1], {});
+  check(bul.vx === 0 && bul.vy === 0, 'a blast next to a guarded Bulwark does not move it');
+  w.walls = [seg(bul.x + 12)]; bul.wallImmune = true; bul.vx = 0; bul.vy = 0;
+  check(w.knockMul(bul) > 0, 'a wall far across the map does not grant immunity');
+  w.explode(bul.x - 1.2, bul.y, 1.5, 20, w.bots[1], {});
+  check(bul.vx > 0, 'a blast moves Bulwark when its wall is far away');
+  const enemyWall = seg(bul.x + 1.4); enemyWall.owner = w.bots[1].id;
+  w.walls = [enemyWall]; bul.wallImmune = false;
+  check(w.knockMul(bul) > 0, 'standing beside someone else\'s wall grants nothing');
+}
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall rule checks passed');

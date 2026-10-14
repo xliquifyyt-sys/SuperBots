@@ -101,6 +101,26 @@ function distPointPoly(px, py, P) {
   if (!inside) { inside = true; for (let i = 0; i < P.length; i++) { const [ax, ay] = P[i], [bx, by] = P[(i + 1) % P.length]; if ((px - ax) * (by - ay) - (py - ay) * (bx - ax) < 0) { inside = false; break; } } }
   return inside ? 0 : best;
 }
+function segsCross(ax, ay, bx, by, cx, cy, dx, dy) {
+  const d1 = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax), d2 = (bx - ax) * (dy - ay) - (by - ay) * (dx - ax);
+  const d3 = (dx - cx) * (ay - cy) - (dy - cy) * (ax - cx), d4 = (dx - cx) * (by - cy) - (dy - cy) * (bx - cx);
+  return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0));
+}
+function distPointSeg(px, py, ax, ay, bx, by) {
+  const ex = bx - ax, ey = by - ay, len2 = ex * ex + ey * ey || 1e-9;
+  const t = Math.max(0, Math.min(1, ((px - ax) * ex + (py - ay) * ey) / len2));
+  return Math.hypot(px - (ax + ex * t), py - (ay + ey * t));
+}
+// Shortest distance from segment (ax,ay)-(bx,by) to polygon P; 0 when they touch or overlap.
+function distSegPoly(ax, ay, bx, by, P) {
+  let best = Math.min(distPointPoly(ax, ay, P), distPointPoly(bx, by, P));
+  for (let i = 0; i < P.length && best > 0; i++) {
+    const [cx, cy] = P[i], [dx, dy] = P[(i + 1) % P.length];
+    if (segsCross(ax, ay, bx, by, cx, cy, dx, dy)) return 0;
+    best = Math.min(best, distPointSeg(cx, cy, ax, ay, bx, by));
+  }
+  return best;
+}
 
 // Slopes collide as real right triangles: { pts: [[x,y] x3] } wound clockwise on screen
 // (y down). Returns the push that moves a circle out of the triangle, like circleRectPush.
@@ -561,9 +581,10 @@ export class World {
     const hit = [];
     for (const o of this.alive()) {
       if (o === b) continue;
+      // Body-outline test (spec 03): the beam segment against the bot's placed hull.
+      if (distSegPoly(b.x, b.y, ex, ey, this.botPoly(o)) > (sp.beamHalfWidth ?? 0.15)) continue;
       const t = Math.max(0, ((o.x - b.x) * aim.dx + (o.y - b.y) * aim.dy));
-      const px = b.x + aim.dx * t, py = b.y + aim.dy * t;
-      if (Math.hypot(o.x - px, o.y - py) < PHYS.botRadius + 0.25) hit.push({ o, t });
+      hit.push({ o, t });
     }
     hit.sort((p, q) => p.t - q.t);
     for (const { o } of hit) this.applyDamage(o, sp.dmg, { type: 'beam', bot: b, label: 'Chain Arc' });
@@ -710,8 +731,14 @@ export class World {
   }
 
   // ----- Damage -----
+  // Bulwark's passive only holds while it stands by one of its own walls (spec 03).
+  wallGuarded(b) {
+    const range = b.def.s1.guardRange ?? 2.5;
+    return this.walls.some((w) => w.owner === b.id && w.hp > 0 && distPointPoly(b.x, b.y, rectPoly(w.rect)) <= range);
+  }
+
   knockMul(b) {
-    if (b.wallImmune && b.def.id === 'bulwark') return 0;
+    if (b.wallImmune && b.def.id === 'bulwark' && this.wallGuarded(b)) return 0;
     if (b.def.id === 'gravitas') return PHYS.weightKnockback.heavy;
     return PHYS.weightKnockback[b.def.weight];
   }
@@ -1265,4 +1292,4 @@ export class World {
 }
 
 export { circleRectPush, pointInRect };
-export { polyPush, distPointPoly, placedHull };
+export { polyPush, distPointPoly, distSegPoly, placedHull };
