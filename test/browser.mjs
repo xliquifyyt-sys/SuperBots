@@ -82,3 +82,5 @@ const st2 = await page.evaluate(() => { const m = window.__superbots.match; retu
 console.log('8p state', JSON.stringify(st2));
 console.log('ERRORS', errors.length ? errors : 'none');
 await browser.close();
+// Uncaught exceptions fail the gate. Console noise (e.g. a missing optional asset) is reported only.
+if (errors.some((e) => e.startsWith('pageerror'))) process.exit(1);
