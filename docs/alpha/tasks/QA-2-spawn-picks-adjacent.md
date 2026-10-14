@@ -9,7 +9,7 @@ severity: P1
 # QA-2: pickSpawns puts bots on top of each other, and Frozen Keel 1v1 is lopsided
 
 Found by the 2026-10-14 nightly QA run. In the UI playthrough, the two AIs in a 3-player Frozen
-Keel FFA started touching on the centre platform. One of them died on turn 1.
+Keel FFA started touching on the centre platform. The results screen for that run showed Nova (Phantom) eliminated on turn 1 after taking 20 damage (`qa-playthrough` report, match m2).
 Screenshot: `docs/alpha/qa/2026-10-14/m2-frozenkeel-1280x720-plan-T1.jpg`. In a 6-bot Temple
 Crossing game, Kilo and Ozzy also spawned overlapping:
 `docs/alpha/qa/2026-10-14/m4-templecrossing-1280x720-plan-T1.jpg`.
