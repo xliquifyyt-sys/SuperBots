@@ -1,6 +1,6 @@
 // Deterministic turn simulation for Super Bots.
 // The World holds every bot, projectile, wall, field and power-up. Each turn:
-//   startTurn()  -> pre-turn effects, hazard announcements, power-up spawns
+//   startTurn()  -> pre-turn effects, hazard announcements, power-up expiry and spawns
 //   submit()     -> one action per bot
 //   resolve()    -> applies movement/launches, then step(dt) until done()
 //   endTurn()    -> pickups, cooldown ticks, expiry
@@ -370,7 +370,20 @@ export class World {
       }
     }
 
-    // 4. Power-ups: spawn (they never despawn — they stay until a bot grabs them)
+    // 4. Power-ups: count down and expire (D-2), then maybe spawn.
+    // A power-up lives TURN.powerupExpire turns counting the turn it spawned; it is gone at the
+    // start of the turn after that, before this turn's spawn roll (so its slot can refill at once).
+    // No RNG draws here, so the draw order is unchanged.
+    for (let i = 0; i < this.powerups.length; i++) {
+      const pu = this.powerups[i];
+      pu.turnsLeft--;
+      if (pu.turnsLeft <= 0) {
+        this.powerups.splice(i--, 1);
+        this.emit('powerupExpire', { x: pu.x, y: pu.y, id: pu.id });
+      } else {
+        this.emit('powerupCountdown', { x: pu.x, y: pu.y, id: pu.id, turnsLeft: pu.turnsLeft });
+      }
+    }
     if (this.settings.powerups !== 'off' && !this.suddenDeath && this.turn >= 2) {
       const battle = m.size === 'battle';
       const rate = { low: battle ? 0.35 : 0.25, normal: battle ? 1 : 0.5, high: 1 }[this.settings.powerups];
@@ -384,8 +397,8 @@ export class World {
           const [px0, py0] = this.rng.pick(free);
           const pt = this.pushOutOfTerrain({ x: px0, y: py0 });
           const id = this.rng.weighted(pool, (k) => POWERUPS[k].weight);
-          this.powerups.push({ x: pt.x, y: pt.y, id });
-          this.emit('powerupSpawn', { x: pt.x, y: pt.y, id });
+          this.powerups.push({ x: pt.x, y: pt.y, id, turnsLeft: TURN.powerupExpire });
+          this.emit('powerupSpawn', { x: pt.x, y: pt.y, id, turnsLeft: TURN.powerupExpire });
         }
       }
     }
@@ -462,7 +475,7 @@ export class World {
       // until the end of the turn: player actions resolve first, then the rain lands.
       // One bomb every 2 units with a little jitter: blast radius 1.2 plus the bot's own
       // half-width covers the gaps, so an exposed bot is hit and a sheltered one is not.
-      const n = Math.max(6, Math.round(this.map.width / 1.6));
+      const n = Math.max(DMG.airStrikeMinBombs, Math.round(this.map.width / DMG.airStrikeSpacing));   // D-1: full-map carpet
       for (let i = 0; i < n; i++) {
         const x = (i + 0.5) * (this.map.width / n) + this.rng.range(-0.3, 0.3);
         this.projectiles.push({

@@ -273,6 +273,8 @@ export class Renderer {
         this.shake += 1;
         break;
       case 'pickup': this.numbers.push({ x: e.x, y: e.y - 1, text: e.name, color: POWERUPS[e.id].color, t: 0, life: 1.3 }); this.emit(e.x, e.y, 16, { speed: 3, life: 0.6, size: 0.15, color: POWERUPS[e.id].color, gravity: -4 }); break;
+      case 'powerupCountdown': if (e.turnsLeft === 1) this.numbers.push({ x: e.x, y: e.y - 1, text: 'LAST TURN', color: POWERUPS[e.id].color, t: 0, life: 1.4 }); break;
+      case 'powerupExpire': this.numbers.push({ x: e.x, y: e.y - 1, text: 'EXPIRED', color: '#a0a8b8', t: 0, life: 1.2 }); this.emit(e.x, e.y, 14, { speed: 2, life: 0.7, size: 0.2, color: 'rgba(160,168,184,0.8)', gravity: -3 }); break;
       case 'jump': this.emit(e.x, e.y + 0.4, 8, { speed: 2, life: 0.4, size: 0.2, color: '#ffffff', gravity: 6 }); break;
       case 'fire': if (painted) break; this.emit(e.x, e.y, 6, { speed: 2, life: 0.25, size: 0.15, color: '#ffffff' }); this.flashes.push({ star: true, x: e.x, y: e.y - 0.2, r: 0.55, t: 0, life: 0.1, color: '#ffe9a8', seed: (e.x * 11) % 100 }); break;
       case 'beam': this.flashes.push({ beam: true, x1: e.x1, y1: e.y1, x2: e.x2, y2: e.y2, color: e.color, t: 0, life: 0.45 }); this.shake += 0.4; break;
@@ -516,7 +518,16 @@ export class Renderer {
     const c = this.ctx, z = this.cam.zoom * this.userZoom;
     for (const p of this.world.powerups) {
       const [x, y] = this.toScreen(p.x, p.y - 0.15);
-      drawPowerupIcon(c, p.id, x, y, Math.max(8, z * 0.46), { float: true, time: this.time });
+      const size = Math.max(8, z * 0.46);
+      drawPowerupIcon(c, p.id, x, y, size, { float: true, time: this.time });
+      // D-2 countdown badge (read-only: turnsLeft is owned by the sim). Blinks on the last turn.
+      if (p.turnsLeft > 0 && (p.turnsLeft > 1 || Math.floor(this.time * 3) % 2 === 0)) {
+        const bx = x + size * 0.85, by = y - size * 0.85, br = Math.max(7, size * 0.42);
+        c.fillStyle = p.turnsLeft <= 2 ? '#ff4d4d' : '#141824'; c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(1.5, br * 0.16);
+        c.beginPath(); c.arc(bx, by, br, 0, Math.PI * 2); c.fill(); c.stroke();
+        c.fillStyle = '#ffffff'; c.font = `bold ${Math.round(br * 1.25)}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(String(p.turnsLeft), bx, by + 0.5);
+      }
     }
   }
 

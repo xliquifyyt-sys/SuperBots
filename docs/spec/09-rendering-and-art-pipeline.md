@@ -9,7 +9,7 @@ Rendering is a single 2D canvas (`src/render/renderer.js`) drawn every frame at 
 3. Kill floor (lava, water, void or neon), hazard overlays for announced zones, circles and points.
 4. Terrain: painted kit tiles (top strip and face texture per rectangle with lift, outline, and theme extras: icicles and snow caps on ice, grass and vines on jungle, cloud puffs on sky, underglow on neo) or themed procedural slabs; slopes are drawn as triangles with the same kit.
 5. Looped-edge markers or solid walls.
-6. Mines, burning patches, static fields (crackling arcs), toxic clouds, singularity swirl, power-ups (icons with colour), Bastion walls, teleporter pads.
+6. Mines, burning patches, static fields (crackling arcs), toxic clouds, singularity swirl, power-ups (icons with colour and a turns-left badge from `turnsLeft`, see 04), Bastion walls, teleporter pads.
 7. Bots (see rigs below) with nameplates, ready tags, deflector domes, shadows.
 8. Projectiles with glow and trail; bombs with a red marker.
 9. Flashes: lightning beams, cones, fireballs, rings, spike stars, crusher slab animation.

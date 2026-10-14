@@ -54,7 +54,8 @@ export const DMG = {
   selfDestructRadius: 1.5,
   airStrikeBomb: 20,
   airStrikeRadius: 1.2,
-  airStrikeBombs: 3,
+  airStrikeMinBombs: 6,      // D-1 keeps the full-map carpet: max(airStrikeMinBombs, round(mapWidth / airStrikeSpacing)) bombs
+  airStrikeSpacing: 1.6,
   poison: 10,
   burn: 8,
   lava: 25,
@@ -66,7 +67,7 @@ export const TURN = {
   planOptions: [10, 15, 20, 30],
   cleanup: 0.8,
   suddenDeathHp: 60,
-  powerupExpire: 6,
+  powerupExpire: 6,          // D-2: a power-up on the field lasts 6 turns, counting the turn it spawned
   maxChainKills: 3,
 };
 

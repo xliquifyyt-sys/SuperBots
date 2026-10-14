@@ -241,6 +241,8 @@ Implementation: On a kill, killer.cdBonus = 1; the next special cast uses cd = m
 
 ### S2: Toxic Bomb (`toxicBomb`)
 
+Design default D-4 keeps Toxic Bomb; the GDD's Smoke Bomb (hides aim guides) is not built.
+
 - Cooldown: 3 turns (fast cooldowns setting: 2).
 - Kind: Projectile with cloud.
 - Numbers: `{"dmg": 5, "radius": 2.4}`
