@@ -76,7 +76,7 @@ export const BOTS = {
     id: 'bulwark', name: 'Bulwark', cls: 'Heavy tank', hp: 140, weight: 'heavy', accuracy: 'medium',
     color: '#4f7cff', shape: 'block', desc: 'Anchors a fight. Walls off lanes and punishes clustering.',
     passive: 'Immune to knockback while Bastion Wall is up.',
-    s1: { id: 'bastionWall', name: 'Bastion Wall', cd: 3, target: 'point', desc: 'Place a 3-segment barrier anywhere on the map for 2 turns. Shield a teammate or block a lane. Blocks projectiles; breaks after 10 damage.', wallHp: 10 },
+    s1: { id: 'bastionWall', name: 'Bastion Wall', cd: 3, target: 'point', desc: 'Place a 3-segment barrier anywhere on the map for 2 turns. Shield a teammate or block a lane. Blocks projectiles; breaks after 10 damage.', wallHp: 10, guardRange: 2.5 },   // passive: knockback immunity only while Bulwark's centre is within guardRange of one of its standing segments
     s2: { id: 'siegeShell', name: 'Siege Shell', cd: 4, desc: 'Slow heavy shell: 55 damage, radius 1.5, strong knockback.', dmg: 55, radius: 1.5 },
   },
   magmaw: {
@@ -90,7 +90,7 @@ export const BOTS = {
     id: 'volt', name: 'Volt', cls: 'Medium marksman', hp: 130, weight: 'medium', accuracy: 'high',
     color: '#ffe23a', shape: 'bolt', desc: 'The reliable marksman. Beams ignore walls.',
     passive: 'Missile speed +15%.',
-    s1: { id: 'chainArc', name: 'Chain Arc', cd: 3, desc: 'Instant beam that pierces terrain and bots: 40 damage, then arcs to one more bot nearby for 15.', dmg: 40, arcDmg: 15, arcRange: 6 },
+    s1: { id: 'chainArc', name: 'Chain Arc', cd: 3, desc: 'Instant beam that pierces terrain and bots: 40 damage, then arcs to one more bot nearby for 15.', dmg: 40, arcDmg: 15, arcRange: 6, beamHalfWidth: 0.15 },   // beam hits a bot whose body outline comes within beamHalfWidth of the line
     s2: { id: 'staticField', name: 'Static Field', cd: 4, desc: 'Drops a wide field at impact: 30 damage, bots inside are Shocked (no specials for the next 2 turns).', dmg: 30, radius: 3, shockTurns: 3 },
   },
   warden: {

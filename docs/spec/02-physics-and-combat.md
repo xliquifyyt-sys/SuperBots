@@ -84,7 +84,7 @@ Impacts: `out`, `floor`, `expire` do nothing (floor emits a splash). `split` spa
 2. Damages every wall segment within radius by dmg; broken segments are removed.
 3. For every living bot (skipping the source when excludeSelf, and the source's teammates when enemiesOnly) whose polygon is within radius: apply damage, then if still alive add velocity `k = dmg * 0.336 * knock * weightKnockback[target]` along the direction from the blast to the bot, with an extra upward bias (`vy += (ny - 0.45) * k`), and set it airborne. Status effects attached to the blast apply when damage landed (or when the blast deals 0 by design).
 
-Knockback multipliers per source: missile 1.25, Siege Shell 2.2, Shockwave 2.5, Molten Slam 1.5, mines 1.3, self-destruct 1.2, everything else 1.0. Bulwark with a wall standing takes 0; Gravitas takes the heavy 0.6.
+Knockback multipliers per source: missile 1.25, Siege Shell 2.2, Shockwave 2.5, Molten Slam 1.5, mines 1.3, self-destruct 1.2, everything else 1.0. Bulwark standing within 2.5 of one of its own wall segments takes 0; Gravitas takes the heavy 0.6.
 
 ## Damage formula (`applyDamage`)
 
@@ -109,7 +109,7 @@ Every pair of living bots whose polygons overlap is separated in proportion to t
 
 ## Walls (Bastion Wall)
 
-Walls are rectangles with owner, hp, turns, colour and segment index. They block projectiles from anyone but the owner, are solid for bots, take damage from projectiles and blasts, and expire by turns. Bulwark is knockback-immune while any of its walls stand.
+Walls are rectangles with owner, hp, turns, colour and segment index. They block projectiles from anyone but the owner, are solid for bots, take damage from projectiles and blasts, and expire by turns. Bulwark is knockback-immune while its centre is within `guardRange` 2.5 of one of its own standing segments.
 
 ## Status effects
 

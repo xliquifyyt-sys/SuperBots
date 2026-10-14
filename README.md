@@ -2,13 +2,13 @@
 
 A simultaneous-turn 2D artillery brawler for 2 to 8 bots, in the Brawlbots genre. Everyone aims and fires at the same time, the deterministic sim resolves every action at once, and the last bot (or team) standing wins.
 
-This is the v0.1 single-player prototype of the [Super Bots design document](docs/GDD-v0.1.md): every rule, bot, power-up, map and host setting from the GDD is implemented, and the other players are AI. It runs in the browser with no build step and installs as a PWA.
+This is the v0.1 prototype of the [Super Bots design document](docs/GDD-v0.1.md): every rule, bot, power-up, map and host setting from the GDD is implemented. Offline, the other players are AI; with the Node server, friends can play custom games online ([docs/ONLINE.md](docs/ONLINE.md)). It runs in the browser with no build step and installs as a PWA. The game as it runs today is written up in [docs/spec/](docs/spec/00-README.md); the road to alpha is in [docs/alpha/](docs/alpha/ALPHA.md).
 
 ## Play
 
 ```bash
-git clone https://github.com/xliquifyyt-sys/SuperBots.git
-cd SuperBots
+git clone https://github.com/xliquifyyt-sys/superbots.git
+cd superbots
 python3 -m http.server 8000      # any static server works
 ```
 
@@ -56,7 +56,7 @@ The dotted trajectory shows 30 / 55 / 85 % of the flight for low / medium / high
 
 **Rules.** Jump and Missile every turn, cooldown specials, elimination by HP, kill floor or leaving the map, self-destruct blasts with chain kills, ten power-ups with the GDD stacking rules, Sudden Death only on a turn-cap tie (respawn at 60 HP, no specials, alternating Jump/Missile), a same-turn wipe is a shared win, turn cap with highest-HP or Sudden Death tiebreak, teams with friendly-fire toggle and Rally Beacon.
 
-**Maps.** Ten maps across five theme kits, one Standard and one Battle map each: Lava (Ember Pit, Magma Works), Ice (Frost Hollow, Glacier Fortress), Jungle (Canopy Ruins, Temple Crossing), Sky (Cloud Steps, Nimbus Reach) and Neo City (Neon Alley, Skyline Grid). Hazards: rising lava, geysers, falling icicles, blizzard gusts, spike mines, log drops, wind, EMP pulses, teleporter edges. Air strikes give a one-turn warning with no location, then standard missiles rain across the whole map, so overhead cover matters.
+**Maps.** Ten maps across five theme kits, one Standard and one Battle map each: Lava (Ember Pit, Magma Works), Ice (Frozen Keel, Glacier Fortress), Jungle (Canopy Ruins, Temple Crossing), Sky (Cloud Steps, Nimbus Reach) and Neo City (Neon Alley, Skyline Grid). Hazards: rising lava, geysers, falling icicles, blizzard gusts, spike mines, log drops, wind, EMP pulses, teleporter edges. Air strikes give a one-turn warning with no location, then standard missiles rain across the whole map, so overhead cover matters.
 
 **AI.** Each AI bot samples aims through the same trajectory preview the player sees, refines the best one, weighs specials situationally (walls when under fire, Chain Arc through cover, Singularity on clusters, Gale Shot toward ledges, contact power-ups by body-slamming), dodges when enemies have a line on it, retreats from announced hazards and grabs power-ups. Three difficulty tiers change aim noise, sample count and special usage.
 
@@ -98,18 +98,22 @@ human adds the `human-approved` label.
 ## Tests
 
 ```bash
+node test/determinism.mjs 6  # same seed and actions give identical worlds (online play depends on it)
+node test/rules.mjs          # targeted rule assertions
 node test/headless.mjs 40    # batch of AI matches with mixed sizes/modes/maps; prints win rates
 node test/features.mjs       # asserts every special, power-up, hazard and rule fires at least once
 node test/balance.mjs 3      # 1v1 round-robin balance report
 node test/stress.mjs 250     # randomised host settings, sizes and modes
-node test/browser.mjs        # Playwright browser smoke test (needs playwright-core and a static server on :8123)
+node test/browser.mjs        # Playwright smoke test: needs npm install, a static server (http://localhost:8123, or set BASE_URL) and CHROMIUM_PATH
+node test/online.mjs         # scripted clients against the real server: friends, invite, full match, reconnect
 node test/bughunt.mjs 5      # 8-bot invariant checks on every map (embedding, stuck bots, misplaced pickups)
-node test/trace.mjs phantom volt frosthollow 7 hard   # turn-by-turn trace of one duel
+node test/trace.mjs phantom volt frozenkeel 7 hard    # turn-by-turn trace of one duel (map ids: src/core/maps.js)
 ```
 
 ## Deploy
 
-Enable GitHub Pages with the "GitHub Actions" source and the included workflow publishes the game on every push to `main`.
+- **Static client (offline play).** `.github/workflows/pages.yml` publishes a slim static build (no `server/`, `test/` or raw art) to GitHub Pages on every push to `main`. Enable Pages with the "GitHub Actions" source in the repository settings.
+- **Online server.** `render.yaml` is a Render blueprint for one Node 22 web service that tracks `main` with auto-deploy, serves the client, REST API and WebSocket hub, and keeps SQLite on a persistent disk (`DATA_DIR=/var/data`). Set `GOOGLE_CLIENT_ID` and `APPLE_CLIENT_ID` as Render env vars. For other hosts see [docs/ONLINE.md](docs/ONLINE.md#deploy).
 
 ## License
 

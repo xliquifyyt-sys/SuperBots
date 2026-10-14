@@ -45,20 +45,20 @@ Gravitas is the exception: medium jump and mass, heavy (0.6x) knockback.
 | Body outline | width -1.17 .. 1.41, height -0.90 .. 0.61 (world units, centre at 0,0, facing right) |
 
 **Passive: Immune to knockback while Bastion Wall is up.**  
-Implementation: knockMul(b) returns 0 while b.wallImmune (set each resolve to "any wall with owner == Bulwark exists").
+Implementation: knockMul(b) returns 0 only while Bulwark's centre is within `guardRange` (2.5, `BOTS.bulwark.s1.guardRange`) of one of its own standing wall segments (`wallGuarded(b)`, checked live at each hit). A wall placed far across the map shields lanes but does not anchor Bulwark. Divergence from the GDD ("immune while the wall is up"): the GDD wall was always placed in front of Bulwark; with "place anywhere" the immunity is tied to standing beside it (M0-03).
 
 ### S1: Bastion Wall (`bastionWall`)
 
 - Cooldown: 3 turns (fast cooldowns setting: 2).
 - Kind: Point-target placement. Target: point on the map (tap/drag), not an aim vector.
-- Numbers: `{"wallHp": 10}`
+- Numbers: `{"wallHp": 10, "guardRange": 2.5}`
 - In-game text: Place a 3-segment barrier anywhere on the map for 2 turns. Shield a teammate or block a lane. Blocks projectiles; breaks after 10 damage.
 - How it resolves:
   - Player taps or drags anywhere on the map; the tap point is the wall position (aim.tx, aim.ty). AI aims use the legacy rule: 1.35 units toward the aim side of the caster.
   - Three stacked segments, each 0.4 wide x 0.85 tall (total column 0.4 x 2.55), centred on the point. The column is clamped inside the arena and pushed out of any terrain it overlaps.
   - Each segment has wallHp HP (10). Projectiles that are not the owner's hit a segment and deal their damage to it; blasts within their radius also damage segments. Broken segments vanish (wallBreak event).
   - Walls last turns:3 counters (placed turn plus two more), decremented at the start of each resolve.
-  - Passive hook: while any wall owned by Bulwark stands, Bulwark takes zero knockback (knockMul returns 0).
+  - Passive hook: while Bulwark's centre is within guardRange 2.5 of a standing segment it owns, Bulwark takes zero knockback (knockMul returns 0).
 
 ### S2: Siege Shell (`siegeShell`)
 
@@ -123,11 +123,11 @@ Implementation: spawnProjectile multiplies missile speed by 1.15 when the owner 
 
 - Cooldown: 3 turns (fast cooldowns setting: 2).
 - Kind: Instant beam.
-- Numbers: `{"dmg": 40, "arcDmg": 15, "arcRange": 6}`
+- Numbers: `{"dmg": 40, "arcDmg": 15, "arcRange": 6, "beamHalfWidth": 0.15}`
 - In-game text: Instant beam that pierces terrain and bots: 40 damage, then arcs to one more bot nearby for 15.
 - How it resolves:
   - Line from the caster along the aim across the whole map (length = hypot(mapW, mapH)). Ignores terrain and walls.
-  - Every living bot whose centre is within 0.75 (PHYS.botRadius + 0.25) of the line takes 40 (label "Chain Arc"). Note: this is still a circle test, not the body outline.
+  - Every living bot whose body outline (placed hull) comes within beamHalfWidth 0.15 of the beam segment takes 40 (label "Chain Arc"), ordered by distance along the beam. Bots behind the caster are not hit. (Before M0-03 this was a 0.75 circle around the centre.)
   - Then the nearest bot within arcRange 6 of the FIRST hit bot that was not already hit takes arcDmg 15 (label "Arc"). No knockback from either hit.
   - Emits beam events for the renderer (lightning).
 
