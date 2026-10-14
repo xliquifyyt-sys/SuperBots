@@ -23,8 +23,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: build static site (no server, no raw art sources)
+        run: |
+          mkdir -p _site
+          rsync -a --exclude '.git' --exclude '.github' --exclude 'node_modules' --exclude 'server' \
+            --exclude 'art/sprites/raw' --exclude 'art/maps/raw' --exclude 'art/reference' --exclude 'test' --exclude '_site' ./ _site/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
