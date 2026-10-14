@@ -65,6 +65,10 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci || npm install
       - run: npx playwright-core install --with-deps chromium || npx playwright install --with-deps chromium
+      - name: locate chromium and the screenshot folder the tests expect
+        run: |
+          echo "CHROMIUM_PATH=$(node -e "import('playwright-core').then(m=>console.log(m.chromium.executablePath()))")" >> "$GITHUB_ENV"
+          sudo mkdir -p /opt/cursor/artifacts && sudo chown -R "$USER" /opt/cursor
       - run: node test/online.mjs
       - run: node test/online-browser.mjs
       - name: offline browser smoke
