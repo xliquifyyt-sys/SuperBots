@@ -2,6 +2,7 @@
 // websocket that drives an authoritative match.
 
 import { BOTS, BOT_IDS } from '../core/defs.js';
+import { MAPS, MAP_IDS } from '../core/maps.js';
 import { Mirror } from '../net/sync.js';
 
 const $ = (id) => document.getElementById(id);
@@ -18,7 +19,8 @@ const SETTING_FIELDS = [
   ['airStrikes', 'Air strikes', { off: 'Off', rare: 'Rare', normal: 'Normal' }],
   ['hazards', 'Map hazards', { true: 'On', false: 'Off' }, true],
   ['aiDifficulty', 'AI difficulty', { easy: 'Rookie', normal: 'Veteran', hard: 'Elite' }],
-  ['map', 'Map', { random: 'Random', emberpit: 'Ember Pit', magmaworks: 'Magma Works', frozenkeel: 'Frost Hollow', glacierfort: 'Glacier Fort', canopyruins: 'Canopy Ruins', templecrossing: 'Temple Crossing', cloudsteps: 'Cloud Steps', nimbus: 'Nimbus Reach', neonalley: 'Neon Alley', skylinegrid: 'Skyline Grid' }],
+  // Built from maps.js so a renamed or added map cannot drift from the real name (M0-07).
+  ['map', 'Map', { random: 'Random', ...Object.fromEntries(MAP_IDS.map((id) => [id, MAPS[id].name])) }],
 ];
 
 export function mountOnline(hooks) {
