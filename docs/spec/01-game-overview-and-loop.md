@@ -34,14 +34,14 @@ Timer expiry during plan: the player's current aim is used with the selected act
 2. **Pre-turn status**: Poison deals 10, then Burn deals 8 (Magmaw immune). Rally overheal decays by up to 10 toward max HP.
 3. **Hazards** (skipped if the host turned hazards off, and always during Sudden Death): each hazard entry on the map either announces a warning for next turn or fires or schedules itself for this turn. Details per type in 06.
 4. **Air strike**: if one was scheduled for this turn it becomes pending (fires in resolve) with the banner "AIR STRIKE INCOMING, TAKE COVER". Otherwise, from turn 2 on, roll `rng < p` with p = 0.18 (normal) or 0.08 (rare) to schedule one for next turn ("Air strike next turn"). Off setting disables. No location is ever revealed because the strike covers the whole map.
-5. **Power-up spawn**: from turn 2, if below the cap (3 on Standard maps, 5 on Battle maps), with probability by setting: Low 0.25 (Standard) / 0.35 (Battle), Normal 0.5 / 1.0, High 1.0. A free spawn point is chosen at random (no existing power-up within 0.5), lifted out of terrain, and a type is picked by weight from the pool, excluding types already on the field, types the host disabled, and Rally Beacon outside Teams mode. Power-ups never expire.
+5. **Power-up expiry, then spawn** (design default D-2): every power-up on the field counts its `turnsLeft` down by 1. At 0 it is removed with a `powerupExpire` event; otherwise a `powerupCountdown` event carries the new `turnsLeft`. A power-up spawns with `turnsLeft = TURN.powerupExpire` (6), so it is on the field for 6 turns counting its spawn turn and is gone at the start of the 7th, before that turn's spawn roll (its slot can refill the same turn). No RNG is drawn here. Then the spawn: from turn 2, if below the cap (3 on Standard maps, 5 on Battle maps), with probability by setting: Low 0.25 (Standard) / 0.35 (Battle), Normal 0.5 / 1.0, High 1.0. A free spawn point is chosen at random (no existing power-up within 0.5), lifted out of terrain, and a type is picked by weight from the pool, excluding types already on the field, types the host disabled, and Rally Beacon outside Teams mode.
 6. Action slots cleared.
 
 ## Resolve in detail (`resolve` then `step`)
 
 At t = 0:
 - Pending crusher, geyser and reactor hazards apply their damage and shoves.
-- If an air strike is pending, `max(6, round(mapWidth / 1.6))` bombs are created above the map (y between -2 and -7, x evenly spaced with +/-0.3 jitter, vx +/-0.15, vy 6) with a 2.2 to 3.2 s delay before they start falling, so player actions land first.
+- If an air strike is pending, `max(DMG.airStrikeMinBombs, round(mapWidth / DMG.airStrikeSpacing))` = `max(6, round(mapWidth / 1.6))` bombs are created above the map (y between -2 and -7, x evenly spaced with +/-0.3 jitter, vx +/-0.15, vy 6) with a 2.2 to 3.2 s delay before they start falling, so player actions land first.
 - Wall lifetimes decrement; dead walls are removed; `wallImmune` is recomputed per bot.
 - Every living bot's action launches: jump, missile, or special (see 02 and 03). Facing is set from the aim. In Sudden Death the action type is recorded for the alternating rule.
 

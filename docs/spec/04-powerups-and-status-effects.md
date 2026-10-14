@@ -6,7 +6,8 @@
 - Spawning happens at turn start from turn 2 onward, never during Sudden Death, and only while the count on the field is below the cap: 3 on Standard maps, 5 on Battle maps.
 - Spawn chance per turn by host setting: Off 0; Low 0.25 (Standard) or 0.35 (Battle); Normal 0.5 or 1.0; High 1.0.
 - Type selection is weighted (table below) over the pool minus: types already on the field (each type at most once), types the host disabled in the power-up pool, and Rally Beacon outside Teams mode.
-- Power-ups never expire. They are collected the instant a bot's body comes within 0.6 of them during a resolve, and buffs apply immediately mid-turn.
+- **Expiry (design default D-2, matches the GDD).** A power-up spawns with `turnsLeft = TURN.powerupExpire` (6). At each turn start, before the spawn roll, every power-up on the field loses 1; at 0 it is removed and the sim emits `powerupExpire {x, y, id}`, otherwise it emits `powerupCountdown {x, y, id, turnsLeft}`. So a power-up is collectable on 6 turns counting the one it spawned on. The countdown is visible: the renderer draws a number badge on each power-up from its `turnsLeft` (red at 2 or less, blinking on the last turn), floats "LAST TURN" on the `powerupCountdown` with `turnsLeft` 1, and a grey puff and "EXPIRED" on `powerupExpire`. Gale Shot moves a power-up without changing its timer. Sudden Death still clears all power-ups at once.
+- Power-ups are collected the instant a bot's body comes within 0.6 of them during a resolve, and buffs apply immediately mid-turn.
 - Gale Shot slides power-ups in its cone 3.5 units along the aim and drops them back to the ground.
 
 ## Catalogue
@@ -19,7 +20,7 @@
 | Plating (`plating`) | buff | 8 | 4 | -50% damage taken. Counter 4. |
 | Toxin (`toxin`) | contact | 6 | 4 | Held for 4 turns; the next bot touched is Poisoned (3 counters). |
 | Frost (`frost`) | contact | 6 | 4 | Held for 4 turns; the next bot touched is Frozen (2 counters). |
-| Thrusters (`thrusters`) | buff | 7 | 4 | Jump distance x1.75 (speed x sqrt(1.75)). Counter 4. |
+| Thrusters (`thrusters`) | buff | 7 | 4 | Jump distance x1.75 (speed x sqrt(1.75)). Counter 4. One jump per turn as usual: design default D-3 keeps the stronger jump instead of the GDD's second jump in the same turn. |
 | Reflector Coat (`reflector`) | buff | 5 | 2 | The first projectile to hit the bot each turn is reflected back along its path and becomes the bot's own. Counter 2 (this turn and next). |
 | Shockwire (`shockwire`) | contact | 5 | 4 | Held for 4 turns; the next bot touched is Shocked (2 counters). |
 | Rally Beacon (`rally`) | buff, teams only | 6 | 2 | Every living teammate and the picker: +20 HP (overheal above max up to 20, decaying 10 per turn) and +10% damage (counter 3). |
@@ -47,3 +48,14 @@ See the table in 02 for counters and behaviour. In short:
 | Amp / Plating / Thrusters / Reflector / Rally | modifiers above | |
 
 The HUD shows a floating label when an effect is applied ("POISON", "SHOCKED"...) and lists active effects in the bot info panel. The action bar greys out blocked actions during planning.
+
+## Design defaults (HUMAN_QUEUE D-1..D-4)
+
+The GDD and the build disagreed on four rules; `docs/alpha/HUMAN_QUEUE.md` set these defaults and the code follows them.
+
+| Id | Rule | Decision | Where |
+|---|---|---|---|
+| D-1 | Air strike: full-map carpet or 3 bombs (GDD) | Full-map carpet (divergence from the GDD) | `DMG.airStrikeMinBombs`, `DMG.airStrikeSpacing`; 06 |
+| D-2 | Power-ups expire after 6 turns (GDD) or stay | Expire after 6 turns | `TURN.powerupExpire`; this file, 01 |
+| D-3 | Thrusters: second jump in the same turn (GDD) or stronger jump | Stronger jump (divergence from the GDD) | catalogue above; 02 |
+| D-4 | Phantom S2: Toxic Bomb or Smoke Bomb that hides aim guides (GDD) | Toxic Bomb (divergence from the GDD) | 03 |

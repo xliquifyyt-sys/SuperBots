@@ -2,6 +2,7 @@
 // hazard and rule must show up in the event log at least once.
 import { Match } from '../src/core/match.js';
 import { BOTS, BOT_IDS, POWERUP_IDS } from '../src/core/defs.js';
+import { TURN } from '../src/core/defs.js';
 import { MAP_IDS } from '../src/core/maps.js';
 
 const seen = { specials: new Set(), powerups: new Set(), events: new Set(), maps: new Set(), effects: new Set(), causes: new Set(), winTypes: new Set() };
@@ -43,10 +44,43 @@ for (let i = 0; i < 90; i++) {
   else { errors++; console.log('ERROR turn-cap tie did not enter Sudden Death'); }
 }
 
+// D-2: a power-up lasts TURN.powerupExpire turns counting its spawn turn, counts down with a
+// powerupCountdown event each turn start, and is removed with a powerupExpire event.
+{
+  const m = new Match(
+    [{ name: 'A', botId: 'volt', team: 0, isAI: true }, { name: 'B', botId: 'warden', team: 1, isAI: true }],
+    { map: 'emberpit', hazards: false, powerups: 'high', airStrikes: 'off' },
+    7,
+  );
+  m.start();
+  const w = m.world;
+  let pu = null, spawnTurn = 0, ok = true;
+  const counts = [];
+  for (let k = 0; k < 20 && ok; k++) {
+    w.startTurn();
+    if (!pu) {
+      if (w.powerups.length) { pu = w.powerups[0]; spawnTurn = w.turn; if (pu.turnsLeft !== TURN.powerupExpire) ok = false; }
+      continue;
+    }
+    const cd = w.events.find((e) => e.type === 'powerupCountdown' && e.id === pu.id);
+    const ex = w.events.find((e) => e.type === 'powerupExpire' && e.id === pu.id);
+    if (ex) {
+      if (w.turn - spawnTurn !== TURN.powerupExpire || w.powerups.includes(pu)) ok = false;
+      else { seen.events.add('powerupExpire'); }
+      break;
+    }
+    if (!cd || cd.turnsLeft !== TURN.powerupExpire - (w.turn - spawnTurn) || !w.powerups.includes(pu)) { ok = false; break; }
+    counts.push(cd.turnsLeft);
+  }
+  if (ok && pu && counts.join(',') === Array.from({ length: TURN.powerupExpire - 1 }, (_, i) => TURN.powerupExpire - 1 - i).join(',') && seen.events.has('powerupExpire')) seen.events.add('powerupCountdown');
+  else { errors++; console.log('ERROR power-up expiry (D-2): spawn turn', spawnTurn, 'countdown', counts.join(','), 'ok', ok); }
+}
+
 const allSpecials = BOT_IDS.flatMap((id) => [BOTS[id].s1.name, BOTS[id].s2.name]);
 const missingSpecials = allSpecials.filter((s) => !seen.specials.has(s));
 const missingPowerups = POWERUP_IDS.filter((p) => !seen.powerups.has(p));
 const wantEvents = ['explosion', 'damage', 'eliminated', 'pickup', 'jump', 'fire', 'beam', 'blink', 'gale', 'crusher', 'geyser', 'reactorPulse', 'airstrike', 'toxic', 'singularity', 'reflect', 'wallBreak', 'bounce', 'contact', 'suddenDeath', 'split', 'patch', 'teleport', 'deflector', 'wallHit'];
+wantEvents.push('powerupCountdown', 'powerupExpire');
 const missingEvents = wantEvents.filter((e) => !seen.events.has(e));
 console.log(`${matches} matches, ${errors} errors, ${Date.now() - t0}ms`);
 console.log('maps:', [...seen.maps].join(', '));

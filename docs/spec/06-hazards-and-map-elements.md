@@ -36,7 +36,7 @@ A circle. Warning the turn before, danger ring on the hazard turn; at the start 
 
 ## Air strikes
 
-Independent of map hazards; host setting Off / Rare (8% per turn) / Normal (18% per turn), rolled from turn 2 when none is scheduled, never in Sudden Death. The warning turn says "Air strike next turn"; the strike turn says "AIR STRIKE INCOMING, TAKE COVER". No location is given because the whole map is carpeted: `max(6, round(width / 1.6))` bombs spaced evenly with +/-0.3 jitter, held for 2.2 to 3.2 s so player actions resolve first, then falling nearly vertically. Each bomb: 20 damage, radius 1.2. Any bot with terrain above it is safe; any exposed bot is hit. The AI treats exposure during a warning as high danger and moves under cover.
+Independent of map hazards; host setting Off / Rare (8% per turn) / Normal (18% per turn), rolled from turn 2 when none is scheduled, never in Sudden Death. The warning turn says "Air strike next turn"; the strike turn says "AIR STRIKE INCOMING, TAKE COVER". No location is given because the whole map is carpeted (design default D-1 keeps the carpet; the GDD's 3 bombs are not built): `max(DMG.airStrikeMinBombs, round(width / DMG.airStrikeSpacing))` = `max(6, round(width / 1.6))` bombs spaced evenly with +/-0.3 jitter, held for 2.2 to 3.2 s so player actions resolve first, then falling nearly vertically. Each bomb: 20 damage, radius 1.2. Any bot with terrain above it is safe; any exposed bot is hit. The AI treats exposure during a warning as high danger and moves under cover.
 
 ## Looped edges (`teleporters: true`)
 

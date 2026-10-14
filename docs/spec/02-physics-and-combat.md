@@ -122,7 +122,7 @@ Walls are rectangles with owner, hp, turns, colour and segment index. They block
 | shocked | Static Field (3), Shockwire contact (2) | Specials unavailable while the counter > 0 after this turn's cleanup | Overclock, time |
 | amp | Amp pickup (4) | +50% damage dealt | time |
 | plating | Plating pickup (4) | -50% damage taken | time |
-| thrusters | Thrusters pickup (4) | jump speed x sqrt(1.75) (distance x1.75) | time |
+| thrusters | Thrusters pickup (4) | jump speed x sqrt(1.75) (distance x1.75); still one jump per turn (D-3) | time |
 | reflector | Reflector Coat pickup (2) | first projectile to hit the bot each turn is reflected | time |
 | rally | Rally Beacon pickup (3) | +10% damage; the pickup also gave +20 HP with overheal up to 20 that decays 10 per turn | time |
 
@@ -134,4 +134,4 @@ Kind `bomb`: owner none, 20 damage, radius 1.2, knock 1.0, fall straight (vx +/-
 
 ## Events
 
-Every notable moment emits an event `{type, t, ...}` into `world.events` for the turn: fire, jump, land, special, damage, eliminated, explosion, beam, blink, gale, split, bounce, reflect, deflector, toxic, singularity, patch, pickup, powerupSpawn, mine, mineSpawn, wallHit, wallBreak, effect, contact, teleport, geyser, crusher, reactorPulse, airstrike, bomb, splash, lavaSurf, suddenDeath. The renderer and audio consume these; the sim never depends on them.
+Every notable moment emits an event `{type, t, ...}` into `world.events` for the turn: fire, jump, land, special, damage, eliminated, explosion, beam, blink, gale, split, bounce, reflect, deflector, toxic, singularity, patch, pickup, powerupSpawn, powerupCountdown, powerupExpire, mine, mineSpawn, wallHit, wallBreak, effect, contact, teleport, geyser, crusher, reactorPulse, airstrike, bomb, splash, lavaSurf, suddenDeath. The renderer and audio consume these; the sim never depends on them.

@@ -15,6 +15,7 @@
 | eliminated | ko | descending stinger |
 | pickup | pickup | bright arpeggio |
 | powerupSpawn | powerupSpawn | soft chime |
+| powerupCountdown, powerupExpire | none | visual only (badge, "LAST TURN", "EXPIRED" puff) |
 | beam | beam | electric buzz |
 | blink | blink | whoosh and shimmer |
 | gale | gale | wind swell |
