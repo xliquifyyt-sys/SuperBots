@@ -4,6 +4,7 @@ import { MAPS, MAP_IDS, mapsForPlayers } from './core/maps.js';
 import { Match } from './core/match.js';
 import { Renderer } from './render/renderer.js';
 import { drawBot } from './render/bots.js';
+import { loadSprites, onSpritesChange, getSprite } from './render/sprites.js';
 import { iconCanvas, actionIconCanvas } from './render/icons.js';
 import { GameController } from './ui/game.js';
 import { mountOnline } from './ui/online.js';
@@ -60,13 +61,56 @@ function showScreen(id) {
 document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => { audio.init(); audio.ui(); showScreen(b.dataset.go); }));
 
 // ---------- bot portraits ----------
-function portrait(def, size = 64, color) {
-  const cv = document.createElement('canvas'); cv.width = cv.height = size;
+// Portraits are drawn once at card build time, which can be before the painted
+// sprites have loaded. Each portrait canvas remembers what it shows, and every
+// sprite arrival redraws the ones still on the vector fallback.
+const spriteBounds = new Map();   // botId -> opaque bounds of the painted still, so portraits fit the art, not its padding
+function opaqueBounds(id, img) {
+  if (spriteBounds.has(id)) return spriteBounds.get(id);
+  let box = { x: 0, y: 0, w: img.width, h: img.height };
+  try {
+    const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+    const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, c.width, c.height).data;
+    let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+    for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+      if (d[(y * c.width + x) * 4 + 3] > 16) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    }
+    if (x1 >= x0) box = { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+  } catch { /* tainted canvas: fall back to the full image */ }
+  spriteBounds.set(id, box);
+  return box;
+}
+function paintPortrait(cv) {
+  const def = BOTS[cv.dataset.bot];
+  const h = Number(cv.dataset.size), w = Math.round(h * 1.5);
+  const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
   const ctx = cv.getContext('2d');
-  ctx.translate(size / 2, size / 2);
-  drawBot(ctx, def, size * 0.3, { anim: 'idle', t: 0, facing: 1, grounded: true, color: color || def.color, hp: 1, id: 0 }, 0.7);
+  const sprite = getSprite(def.id);
+  if (sprite) {
+    // Painted still, trimmed to its opaque area and fitted into the portrait.
+    const b = opaqueBounds(def.id, sprite);
+    const k = Math.min((w * 0.94) / b.w, (h * 0.94) / b.h) * dpr;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(sprite, b.x, b.y, b.w, b.h, (cv.width - b.w * k) / 2, (cv.height - b.h * k) / 2, b.w * k, b.h * k);
+  } else {
+    ctx.setTransform(dpr, 0, 0, dpr, w / 2 * dpr, h / 2 * dpr);
+    drawBot(ctx, def, h * 0.3, { anim: 'idle', t: 0, facing: 1, grounded: true, color: cv.dataset.color || def.color, hp: 1, id: 0 }, 0.7);
+  }
+  cv.dataset.painted = sprite ? '1' : '0';
+}
+function portrait(def, size = 64, color) {
+  const cv = document.createElement('canvas');
+  cv.className = 'portrait';
+  cv.style.width = Math.round(size * 1.5) + 'px'; cv.style.height = size + 'px';
+  cv.dataset.bot = def.id; cv.dataset.size = String(size);
+  if (color) cv.dataset.color = color;
+  paintPortrait(cv);
   return cv;
 }
+onSpritesChange(() => { for (const cv of document.querySelectorAll('canvas.portrait[data-painted="0"]')) paintPortrait(cv); });
+loadSprites();
 function botCard(def, small) {
   const card = document.createElement('div');
   card.className = 'card'; card.dataset.bot = def.id;

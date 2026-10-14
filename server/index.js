@@ -5,7 +5,7 @@
 //   open http://localhost:8080
 
 import { createServer } from 'http';
-import { createReadStream, existsSync, statSync } from 'fs';
+import { createReadStream, existsSync, readFileSync, statSync } from 'fs';
 import { extname, join, normalize, resolve, sep } from 'path';
 import { WebSocketServer } from 'ws';
 import { authConfig, verifyApple, verifyGoogle } from './auth.js';
@@ -176,6 +176,8 @@ function serveStatic(pathname, res) {
   }
   if (!existsSync(file) || !statSync(file).isFile()) { send(res, 404, { error: 'Not found' }); return; }
   res.writeHead(200, { 'content-type': TYPES[extname(file)] || 'application/octet-stream', 'cache-control': 'no-cache' });
+  // Tell the client it is served by the game server, so a static build never probes /api.
+  if (file === join(ROOT, 'index.html')) { res.end(readFileSync(file, 'utf8').replace('name="superbots-host" content="static"', 'name="superbots-host" content="server"')); return; }
   createReadStream(file).pipe(res);
 }
 
