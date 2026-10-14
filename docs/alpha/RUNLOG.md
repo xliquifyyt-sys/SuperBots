@@ -10,9 +10,10 @@ Builder, QA and producer runs append here.
   `src/core/sim.js` like M0-03.
 - **Reviews:** M0-01 APPROVE; M0-02 REJECT (unfiled follow-up, stale spec/11 claim) → fixed → APPROVE;
   M0-03 APPROVE.
-- **PRs:** #5 M0-01, #6 M0-02, #7 M0-03 (scope narrowed to Chain Arc + Bulwark).
+- **PRs:** #5 M0-01, #6 M0-02, #7 M0-03 (scope narrowed to Chain Arc + Bulwark) — all three CI-green and
+  auto-merged on first push (~7–10 min CI each). #8 M0-06 open with `hold`.
 - **Blocked:** M0-06 turn-cap tie → draw (split from M0-03) — changes one protected assertion, needs
-  `human-approved` (HUMAN_QUEUE H-04). Prepared on `agent/M0-06-turncap-tie-draw`.
+  `human-approved` (HUMAN_QUEUE H-04). PR #8 (`hold`; guard red until approved).
 - **New tasks:** M0-05 (bughunt 4+ glacierfort embed), M0-07 (online map labels), M0-08 (unknown map id),
   M0-09 (server records draws), M0-10 (AI Chain Arc outline), M0-11 (card text ≥12px), M5-05 (server base
   URL for native builds).

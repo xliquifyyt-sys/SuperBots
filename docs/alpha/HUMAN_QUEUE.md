@@ -41,7 +41,7 @@ Agents write the exact specs as tasks M1-01 and M1-02 run; entries appear below.
 ## Approvals
 
 ### H-04 Approve one protected-test change for M0-06 (turn-cap HP tie → draw)
-- **What:** PR for branch `agent/M0-06-turncap-tie-draw` changes one existing line in `test/rules.mjs`
+- **What:** PR #8 (branch `agent/M0-06-turncap-tie-draw`) changes one existing line in `test/rules.mjs`
   (the "HP tiebreak does not start Sudden Death" check: `m.winner.type === 'player'` → `'draw'`). Everything
   else in the PR only adds lines.
 - **Why:** a 40/40 tie at the turn cap currently gives the win to whoever is listed first. The fix makes it a
