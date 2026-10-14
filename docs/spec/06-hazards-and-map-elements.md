@@ -18,7 +18,7 @@ The turn before: `count` points are drawn at random (seeded) from `points` and s
 Every `every` turns (from turn `every`) a burning patch appears at a random walkable spot (`randomGroundSpot`: random x in [1.5, width-1.5], the topmost terrain surface under it, if above the kill floor). The patch is `w` wide and lasts `turns` turns. During a resolve, a grounded bot whose body overlaps the patch horizontally and sits within 1.1 vertically takes `dmg` once per turn. Magmaw ignores patches. Molten Slam leaves the same kind of patch (w 4, turns 3, dmg 15). Used by both lava maps (every 3, 20 damage, 2 turns, 3 wide).
 
 ### gusts (`{every, strength}`)
-Every `every` turns `windX = +/- strength` (side at random) for that turn only; other turns windX is 0. Warning "Gust next turn", then a banner with the direction. Wind acts on airborne bots at windX x 0.25 per second (not Skyla) and on projectiles at windX x 0.6 per second. Used by Frost Hollow (4, 9), Glacier Fortress (3, 10), Cloud Steps (3, 7), Nimbus Reach (3, 11).
+Every `every` turns `windX = +/- strength` (side at random) for that turn only; other turns windX is 0. Warning "Gust next turn", then a banner with the direction. Wind acts on airborne bots at windX x 0.25 per second (not Skyla) and on projectiles at windX x 0.6 per second. Used by Frozen Keel (4, 9), Glacier Fortress (3, 10), Cloud Steps (3, 7), Nimbus Reach (3, 11).
 
 ### wind (`{max}`)
 A constant wind re-rolled every turn uniformly in [-max, max] and announced. Not used by a shipped map but supported.
