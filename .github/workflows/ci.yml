@@ -1,0 +1,104 @@
+name: CI
+
+# Every PR runs the full gate set. Agent PRs (branch agent/*) are squash-merged
+# automatically when every gate is green. Nothing else may merge them.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    name: guard (protected files)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: bash scripts/ci/guard.sh origin/${{ github.base_ref }}
+        env:
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+
+  sim:
+    name: sim (determinism, rules, features, bughunt)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci || npm install
+      - run: node test/determinism.mjs 6
+      - run: node test/rules.mjs
+      - run: node test/headless.mjs 20
+      - run: node test/features.mjs
+      - run: node test/bughunt.mjs 2
+
+  balance:
+    name: balance band
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node scripts/ci/balance-gate.mjs 2
+
+  online:
+    name: online (server + two browsers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci || npm install
+      - run: npx playwright-core install --with-deps chromium || npx playwright install --with-deps chromium
+      - name: locate chromium and the screenshot folder the tests expect
+        run: |
+          echo "CHROMIUM_PATH=$(node -e "import('playwright-core').then(m=>console.log(m.chromium.executablePath()))")" >> "$GITHUB_ENV"
+          sudo mkdir -p /opt/cursor/artifacts && sudo chown -R "$USER" /opt/cursor
+      - run: node test/online.mjs
+      - run: node test/online-browser.mjs
+      - name: offline browser smoke
+        run: |
+          python3 -m http.server 8123 >/dev/null 2>&1 &
+          sleep 1
+          node test/browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: test/*.png
+          if-no-files-found: ignore
+
+  automerge:
+    name: automerge agent PR
+    needs: [guard, sim, balance, online]
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'agent/') && !contains(github.event.pull_request.labels.*.name, 'hold')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - name: squash-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --squash --delete-branch
+      - name: deploy web build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Merges made with GITHUB_TOKEN do not fire push workflows; dispatch the deploy explicitly.
+        run: gh workflow run pages.yml --repo ${{ github.repository }} --ref main

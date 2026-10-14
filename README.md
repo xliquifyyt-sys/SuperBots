@@ -85,6 +85,16 @@ docs/GDD-v0.1.md          The design document this build implements
 
 The sim has no DOM dependencies, so the whole game logic runs headless in Node. That is how the tests work and how a server build would run it.
 
+## Agent team
+
+Development to alpha is run by a scheduled team of Claude agents. `CLAUDE.md` is the team
+charter, `.claude/agents/` defines the roles (producer, gameplay, netcode, client-ui,
+art-pipeline, audio, mobile, qa, balance, reviewer), `docs/alpha/ALPHA.md` is the definition
+of done, `docs/alpha/tasks/` is the backlog, and `docs/alpha/HUMAN_QUEUE.md` lists what
+needs a person (art, audio, accounts, decisions). Agent PRs (`agent/*` branches) are
+squash-merged by CI only when every gate is green; gate files can only grow unless a
+human adds the `human-approved` label.
+
 ## Tests
 
 ```bash

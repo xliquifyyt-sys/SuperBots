@@ -1,0 +1,29 @@
+# Render blueprint for the Super Bots alpha server.
+# One Node process serves the web client, the REST API and the WebSocket match hub.
+# The SQLite file lives on a persistent disk so accounts survive deploys.
+# Live lobbies are in memory, so this service runs as exactly one instance.
+services:
+  - type: web
+    name: superbots-alpha
+    runtime: node
+    plan: starter            # persistent disks need a paid plan
+    region: singapore        # closest Render region to India
+    branch: main
+    autoDeploy: true
+    buildCommand: npm ci --omit=dev || npm install --omit=dev
+    startCommand: node server/index.js
+    healthCheckPath: /api/config
+    numInstances: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATA_DIR
+        value: /var/data
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: APPLE_CLIENT_ID
+        sync: false
+    disk:
+      name: superbots-data
+      mountPath: /var/data
+      sizeGB: 1

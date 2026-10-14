@@ -10,7 +10,9 @@
     "test": "node test/headless.mjs 40 && node test/features.mjs",
     "test:online": "node test/online.mjs",
     "test:online-browser": "node test/online-browser.mjs",
-    "balance": "node test/balance.mjs 3"
+    "balance": "node test/balance.mjs 3",
+    "test:determinism": "node test/determinism.mjs 6",
+    "gates": "node test/determinism.mjs 6 && node test/rules.mjs && node test/headless.mjs 20 && node test/features.mjs && node test/bughunt.mjs 2 && node scripts/ci/balance-gate.mjs 2 && node test/online.mjs"
   },
   "dependencies": {
     "ws": "^8.22.0"
