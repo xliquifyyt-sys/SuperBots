@@ -95,3 +95,20 @@ self-eliminations) both skew these numbers.
   roster can't be opened.
 - **New tests (additions only, not in CI yet):** `test/net-parity.mjs`, `test/online-8p.mjs`,
   `test/ai-selfkill.mjs`, `test/qa-playthrough.mjs`. QA-1 asks for net-parity to be wired into CI.
+
+## 2026-10-15 — builder run (producer)
+- **Main at start:** 4d6e581; CI green on its PR head (#13), so no main fix needed.
+- **Attempted:** QA-1 (gameplay, P0), M0-08 (gameplay), M0-11 (client-ui). Skipped this run for file overlap:
+  M0-10/M0-14 (planner.js, like QA-1), M0-12 (sim.js, like QA-1), M0-13 (style.css, like M0-11).
+- **Reviews:** M0-08 APPROVE, M0-11 APPROVE, QA-1 REJECT on process only (code correct; balance gate red).
+- **PRs:** #14 M0-08 and #15 M0-11 — CI green, auto-merged on first push. #16 QA-1 open with `hold`
+  (merged up with main after #14 to resolve an additions-only ci.yml conflict).
+- **Blocked:** QA-1 — `balance-gate.mjs 2` fails with Skyla 4% vs 10% floor (main 11%). No `defs.js` change;
+  removing the server-only RNG draw reshuffles the 28-game sample (8 seeds: Skyla ~13% before and after).
+  Human decision HUMAN_QUEUE H-05; agent follow-up QA-1a.
+- **New tasks:** QA-1a (Skyla clears the balance floor robustly), M0-08a (`tools/gen_spec.py` would overwrite
+  M0-03 hand edits in `docs/spec/03-bots.md`).
+- **Gate times (worker, 3 worktrees on 2 cores):** determinism 65–111 s, headless 70–92 s, features 390–500 s,
+  bughunt 2 72–73 s, balance-gate 93–121 s, online 50 s, online-browser 90–117 s, browser 43–57 s.
+- **Notes:** reviewer findings left for later — `{ map: undefined }` now throws in `Match` (no caller passes it);
+  lobby stat chips wrap to 2–3 rows at 390 wide; `browser.mjs` card check is horizontal-only.
