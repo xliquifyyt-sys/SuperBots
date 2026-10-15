@@ -44,6 +44,7 @@ jobs:
       - run: node test/headless.mjs 20
       - run: node test/features.mjs
       - run: node test/bughunt.mjs 2
+      - run: node test/mapid.mjs
 
   balance:
     name: balance band

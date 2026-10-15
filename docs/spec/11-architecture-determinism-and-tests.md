@@ -72,7 +72,8 @@ docs/                        GDD, roadmap, status, this spec
 | `node test/stress.mjs 250` | randomised host settings |
 | `node test/browser.mjs` | Playwright smoke test (needs a static server on port 8123 or `BASE_URL`, and `CHROMIUM_PATH`) |
 | `node tools/bughunt.mjs 10` | per-turn invariants on every map: embedded or stuck bots, lost pickups, flow stats |
-| `node test/trace.mjs phantom volt frozenkeel 7 hard` | turn-by-turn trace of one duel (an unknown map id silently falls back to a random eligible map) |
+| `node test/trace.mjs phantom volt frozenkeel 7 hard` | turn-by-turn trace of one duel (an unknown map id exits non-zero and lists the valid ids) |
+| `node test/mapid.mjs` | unknown map ids throw in `Match` and are dropped by the server's `sanitizeSettings`; known ids, `random` and the battle-map fallback are unchanged (gate) |
 | `python3 tools/gen_hulls.py` | regenerate body outlines from sprites |
 | `python3 tools/gen_spec.py` | regenerate the data-driven spec files |
 | `tools/rigview.html` | rig state viewer |
