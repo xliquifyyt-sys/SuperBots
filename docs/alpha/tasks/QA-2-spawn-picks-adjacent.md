@@ -2,7 +2,7 @@
 id: QA-2
 milestone: M0
 role: gameplay
-status: blocked
+status: done
 depends: []
 severity: P1
 ---
@@ -42,7 +42,7 @@ Repro: `node -e "import('./src/core/maps.js').then(({MAPS,pickSpawns})=>console.
 - [x] For every map and every n in minPlayers..maxPlayers, no two picked spawns are closer than 4 units.
       Add this as an assertion in a new test or in `test/rules.mjs` (additions only).
 - [x] Paste the before/after `node test/balance.mjs 3` table in the PR body. Frozen Keel results will move.
-- [ ] All CLAUDE.md gates are green.
+- [x] All CLAUDE.md gates are green.
 
 ## Log
 
@@ -90,4 +90,27 @@ told not to touch. Unblock: land the sim.js terrain/mine fix, rebase, rerun bugh
 Balance (`node test/balance.mjs 3`), before (origin/main 263b17a) -> after:
 bulwark 62 -> 64, magmaw 45 -> 40, volt 57 -> 52, warden 69 -> 60, skyla 12 -> 14, phantom 21 -> 19,
 ricochet 55 -> 55, gravitas 29 -> 38.
+
+### 2026-10-15 (round 2) — unblocked, done
+
+Merged origin/main (M0-15) and origin/agent/M0-12-vent-exit-sink (PR #22: `mineSpot()` + terrain
+separation fix) into this branch with merge commits. bughunt 2/3 are now clean.
+
+One more gate went red after the merge: `node test/features.mjs` reported `events missing: wallHit`.
+`wallHit` only fires when a projectile weaker than a Bastion Wall segment's HP (10) hits a fresh
+segment. The 90-match random batch saw one on the M0-12 base (features exit 0) but none once the spawn
+positions moved. That is a coverage shift, not a sim change. Fix (additions only): an explicit scenario
+in `test/features.mjs` puts a segment in front of Volt, fires a 4-damage shard into it, and checks for
+`wallHit` with the segment still standing at less than full HP.
+
+Gates after the merge (this worktree): npm install 0; determinism 6 0 (49s); rules 0; spawns 0;
+headless 20 0 (46s); features 1 (388s, wallHit) -> 0 after the scenario (392s, events missing: none);
+bughunt 2 0 (87s, NO ISSUES FOUND); mapid 0; balance-gate 2 0 (105s); online 0 (50s);
+online-browser 0 (95s); online-maps 0; online-settings-layout 0; browser on :8133 0 (44s);
+bughunt 3 0 (148s, NO ISSUES FOUND); terrain-embed 3 0 (151s, NO BOT EMBEDDED IN TERRAIN);
+gen_spec leaves 03/05 unchanged.
+
+Balance `node test/balance.mjs 3`, base = M0-12 tip (main + PR #22, no QA-2) -> this branch:
+bulwark 64 -> 67, magmaw 45 -> 40, volt 55 -> 52, warden 69 -> 60, skyla 12 -> 14, phantom 17 -> 17,
+ricochet 55 -> 55, gravitas 36 -> 43. No defs.js numbers changed by QA-2.
 
