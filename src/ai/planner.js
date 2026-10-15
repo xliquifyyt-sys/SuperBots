@@ -78,9 +78,11 @@ export class AIPlanner {
     const ang = Math.atan2(a.dy, a.dx) + this.rng.range(-noise, noise) * AI_AIM.angleNoiseMul;
     const power = Math.max(0.15, Math.min(1, a.power * (1 + this.rng.range(-noise, noise) * AI_AIM.powerNoiseMul)));
     const out = { dx: Math.cos(ang), dy: Math.sin(ang), power };
-    // Point-target moves (Blink Strike, Bastion Wall) go to the map point that was scored;
-    // without it the sim falls back to the aim-line rule and Blink flies off over the void.
-    if (a.tx != null && a.ty != null) { out.tx = a.tx; out.ty = a.ty; }
+    // Blink Strike goes to the map point that was scored; without it the sim falls back to the
+    // aim-line rule and Blink flies off over the void. Bastion Wall still uses the aim-line rule
+    // (its point would change Bulwark too, and a wall at that point can leave a gap narrower
+    // than a bot: see QA-1e).
+    if (chosen.debug === 'blinkStrike' && a.tx != null && a.ty != null) { out.tx = a.tx; out.ty = a.ty; }
     return { type: chosen.key, aim: out, param: chosen.param, locked: true, debug: chosen.debug };
   }
 
