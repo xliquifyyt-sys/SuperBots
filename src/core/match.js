@@ -18,6 +18,11 @@ export class Match {
 
     // Map
     let mapId = this.settings.map;
+    // An id missing from MAPS is a caller bug (typo, stale name), not a request for a random map.
+    // A known map that cannot seat the roster still falls back to an eligible one below.
+    if (mapId !== 'random' && !(typeof mapId === 'string' && Object.hasOwn(MAPS, mapId))) {
+      throw new Error(`Unknown map id ${JSON.stringify(mapId)}. Valid map ids: random, ${MAP_IDS.join(', ')}`);
+    }
     const eligible = mapsForPlayers(players.length);
     if (mapId === 'random' || !eligible.includes(mapId)) mapId = rng.pick(eligible.length ? eligible : MAP_IDS);
     this.map = MAPS[mapId];
