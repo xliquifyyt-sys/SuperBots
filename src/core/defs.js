@@ -203,7 +203,7 @@ export const AI_AIM = {
   powerNoiseMul: 1.5,     // power jitter = aimNoise x accuracy factor x this (fraction of power)
   updraftCeilingMargin: 2, // Updraft apex must stay this far below PHYS.ceilingY
   updraftMinDrop: 3,       // Updraft apex must be this high above the ground below, or its rain bursts on Skyla
-  ledgeMargin: 1,          // Updraft landing needs ground this far to either side (it slides after the preview lands)
+  ledgeMargin: 1,          // Updraft landing / Blink spot needs ground this far to either side (Updraft slides after the preview lands)
 };
 
 export const AI_NAMES = ['Rex', 'Nova', 'Juno', 'Kilo', 'Mira', 'Ozzy', 'Pax', 'Quill', 'Rune', 'Sable', 'Tango', 'Vex'];

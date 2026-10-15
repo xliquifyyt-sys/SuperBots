@@ -77,7 +77,11 @@ export class AIPlanner {
     const a = chosen.aim;
     const ang = Math.atan2(a.dy, a.dx) + this.rng.range(-noise, noise) * AI_AIM.angleNoiseMul;
     const power = Math.max(0.15, Math.min(1, a.power * (1 + this.rng.range(-noise, noise) * AI_AIM.powerNoiseMul)));
-    return { type: chosen.key, aim: { dx: Math.cos(ang), dy: Math.sin(ang), power }, param: chosen.param, locked: true, debug: chosen.debug };
+    const out = { dx: Math.cos(ang), dy: Math.sin(ang), power };
+    // Point-target moves (Blink Strike, Bastion Wall) go to the map point that was scored;
+    // without it the sim falls back to the aim-line rule and Blink flies off over the void.
+    if (a.tx != null && a.ty != null) { out.tx = a.tx; out.ty = a.ty; }
+    return { type: chosen.key, aim: out, param: chosen.param, locked: true, debug: chosen.debug };
   }
 
   // How dangerous a spot is for bot b (higher = worse).
@@ -268,7 +272,7 @@ export class AIPlanner {
       if (!imp || imp.type !== 'land' && imp.type !== 'blink') continue;
       if (updraft && this.updraftTooHigh(b, pv)) continue;
       const lx = imp.x, ly = imp.y;
-      if (updraft && !this.footingSafe(lx, ly)) continue;
+      if ((updraft || type === 'blinkStrike') && !this.footingSafe(lx, ly)) continue; // Blink drops Phantom wherever the spot is
       const dangerThere = this.dangerAt(b, lx, ly);
       let score = (dangerHere - dangerThere) * 0.9 - 4; // moving costs a shot
       const moved = Math.hypot(lx - b.x, ly - b.y);
