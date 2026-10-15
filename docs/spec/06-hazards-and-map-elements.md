@@ -60,4 +60,4 @@ A bot whose outline comes within 0.75 of a pad during a resolve is moved to `to`
 
 ## Walkable surface helper
 
-`randomGroundSpot()` tries up to 30 times: pick x uniformly in [1.5, width - 1.5], find the topmost terrain rectangle whose span covers x (0.1 tolerance), and return a point 0.45 above its top if that top is at least 0.5 above the kill floor. Used by timed mines and burning ground. The spot can be on any platform, including floating ones.
+`randomGroundSpot()` tries up to 30 times: pick x uniformly in [1.5, width - 1.5], find the topmost terrain rectangle whose span covers x (0.1 tolerance), and return a point 0.45 above its top if that top is at least 0.5 above the kill floor. Used by timed mines and burning ground. The spot can be on any platform, including floating ones. It draws from `world.rng` by default; the AI's Blink Strike sampling passes the planner's own RNG (`randomGroundSpot(30, planner.rng)`) so planning never advances the world RNG.

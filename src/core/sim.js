@@ -641,9 +641,11 @@ export class World {
 
   // A random spot on the topmost standable surface at some x, for hazards that
   // choose their own location. Returns null if nothing solid sits above the lava.
-  randomGroundSpot(tries = 30) {
+  // `rng` defaults to the world's; the AI planner must pass its own RNG, because only the
+  // server plans and a draw from world.rng there would desync every client (QA-1).
+  randomGroundSpot(tries = 30, rng = this.rng) {
     for (let i = 0; i < tries; i++) {
-      const x = this.rng.range(1.5, this.map.width - 1.5);
+      const x = rng.range(1.5, this.map.width - 1.5);
       let top = null;
       for (const rc of this.map.terrain) {
         if (x >= rc.x - 0.1 && x <= rc.x + rc.w + 0.1 && (top === null || rc.y < top)) top = rc.y;

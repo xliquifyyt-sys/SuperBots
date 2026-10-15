@@ -253,7 +253,7 @@ export class AIPlanner {
       // Blink picks a map point: try spots flanking each enemy plus a few safe retreats along the terrain.
       samples = [];
       for (const e of enemies) for (const off of [-3.2, -2.2, 2.2, 3.2]) samples.push({ dx: off < 0 ? -1 : 1, dy: 0, power: 1, tx: e.x + off, ty: e.y - 0.4 });
-      for (let i = 0; i < 6; i++) { const pt = w.randomGroundSpot(); if (pt) samples.push({ dx: 1, dy: 0, power: 1, tx: pt.x, ty: pt.y - 0.4 }); }
+      for (let i = 0; i < 6; i++) { const pt = w.randomGroundSpot(30, this.rng); if (pt) samples.push({ dx: 1, dy: 0, power: 1, tx: pt.x, ty: pt.y - 0.4 }); }
     }
     for (const aim of samples) {
       if (aim.tx == null && aim.dy > 0.2) continue; // jumps go up
