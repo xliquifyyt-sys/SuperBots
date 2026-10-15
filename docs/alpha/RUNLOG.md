@@ -112,3 +112,80 @@ self-eliminations) both skew these numbers.
   bughunt 2 72–73 s, balance-gate 93–121 s, online 50 s, online-browser 90–117 s, browser 43–57 s.
 - **Notes:** reviewer findings left for later — `{ map: undefined }` now throws in `Match` (no caller passes it);
   lobby stat chips wrap to 2–3 rows at 390 wide; `browser.mjs` card check is horizontal-only.
+
+## 2026-10-15 (afternoon) — builder run (producer)
+- **Main at start:** 15d79da; CI green on its PR head (#17), so no main fix needed.
+- **Attempted:** QA-1a (balance, P0 — task file was only on PR #16's branch), M0-08a (gameplay),
+  M0-13 (client-ui). Skipped for overlap/risk: M0-10/M0-14 (planner.js, like QA-1a), M0-12 (sim.js,
+  and a physics change reshuffles the balance sample), QA-2 (maps.js spawns move Frozen Keel balance).
+- **Reviews:** M0-08a APPROVE, M0-13 APPROVE, QA-1 + QA-1a (combined branch) APPROVE. Each reviewer re-ran every gate.
+- **QA-1a result:** Skyla's AI was killing herself with her own Updraft rain (1332 self-damage, 10
+  self-kills over the 28 gate duels → 180, 0) and Blink Strike dropped its target point. Planner fix,
+  no ability numbers changed. `balance.mjs 8` Skyla 13% → 30%. QA-1a alone trips `bughunt 2` on two
+  pre-existing sim bugs (QA-1d, M0-12), so it was merged into the QA-1 branch (H-05 option 2); the
+  combined tree is green on every gate including balance-gate 2 (Skyla 29%) and net-parity 3 (0/30).
+- **PRs:** #19 M0-13 — CI green, auto-merged. #18 M0-08a — CI green, auto-merged. #16 QA-1 + QA-1a —
+  updated (merge of main + QA-1a), body rewritten, **kept on `hold`** for Ganesh (H-05 updated); CI on 37ad5de is green on every job, automerge skipped only for `hold`.
+- **New tasks:** QA-1b (jump preview vs sim on ramps), QA-1c (gen_spec Blink prose after QA-1a),
+  QA-1d (spike mine spawns inside the Temple Crossing post), QA-1e (Bastion Wall point / wedge),
+  QA-1g (bughunt stair-step false positive; protected file, needs a human). QA-1f was the same bug as
+  M0-12 and was folded into it. All on PR #16's branch.
+- **Backlog notes:** M0-15 now also covers `test/online-settings-layout.mjs` (added by M0-13, not yet in
+  CI). M2-03 notes that after QA-1a Magmaw sits at 32–36% and Gravitas/Phantom/Skyla below 40%.
+- **Reviewer nits left:** gen_spec Chain Arc "within 0.15 of its centre" is ambiguous; wall damage
+  ignores damage multipliers (not stated in spec); settings chips leave an uneven last row at 844x390;
+  local Custom Game grid never adds `wide`.
+- **Gate times (reviewer, 3 in parallel on 2 cores):** determinism 69–76 s, headless 75–85 s, features
+  572–624 s, bughunt 2 105–129 s, balance-gate 2 116–153 s, online 50 s, online-browser 86–114 s, browser 50–58 s.
+
+## 2026-10-15 (night) — nightly QA (qa)
+- **Main:** 94d14f0 (M0-15). PR #16 (QA-1 + QA-1a) is still on `hold`, so main does not carry the Blink RNG fix.
+- **Suites (sequential, 2 cores):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 131 s |
+| rules | pass | <1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 1 sudden death, avg 9.9 turns) | 781 s |
+| bughunt 5 | **FAIL** — x8 Ricochet embedded in glacierfort step rect (known: M0-05 / QA-1g; `bughunt 2` gate unaffected) | 202 s |
+| features | pass | 374 s |
+| headless 60 | pass (0 errors, 5 draws) | 168 s |
+| balance 4 | pass (report) | 186 s |
+| online | pass | 50 s |
+| online-browser | pass | 89 s |
+| browser (static :8123) | pass, no page errors | 49 s |
+| online-maps | pass | 3 s |
+| online-settings-layout | pass | 8 s |
+| net-parity 3 (not in CI) | **FAIL** — 15/30 matches desync (known P0 QA-1; fix on held PR #16) | 37 s |
+| online-8p (not in CI) | pass (nimbus, 14 turns) | 45 s |
+| ai-selfkill 1 (report) | 43 undamaged self-eliminations in 280 hard 1v1s (15.4%; phantom 14, skyla 11) — QA-3 | 244 s |
+| balance-gate 2 | pass — Skyla 11% vs 10% floor | 98 s |
+| turn-count 12 (new) | **FAIL** — 11/11 off by one (QA-8) | 14 s |
+
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.2 turns):**
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 70% | 107 |
+| magmaw | 45% | 63 |
+| volt | 54% | 107 |
+| warden | 63% | 100 |
+| skyla | 13% | 51 |
+| phantom | 23% | 47 |
+| ricochet | 57% | 97 |
+| gravitas | 29% | 70 |
+
+  In the 40–60% band: magmaw, volt, ricochet. Headless 60 FFA: Skyla 1/35 wins (3%), Phantom 4/39 (10%).
+- **UI playthroughs** (`QA_SET=2 node test/qa-playthrough.mjs`, the other five maps from last night):
+  Magmaw v Ricochet on magmaworks at 1280x720, Phantom v Warden+Volt on glacierfort at 390x844, Gravitas v
+  Skyla on cloudsteps at 1280x720, Bulwark in a 4p teams game on nimbus at 390x844, Volt in a 5p FFA on
+  skylinegrid at 1280x720. All five reached results with no page errors. The 390 runs repeat QA-4 (results
+  table clipped) and QA-5 (turn label wraps). Self-eliminations show up in the UI too: on Skyline Grid,
+  Gravitas died on T3 having taken 0 damage, and the human Volt won while dealing 0 damage. Evidence:
+  `docs/alpha/qa/2026-10-15/`.
+- **Filed:** QA-7 (P2, M1, client-ui): HUD roster covers the top-right bot on Cloud Steps at 1280x720.
+  QA-8 (P3, M1, gameplay): the results screen and summaries report turns + 1. QA-9 (P2, M1, client-ui): SKIP and
+  disabled FIRE are unreadable on bright sky maps. QA-10 (P3, M1, client-ui): adjacent bots' name tags overlap.
+- **New tests (additions only, not in CI):** `test/turn-count.mjs` (QA-8). `test/qa-playthrough.mjs` gains
+  `QA_SET=2` for the second map rotation.
+- **P0 still open on main:** QA-1 online desync (net-parity 15/30). It is waiting on Ganesh's call on PR #16 (H-05).

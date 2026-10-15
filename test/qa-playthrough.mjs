@@ -17,6 +17,14 @@ const MATCHES = [
   { vp: [1280, 720], me: 'warden', ai: ['volt', 'magmaw', 'skyla', 'phantom', 'gravitas'], map: 'templecrossing', mode: 'teams' },
   { vp: [390, 844], me: 'skyla', ai: ['ricochet', 'bulwark', 'warden'], map: 'neonalley', mode: 'ffa' },
 ];
+// QA_SET=2 rotates to the other five maps and different bots/viewports (nightly alternates sets).
+if (process.env.QA_SET === '2') MATCHES.splice(0, MATCHES.length,
+  { vp: [1280, 720], me: 'magmaw', ai: ['ricochet'], map: 'magmaworks', mode: 'ffa' },
+  { vp: [390, 844], me: 'phantom', ai: ['warden', 'volt'], map: 'glacierfort', mode: 'ffa' },
+  { vp: [1280, 720], me: 'gravitas', ai: ['skyla'], map: 'cloudsteps', mode: 'ffa' },
+  { vp: [390, 844], me: 'bulwark', ai: ['magmaw', 'phantom', 'ricochet'], map: 'nimbus', mode: 'teams' },
+  { vp: [1280, 720], me: 'volt', ai: ['gravitas', 'warden', 'skyla', 'bulwark'], map: 'skylinegrid', mode: 'ffa' },
+);
 let seed = 12345; const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH, args: ['--no-sandbox'] });
 const report = [];

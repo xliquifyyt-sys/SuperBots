@@ -24,7 +24,7 @@ Every `every` turns `windX = +/- strength` (side at random) for that turn only; 
 A constant wind re-rolled every turn uniformly in [-max, max] and announced. Not used by a shipped map but supported.
 
 ### mines (`{every, dmg, radius, label}`), timed form
-Every `every` turns (from turn `every`) one spike mine is planted on a random walkable surface (0.15 above it). Warning the turn before. Mines accumulate without limit; detonated mines are removed for good. A mine detonates when a bot's outline comes within 0.45 of it or a projectile comes within its body radius + 0.45: an explosion of `dmg` at `radius` with knock 1.3 (credited to the projectile's owner if any). Used by Canopy Ruins and Temple Crossing (every 3, 20 damage, radius 1.2).
+Every `every` turns (from turn `every`) one spike mine is planted on a random walkable surface (0.15 above it). The spot comes from `mineSpot()`: a `randomGroundSpot()` whose mine body (radius `PHYS.mineClearance` 0.35) clears every block, redrawn up to `PHYS.mineSpotTries` (8) times; if none clears, no mine is planted that turn (the scatter of the legacy form leaves the mine where it was). Warning the turn before. Mines accumulate without limit; detonated mines are removed for good. A mine detonates when a bot's outline comes within 0.45 of it or a projectile comes within its body radius + 0.45: an explosion of `dmg` at `radius` with knock 1.3 (credited to the projectile's owner if any). Used by Canopy Ruins and Temple Crossing (every 3, 20 damage, radius 1.2).
 
 The legacy fixed form (`mines: [[x, y, 'fixed']]` on the map with a hazard `{type:'mines', respawn, random}`) places mines at match start, respawns them `respawn` turns after detonation, and optionally scatters non-fixed mines to a new random spot. No shipped map uses it any more, but the code path exists.
 
@@ -44,7 +44,7 @@ On Magma Works, Glacier Fortress, Temple Crossing, Nimbus Reach and Skyline Grid
 
 ## Teleporter pads (`pads: [{x, y, to, label}]`)
 
-A bot whose outline comes within 0.75 of a pad during a resolve is moved to `to` with zero velocity, airborne, and cannot use a pad again for 0.8 s. Cloud Steps has one pad (21, 13) to (17.5, 3.1); Nimbus Reach has two rescue pads at the bottom corners (5, 20) and (44, 20) both to the top-centre platform (25, 7.5). The renderer draws pads as glowing rings and the teleport event flashes both ends.
+A bot whose outline comes within 0.75 of a pad during a resolve is moved to the exit with zero velocity, airborne, and cannot use a pad again for 0.8 s. The exit is `to` when the bot's outline fits there; otherwise (another bot already stands on it, or two bots arrive in the same turn) it is the nearest point to `to`, searched in rings 0.3 apart out to 6, where the outline is clear of terrain, walls, ramps and every other live bot (`freeSpotFor(b, x, y, avoidBots)`, M0-12). The `teleport` event's `to` is the exit actually used. Cloud Steps has one pad (21, 13) to (17.5, 3.1); Nimbus Reach has two rescue pads at the bottom corners (5, 20) and (44, 20) both to the top-centre platform (25, 7.3), just above the platform top (y 8) for every hull. The renderer draws pads as glowing rings and the teleport event flashes both ends.
 
 ## Kill floors
 

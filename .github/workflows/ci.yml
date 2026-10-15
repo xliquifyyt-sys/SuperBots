@@ -48,6 +48,10 @@ jobs:
       - run: node test/net-parity.mjs 2
       - run: node test/ai-purity.mjs 1
       - run: node test/mapid.mjs
+      - name: generated spec matches the code (tools/gen_spec.py, M0-08a)
+        run: |
+          python3 tools/gen_spec.py
+          git diff --exit-code docs/spec/03-bots.md docs/spec/05-maps.md
 
   balance:
     name: balance band
@@ -75,6 +79,10 @@ jobs:
           sudo mkdir -p /opt/cursor/artifacts && sudo chown -R "$USER" /opt/cursor
       - run: node test/online.mjs
       - run: node test/online-browser.mjs
+      - name: online lobby map labels (M0-07; CHROMIUM_PATH from the locate step)
+        run: node test/online-maps.mjs
+      - name: online settings layout (M0-13; CHROMIUM_PATH from the locate step)
+        run: node test/online-settings-layout.mjs
       - name: offline browser smoke
         run: |
           python3 -m http.server 8123 >/dev/null 2>&1 &

@@ -22,9 +22,9 @@ IMPL = {
     'bastionWall': dict(kind='Point-target placement', detail=[
         'Player taps or drags anywhere on the map; the tap point is the wall position (aim.tx, aim.ty). AI aims use the legacy rule: 1.35 units toward the aim side of the caster.',
         'Three stacked segments, each 0.4 wide x 0.85 tall (total column 0.4 x 2.55), centred on the point. The column is clamped inside the arena and pushed out of any terrain it overlaps.',
-        'Each segment has wallHp HP (10). Projectiles that are not the owner\'s hit a segment and deal their damage to it; blasts within their radius also damage segments. Broken segments vanish (wallBreak event).',
+        'Each segment has wallHp HP (10). Projectiles that are not the owner\'s hit a segment and deal their damage to it (10 for a projectile with no damage of its own, such as Toxic Bomb or Singularity); blasts within their radius damage segments by their full damage, the owner\'s own blasts included. Broken segments vanish (wallBreak event). All of a bot\'s walls vanish when it is eliminated.',
         'Walls last turns:3 counters (placed turn plus two more), decremented at the start of each resolve.',
-        'Passive hook: while any wall owned by Bulwark stands, Bulwark takes zero knockback (knockMul returns 0).']),
+        'Passive hook: while Bulwark\'s centre is within guardRange 2.5 of a standing segment it owns, Bulwark takes zero knockback (knockMul returns 0).']),
     'siegeShell': dict(kind='Projectile', detail=['speedMul 0.8, projectile radius 0.3, gravity 1.15x, knock 2.2x, colour #ffb347.']),
     'moltenSlam': dict(kind='Jump then blast on landing', detail=[
         'Performs a normal jump with power = max(aim.power, 0.6); sets slamPending.',
@@ -33,12 +33,12 @@ IMPL = {
     'emberSpit': dict(kind='Projectile x3', detail=['Three projectiles at angle offsets -9, 0, +9 degrees, speedMul 0.6, radius 0.14 body, each applies Burn (effect {burn:2}) on a damaging hit.']),
     'chainArc': dict(kind='Instant beam', detail=[
         'Line from the caster along the aim across the whole map (length = hypot(mapW, mapH)). Ignores terrain and walls.',
-        'Every living bot whose centre is within 0.75 (PHYS.botRadius + 0.25) of the line takes 40 (label "Chain Arc"). Note: this is still a circle test, not the body outline.',
-        'Then the nearest bot within arcRange 6 of the FIRST hit bot that was not already hit takes arcDmg 15 (label "Arc"). No knockback from either hit.',
+        'Every living bot whose body outline (placed hull) comes within beamHalfWidth 0.15 of the beam segment takes 40 (label "Chain Arc"), ordered by distance along the beam. The segment starts at the caster, so bots behind the caster are not hit unless their outline is within 0.15 of its centre. (Before M0-03 this was a 0.75 circle around the centre.)',
+        'Then the nearest bot (centre to centre, allies included, caster excluded) within arcRange 6 of the FIRST hit bot that was not already hit takes arcDmg 15 (label "Arc"). No knockback from either hit.',
         'Emits beam events for the renderer (lightning).']),
     'staticField': dict(kind='Projectile with lingering field', detail=[
         'On impact: normal blast (30 dmg, radius 3) with effect {shocked: 3}, and a static field {r: 3, turns: 2} is left at the impact point.',
-        'At end of turn, every bot inside the field gets Shocked for shockTurns (3 counters = no specials for the next 2 turns).']),
+        'At the end of the impact turn, once (the field is marked applied), every living bot whose outline is within r gets Shocked for shockTurns (3 counters = no specials for the next 2 turns), allies included. The field object lasts turns:2 but never re-applies. The blast itself only applies Shocked to bots it actually damaged.']),
     'deflector': dict(kind='Self buff', detail=[
         'Sets b.deflector = 1 for this turn (decremented at end of turn).',
         'Any projectile that comes within its radius + 0.55 of the body is reversed (vx, vy negated), its owner becomes Warden, reflected++, and it continues. The reflected shot can hit its original shooter.']),
@@ -49,7 +49,7 @@ IMPL = {
         'Blocked while Frozen or Rooted.']),
     'galeShot': dict(kind='Instant cone', detail=[
         'Cone of half-angle 30 degrees, reach 15, from the caster along the aim.',
-        'Each enemy inside: 20 damage (label "Gale"), then a shove of 20 x knockMul(target) x brace along the aim, plus -2.5 vertical. brace = max(0.25, 1 - max(0, velocityIntoWind)/16), so a bot moving into the wind resists.',
+        'Each other living bot whose centre is inside, allies included (0 damage to allies with friendly fire off, but still shoved): 20 damage (label "Gale"), then a shove of 20 x knockMul(target) x brace along the aim, plus -2.5 vertical. brace = max(0.25, 1 - max(0, velocityIntoWind)/16), so a bot moving into the wind resists.',
         'Projectiles in the cone get +20 velocity along the aim; power-ups slide 3.5 units along the aim (clamped inside the map, dropped to ground).']),
     'blinkStrike': dict(kind='Point-target teleport then shards', detail=[
         'Player taps anywhere; arrival = nearest spot to the tap where the body outline fits in open air (ring search up to 6 units; clamped inside the arena and above the kill floor). AI aims use the legacy rule: walk along the aim line up to 60% of map width x power until terrain.',
@@ -57,25 +57,25 @@ IMPL = {
         'Then `shards` (3) projectiles at angle offsets -14, 0, +14 degrees, speedMul 0.85, dmg 8, radius 0.8, body 0.14, excludeSelf on impact. Shards aim at the nearest enemy within 9 units of the arrival point (dy lifted by 0.15, power 0.35 + d/12); otherwise along the original aim.',
         'Blocked while Frozen or Rooted.']),
     'toxicBomb': dict(kind='Projectile with cloud', detail=[
-        'No blast damage. On impact leaves a toxic field {r: 2.4, turns: 1}.',
-        'While the turn resolves the field ticks every 0.4 s: every bot inside takes 5 (label "Toxic", credited to the owner), at most 7 ticks per bot (35 max). The cloud is removed at end of turn.']),
+        'No blast damage. On impact leaves a toxic field {r: 2.4, turns: 1} (r is BOTS.phantom.s2.radius; s2.dmg is not read, the tick damage is the literal 5).',
+        'While the turn resolves the field ticks every 0.4 s: every bot whose outline is within r takes 5 (label "Toxic", credited to the owner except on the owner itself), at most 7 ticks per bot (35 max). The cloud is removed at end of turn.'], note='Design default D-4 keeps Toxic Bomb; the GDD\'s Smoke Bomb (hides aim guides) is not built.'),
     'pinball': dict(kind='Projectile with bounces', detail=[
         'Secondary parameter: bounce count 1..4 (default 4), shown as a button during planning.',
-        'Projectile body r 0.3 (sp.r), dmg 35, radius 0.9. On terrain contact while bounced < bounces: reflect velocity with 1.85x restitution and continue. Final impact damage = dmg + 5 x bounces taken.']),
+        'Projectile body r 0.3 (sp.r), dmg 35, radius 0.9. On terrain contact while bounced < bounces: the normal velocity component is reversed and scaled by 0.85 (v -= 1.85 x vn x n) and the shot continues. Bots and walls end it immediately. Final impact damage = dmg + 5 x bounces taken.']),
     'splitShot': dict(kind='Projectile that splits', detail=[
-        'When vertical velocity crosses from up to down (apex), the shot splits into 4 children at angle offsets -32, -11, +11, +32 degrees with speed x1.1, body 0.14, life 5 s. Each child explodes for 15 / radius 0.8.']),
+        'When vertical velocity crosses from up to down (apex), the shot splits into 4 children at angle offsets -32, -11, +11, +32 degrees with speed x1.1, body 0.14, life 5 s. Each child explodes for 15 / radius 0.8. A shot that hits something before its apex explodes once for 15 / radius 0.8 and does not split.']),
     'singularity': dict(kind='Projectile with pull field', detail=[
         'No blast damage. On impact sets the world singularity {x, y, r: 9.1, t: 2.6 s}.',
-        'Every step, every living bot within r (and farther than 0.3) is accelerated toward the point at 16 units/s^2 and feels only half gravity. The turn cannot end while the pull is active.']),
+        'Every step, every living bot within r (and farther than 0.3), the caster included, is accelerated toward the point at 16 units/s^2 and feels only half gravity. The turn cannot end while the pull is active.']),
     'shockwave': dict(kind='Instant self blast', detail=['explode at the caster: dmg 50, radius 5, knock 2.5, excludeSelf. Hits allies too unless friendly fire is off (then 0 damage but still counted as a blast on them with knockback).']),
 }
 PASSIVE_IMPL = {
-    'bulwark': 'knockMul(b) returns 0 while b.wallImmune (set each resolve to "any wall with owner == Bulwark exists").',
+    'bulwark': 'knockMul(b) returns 0 only while Bulwark\'s centre is within `guardRange` (2.5, `BOTS.bulwark.s1.guardRange`) of one of its own standing wall segments (`wallGuarded(b)`, checked live at each hit). A wall placed far across the map shields lanes but does not anchor Bulwark. Divergence from the GDD ("immune while the wall is up"): the GDD wall was always placed in front of Bulwark; with "place anywhere" the immunity is tied to standing beside it (M0-03).',
     'magmaw': 'addEffect ignores burn for Magmaw; burning patches skip Magmaw. Kill floor of type lava: the first contact per turn sets vy = -15, lifts the body above the floor, lavaImmune = 2 turns, emits lavaSurf. Later contacts that turn, or while lavaImmune is active, kill normally.',
     'volt': 'spawnProjectile multiplies missile speed by 1.15 when the owner is Volt and kind is missile.',
     'warden': 'applyDamage multiplies by 0.8 when src.fromAbove (projectile vy > 2 at impact).',
     'skyla': 'Wind acceleration on airborne bots (windX x 0.25 per second) is skipped for Skyla. Gale pushes still apply.',
-    'phantom': 'On a kill, killer.cdBonus = 1; the next special cast uses cd = max(1, sp.cd - 1) and clears the bonus.',
+    'phantom': 'On a kill (while Phantom is alive), killer.cdBonus = 1; the next special cast uses cd = max(1, sp.cd - 1) (minus a further 1 with fast cooldowns) and clears the bonus.',
     'ricochet': 'doJump sets bounceLeft = 1; on terrain contact while airborne with |vn| > 3 the body rebounds with restitution 0.65 and bounceLeft is consumed.',
     'gravitas': 'knockMul(b) returns the heavy factor (0.6) although weight is medium (jump 1.0x, mass 1.0).',
 }
@@ -98,7 +98,7 @@ def bot_md(b):
     for slot in ('s1', 's2'):
         s = b[slot]; impl = IMPL[s['id']]
         nums = {k2: v for k2, v in s.items() if k2 not in ('id', 'name', 'desc', 'cd', 'target', 'param')}
-        out += [f"### {slot.upper()}: {s['name']} (`{s['id']}`)", '',
+        out += [f"### {slot.upper()}: {s['name']} (`{s['id']}`)", ''] + ([impl['note'], ''] if impl.get('note') else []) + [
                 f"- Cooldown: {s['cd']} turns (fast cooldowns setting: {max(1, s['cd']-1)}).",
                 f"- Kind: {impl['kind']}." + (' Target: point on the map (tap/drag), not an aim vector.' if s.get('target') == 'point' else ''),
                 f"- Numbers: `{json.dumps(nums)}`" if nums else '- Numbers: none beyond cooldown.',

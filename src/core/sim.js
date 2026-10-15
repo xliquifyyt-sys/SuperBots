@@ -314,7 +314,7 @@ export class World {
             // Detonated mines are gone for good; the field grows until someone clears it.
             this.mines = this.mines.filter((mn) => mn.alive);
             if (this.turn > 1 && this.turn % h.every === 0) {
-              const pt = this.randomGroundSpot();
+              const pt = this.mineSpot();
               if (pt) { const mn = { x: pt.x, y: pt.y - 0.15, alive: true, timer: 0 }; this.mines.push(mn); this.emit('mineSpawn', { x: mn.x, y: mn.y }); this.hazardAnnounce.push({ type: 'danger', text: `${(h.label || 'Spike mine').toUpperCase()} PLANTED` }); }
             } else if (this.turn % h.every === h.every - 1) {
               this.hazardAnnounce.push({ type: 'warn', text: `${h.label || 'Spike mine'} next turn` });
@@ -657,7 +657,7 @@ export class World {
 
   // Move a mine to a fresh random surface. Falls back to leaving it put.
   scatterMine(mn) {
-    const pt = this.randomGroundSpot();
+    const pt = this.mineSpot();
     if (pt) { mn.x = pt.x; mn.y = pt.y - 0.15; }
   }
 
@@ -677,6 +677,19 @@ export class World {
     if (top !== null) { b.y = top - this.botExtents(b).b - 0.02; b.vy = Math.min(0, b.vy); b.grounded = false; }
   }
 
+  // A random surface spot for a spike mine (the mine sits 0.15 above it) whose body clears
+  // every block. randomGroundSpot only looks for blocks within 0.1 of x, so on its own it can
+  // put a mine against the side of a post (Temple Crossing; QA-1d). Rejected spots are redrawn,
+  // up to PHYS.mineSpotTries times; null means no clear spot was found.
+  mineSpot() {
+    for (let k = 0; k < PHYS.mineSpotTries; k++) {
+      const pt = this.randomGroundSpot();
+      if (!pt) return null;
+      if (!this.map.terrain.some((rc) => circleRectPush(pt.x, pt.y - 0.15, PHYS.mineClearance, rc))) return pt;
+    }
+    return null;
+  }
+
   dropToGround(obj) {
     this.pushOutOfTerrain(obj, 0.4);
     for (let i = 0; i < 300; i++) {
@@ -689,10 +702,13 @@ export class World {
   }
 
   // Nearest spot to (x,y) where this bot's body fits in open air, searched in growing rings. Falls back to (x,y).
-  freeSpotFor(b, x, y) {
+  // With avoidBots, the spot must also be clear of every other live bot's body (teleporter exits).
+  freeSpotFor(b, x, y, avoidBots = false) {
     const fits = (cx, cy) => {
       if (cx < 0.6 || cx > this.map.width - 0.6 || cy < 0.6 || cy > this.lavaY - 0.8) return false;
-      let blocked = false; this.eachSolidHitPoly(() => placedHull(b.def, cx, cy, b.facing || 1), () => { blocked = true; }); return !blocked;
+      let blocked = false; this.eachSolidHitPoly(() => placedHull(b.def, cx, cy, b.facing || 1), () => { blocked = true; });
+      if (!blocked && avoidBots) { const P = placedHull(b.def, cx, cy, b.facing || 1); for (const o of this.bots) if (o !== b && o.alive && polyPush(P, this.botPoly(o))) { blocked = true; break; } }
+      return !blocked;
     };
     if (fits(x, y)) return { x, y };
     for (let r = 0.3; r <= 6; r += 0.3) {
@@ -921,8 +937,11 @@ export class World {
       if (b.padCd > 0) { b.padCd -= dt; continue; }
       for (const pad of this.pads) {
         if (distPointPoly(pad.x, pad.y, this.botPoly(b)) < 0.75) {
-          this.emit('teleport', { bot: b.id, from: [b.x, b.y], to: pad.to });
-          b.x = pad.to[0]; b.y = pad.to[1];
+          // The exit can be occupied (two bots through the same vent in one turn), so land on
+          // the nearest spot clear of terrain and of other bots instead of on top of them (M0-12).
+          const to = this.freeSpotFor(b, pad.to[0], pad.to[1], true);
+          this.emit('teleport', { bot: b.id, from: [b.x, b.y], to: [to.x, to.y] });
+          b.x = to.x; b.y = to.y;
           b.vx = 0; b.vy = 0; b.grounded = false; b.padCd = 0.8;
           break;
         }
@@ -941,20 +960,7 @@ export class World {
       for (const b of this.alive()) if (distPointPoly(mn.x, mn.y, this.botPoly(b)) < 0.45) { this.detonateMine(mn, null); break; }
     }
     // Bot-bot collisions and contact effects
-    const alive = this.alive();
-    for (let i = 0; i < alive.length; i++) for (let j = i + 1; j < alive.length; j++) {
-      const a = alive[i], c = alive[j];
-      const hit = polyPush(this.botPoly(c), this.botPoly(a));   // push moving c away from a
-      if (!hit) continue;
-      const nx = hit.nx, ny = hit.ny, overlap = hit.depth;
-      const ma = PHYS.mass[a.def.weight] || 1, mc = PHYS.mass[c.def.weight] || 1, mt = ma + mc;
-      a.x -= nx * overlap * (mc / mt); a.y -= ny * overlap * (mc / mt); c.x += nx * overlap * (ma / mt); c.y += ny * overlap * (ma / mt);
-      const rel = (c.vx - a.vx) * nx + (c.vy - a.vy) * ny;
-      if (rel < 0) { const j = -(1 + PHYS.botBump) * rel / (1 / ma + 1 / mc); a.vx -= nx * j / ma; a.vy -= ny * j / ma; c.vx += nx * j / mc; c.vy += ny * j / mc; }
-      // a bot standing on another bot's head counts as grounded
-      if (ny > 0.7 && !a.grounded && a.vy >= -0.5) a.grounded = true; else if (ny < -0.7 && !c.grounded && c.vy >= -0.5) c.grounded = true;
-      this.transferContact(a, c); this.transferContact(c, a);
-    }
+    this.separateBots();
     // Projectiles
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const p = this.projectiles[i];
@@ -964,6 +970,41 @@ export class World {
     if (this.singularity) { this.singularity.t -= dt; }
     for (const b of this.bots) if (b.alive && b.lavaImmune > 0) { /* turn-based; decremented in endTurn */ }
     return this.done();
+  }
+
+  // Bot-bot collisions: push overlapping bodies apart by mass, bump velocities, pass contact
+  // effects. The push can shove a bot into terrain (a bot landing on one that stands on a
+  // block), and the turn can end right after, so every pushed bot is resolved against
+  // terrain again. If terrain pushed one back into its partner, the overlap is separated
+  // again (positions only) for up to PHYS.sepPasses passes, so the partner gives way (M0-12).
+  separateBots() {
+    const alive = this.alive();
+    for (let pass = 0; pass < PHYS.sepPasses; pass++) {
+      const pushed = new Set();
+      for (let i = 0; i < alive.length; i++) for (let j = i + 1; j < alive.length; j++) {
+        const a = alive[i], c = alive[j];
+        const hit = polyPush(this.botPoly(c), this.botPoly(a));   // push moving c away from a
+        if (!hit) continue;
+        const nx = hit.nx, ny = hit.ny, overlap = hit.depth;
+        const ma = PHYS.mass[a.def.weight] || 1, mc = PHYS.mass[c.def.weight] || 1, mt = ma + mc;
+        a.x -= nx * overlap * (mc / mt); a.y -= ny * overlap * (mc / mt); c.x += nx * overlap * (ma / mt); c.y += ny * overlap * (ma / mt);
+        pushed.add(a); pushed.add(c);
+        if (pass > 0) continue;
+        const rel = (c.vx - a.vx) * nx + (c.vy - a.vy) * ny;
+        if (rel < 0) { const j = -(1 + PHYS.botBump) * rel / (1 / ma + 1 / mc); a.vx -= nx * j / ma; a.vy -= ny * j / ma; c.vx += nx * j / mc; c.vy += ny * j / mc; }
+        // a bot standing on another bot's head counts as grounded
+        if (ny > 0.7 && !a.grounded && a.vy >= -0.5) a.grounded = true; else if (ny < -0.7 && !c.grounded && c.vy >= -0.5) c.grounded = true;
+        this.transferContact(a, c); this.transferContact(c, a);
+      }
+      let pushedBack = false;
+      for (const b of alive) {          // alive order, not Set order, keeps this deterministic by construction
+        if (!pushed.has(b)) continue;
+        const x0 = b.x, y0 = b.y;
+        if (this.resolveBotTerrain(b)) b.grounded = true;
+        if (Math.abs(b.x - x0) + Math.abs(b.y - y0) > 1e-6) pushedBack = true;
+      }
+      if (!pushedBack) break;
+    }
   }
 
   // Lift a point straight up until a 0.45-radius circle around it is clear of terrain.
@@ -1308,3 +1349,4 @@ export class World {
 
 export { circleRectPush, pointInRect };
 export { polyPush, distPointPoly, distSegPoly, placedHull };
+export { slopePush };
