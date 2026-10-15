@@ -63,6 +63,7 @@ docs/                        GDD, roadmap, status, this spec
 |---|---|
 | `node test/determinism.mjs 6` | same seed and actions produce identical worlds (gate; online play depends on it) |
 | `node test/rules.mjs` | targeted rule assertions (gate) |
+| `node test/spawns.mjs` | spawn picks 4+ units apart for every map and player count, mirrored 1v1 pads, no bot drops off its pad on settle (gate, QA-2) |
 | `node test/online.mjs` | scripted clients against the real server: friends, invite, full match, reconnect |
 | `node test/online-browser.mjs` | two Chromium windows through the real online menus (needs `CHROMIUM_PATH`) |
 | `node test/bughunt.mjs 5` | 8-bot invariant checks on every map (gate runs `2`) |
