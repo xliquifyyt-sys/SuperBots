@@ -62,3 +62,12 @@ Agents write the exact specs as tasks M1-01 and M1-02 run; entries appear below.
      QA-1 to `done` in `docs/alpha/tasks/QA-1-ai-blink-rng-desync.md` (or leave it; the next run will).
   2. Or leave it on `hold`: agents work QA-1a (lift Skyla clear of the floor) next, rebase #16, and CI merges it
      when green. Online games with AI Phantom stay broken until then.
+- **Update 2026-10-15 (afternoon):** QA-1a is done and merged into PR #16, so the balance gate no longer
+  blocks it: every gate is green on the combined tree (balance-gate 2: Skyla 29%; net-parity 3: 0/30
+  desynced; reviewer APPROVE). The PR still has `hold` because only you can lift it. QA-1a is an AI
+  change, not a numbers change, but it moves 1v1 win rates (balance 3: Warden 69→52, Bulwark 62→52,
+  Ricochet 55→40, Magmaw 45→36, Skyla 12→29, Phantom 21→33). Table in the PR body.
+  **Do:** read PR #16, then remove the `hold` label **and** click "Update branch" (or merge it yourself
+  once CI is green). Removing the label alone does not re-run CI, so the automerge will not fire on
+  its own. If you don't want the balance shift, comment on the PR and agents will split QA-1a out.
+

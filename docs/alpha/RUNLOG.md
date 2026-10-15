@@ -112,3 +112,28 @@ self-eliminations) both skew these numbers.
   bughunt 2 72–73 s, balance-gate 93–121 s, online 50 s, online-browser 90–117 s, browser 43–57 s.
 - **Notes:** reviewer findings left for later — `{ map: undefined }` now throws in `Match` (no caller passes it);
   lobby stat chips wrap to 2–3 rows at 390 wide; `browser.mjs` card check is horizontal-only.
+
+## 2026-10-15 (afternoon) — builder run (producer)
+- **Main at start:** 15d79da; CI green on its PR head (#17), so no main fix needed.
+- **Attempted:** QA-1a (balance, P0 — task file was only on PR #16's branch), M0-08a (gameplay),
+  M0-13 (client-ui). Skipped for overlap/risk: M0-10/M0-14 (planner.js, like QA-1a), M0-12 (sim.js,
+  and a physics change reshuffles the balance sample), QA-2 (maps.js spawns move Frozen Keel balance).
+- **Reviews:** M0-08a APPROVE, M0-13 APPROVE, QA-1 + QA-1a (combined branch) APPROVE. Each reviewer re-ran every gate.
+- **QA-1a result:** Skyla's AI was killing herself with her own Updraft rain (1332 self-damage, 10
+  self-kills over the 28 gate duels → 180, 0) and Blink Strike dropped its target point. Planner fix,
+  no ability numbers changed. `balance.mjs 8` Skyla 13% → 30%. QA-1a alone trips `bughunt 2` on two
+  pre-existing sim bugs (QA-1d, M0-12), so it was merged into the QA-1 branch (H-05 option 2); the
+  combined tree is green on every gate including balance-gate 2 (Skyla 29%) and net-parity 3 (0/30).
+- **PRs:** #19 M0-13 — CI green, auto-merged. #18 M0-08a — CI green, auto-merged. #16 QA-1 + QA-1a —
+  updated (merge of main + QA-1a), body rewritten, **kept on `hold`** for Ganesh (H-05 updated); CI on 37ad5de is green on every job, automerge skipped only for `hold`.
+- **New tasks:** QA-1b (jump preview vs sim on ramps), QA-1c (gen_spec Blink prose after QA-1a),
+  QA-1d (spike mine spawns inside the Temple Crossing post), QA-1e (Bastion Wall point / wedge),
+  QA-1g (bughunt stair-step false positive; protected file, needs a human). QA-1f was the same bug as
+  M0-12 and was folded into it. All on PR #16's branch.
+- **Backlog notes:** M0-15 now also covers `test/online-settings-layout.mjs` (added by M0-13, not yet in
+  CI). M2-03 notes that after QA-1a Magmaw sits at 32–36% and Gravitas/Phantom/Skyla below 40%.
+- **Reviewer nits left:** gen_spec Chain Arc "within 0.15 of its centre" is ambiguous; wall damage
+  ignores damage multipliers (not stated in spec); settings chips leave an uneven last row at 844x390;
+  local Custom Game grid never adds `wide`.
+- **Gate times (reviewer, 3 in parallel on 2 cores):** determinism 69–76 s, headless 75–85 s, features
+  572–624 s, bughunt 2 105–129 s, balance-gate 2 116–153 s, online 50 s, online-browser 86–114 s, browser 50–58 s.
