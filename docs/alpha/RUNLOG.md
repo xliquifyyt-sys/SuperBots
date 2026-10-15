@@ -137,3 +137,55 @@ self-eliminations) both skew these numbers.
   local Custom Game grid never adds `wide`.
 - **Gate times (reviewer, 3 in parallel on 2 cores):** determinism 69–76 s, headless 75–85 s, features
   572–624 s, bughunt 2 105–129 s, balance-gate 2 116–153 s, online 50 s, online-browser 86–114 s, browser 50–58 s.
+
+## 2026-10-15 (night) — nightly QA (qa)
+- **Main:** 94d14f0 (M0-15). PR #16 (QA-1 + QA-1a) is still on `hold`, so main does not carry the Blink RNG fix.
+- **Suites (sequential, 2 cores):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 131 s |
+| rules | pass | <1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 1 sudden death, avg 9.9 turns) | 781 s |
+| bughunt 5 | **FAIL** — x8 Ricochet embedded in glacierfort step rect (known: M0-05 / QA-1g; `bughunt 2` gate unaffected) | 202 s |
+| features | pass | 374 s |
+| headless 60 | pass (0 errors, 5 draws) | 168 s |
+| balance 4 | pass (report) | 186 s |
+| online | pass | 50 s |
+| online-browser | pass | 89 s |
+| browser (static :8123) | pass, no page errors | 49 s |
+| online-maps | pass | 3 s |
+| online-settings-layout | pass | 8 s |
+| net-parity 3 (not in CI) | **FAIL** — 15/30 matches desync (known P0 QA-1; fix on held PR #16) | 37 s |
+| online-8p (not in CI) | pass (nimbus, 14 turns) | 45 s |
+| ai-selfkill 1 (report) | 43 undamaged self-eliminations in 280 hard 1v1s (15.4%; phantom 14, skyla 11) — QA-3 | 244 s |
+| balance-gate 2 | pass — Skyla 11% vs 10% floor | 98 s |
+| turn-count 12 (new) | **FAIL** — 11/11 off by one (QA-8) | 14 s |
+
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.2 turns):**
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 70% | 107 |
+| magmaw | 45% | 63 |
+| volt | 54% | 107 |
+| warden | 63% | 100 |
+| skyla | 13% | 51 |
+| phantom | 23% | 47 |
+| ricochet | 57% | 97 |
+| gravitas | 29% | 70 |
+
+  In the 40–60% band: magmaw, volt, ricochet. Headless 60 FFA: Skyla 1/35 wins (3%), Phantom 4/39 (10%).
+- **UI playthroughs** (`QA_SET=2 node test/qa-playthrough.mjs`, the other five maps from last night):
+  Magmaw v Ricochet on magmaworks at 1280x720, Phantom v Warden+Volt on glacierfort at 390x844, Gravitas v
+  Skyla on cloudsteps at 1280x720, Bulwark in a 4p teams game on nimbus at 390x844, Volt in a 5p FFA on
+  skylinegrid at 1280x720. All five reached results with no page errors. The 390 runs repeat QA-4 (results
+  table clipped) and QA-5 (turn label wraps). Self-eliminations show up in the UI too: on Skyline Grid,
+  Gravitas died on T3 having taken 0 damage, and the human Volt won while dealing 0 damage. Evidence:
+  `docs/alpha/qa/2026-10-15/`.
+- **Filed:** QA-7 (P2, M1, client-ui): HUD roster covers the top-right bot on Cloud Steps at 1280x720.
+  QA-8 (P3, M1, gameplay): the results screen and summaries report turns + 1. QA-9 (P2, M1, client-ui): SKIP and
+  disabled FIRE are unreadable on bright sky maps. QA-10 (P3, M1, client-ui): adjacent bots' name tags overlap.
+- **New tests (additions only, not in CI):** `test/turn-count.mjs` (QA-8). `test/qa-playthrough.mjs` gains
+  `QA_SET=2` for the second map rotation.
+- **P0 still open on main:** QA-1 online desync (net-parity 15/30). It is waiting on Ganesh's call on PR #16 (H-05).
