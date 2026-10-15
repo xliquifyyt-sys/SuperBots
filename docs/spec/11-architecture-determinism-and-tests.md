@@ -41,6 +41,7 @@ docs/                        GDD, roadmap, status, this spec
 
 - Fixed step 1/60 s; all loops have fixed iteration limits; substep counts derive from state only.
 - All randomness goes through `RNG(seed)`: map pick and restrictions use `seed ^ 0x9e3779b9`, the AI uses `seed ^ 0x51ed27`, the world uses the seed directly. RNG calls happen in a fixed order (hazards, air strike roll, power-up spawn) at turn start.
+- AI planning is side-effect free on the `World`: only the server (or a local match) plans, and a network client (`clock = 'client'`) only replays the server's action list. So `AIPlanner` draws only from its own RNG (`seed ^ 0x51ed27`) and never from `world.rng`, and never writes world state; world helpers it calls that need randomness take an explicit RNG (`randomGroundSpot(tries, rng)`). A planner draw from `world.rng` desyncs every client (QA-1). Guarded by `test/ai-purity.mjs` and `test/net-parity.mjs`.
 - No wall-clock reads inside the sim. Playback speed, skip, slow motion and hit-stop only change how fast real time maps to simulated steps, never the steps themselves.
 - `Match.simulateHeadless(players, settings, seed)` plays a whole match with AI for everyone; the same seed and roster always produce the same result. This is what makes lockstep multiplayer feasible: clients submit actions, one authority (or every client identically) runs the sim.
 
@@ -63,6 +64,9 @@ docs/                        GDD, roadmap, status, this spec
 |---|---|
 | `node test/determinism.mjs 6` | same seed and actions produce identical worlds (gate; online play depends on it) |
 | `node test/rules.mjs` | targeted rule assertions (gate) |
+| `node test/net-parity.mjs 2` | server-style (plans AI) vs client-style (replays actions) on every map, digests must match every turn (CI) |
+| `node test/ai-purity.mjs 1` | every `AIPlanner.plan()` call leaves `world.rng` and the world state untouched (CI) |
+| `node test/online-8p.mjs [map]` | real server, 4 ws clients + 4 server AI; every client digest-identical every turn |
 | `node test/spawns.mjs` | spawn picks 4+ units apart for every map and player count, mirrored 1v1 pads, no bot drops off its pad on settle (gate, QA-2) |
 | `node test/online.mjs` | scripted clients against the real server: friends, invite, full match, reconnect |
 | `node test/online-browser.mjs` | two Chromium windows through the real online menus (needs `CHROMIUM_PATH`) |

@@ -45,6 +45,9 @@ jobs:
       - run: node test/headless.mjs 20
       - run: node test/features.mjs
       - run: node test/bughunt.mjs 2
+      # QA-1: server-style vs client-style replay must agree; AI planning must not touch the world.
+      - run: node test/net-parity.mjs 2
+      - run: node test/ai-purity.mjs 1
       - run: node test/mapid.mjs
       - name: generated spec matches the code (tools/gen_spec.py, M0-08a)
         run: |

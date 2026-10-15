@@ -26,6 +26,7 @@ export const PHYS = {
   weightKnockback: { light: 1.3, medium: 1.0, heavy: 0.6 },
   accuracyGuide: { low: 0.3, medium: 0.55, high: 0.85 },
   knockbackPerDamage: 0.336,  // 0.28 x 1.2: every damaging move shoves 20% harder
+  ceilingY: -12,          // a bot that flies above this is out of the arena ('fell')
 };
 
 // Fraction of a trajectory the human aim guide draws. Higher accuracy, longer arc.
@@ -196,6 +197,16 @@ export const AI_DIFFICULTY = {
   easy:   { name: 'Rookie',  aimNoise: 0.12, samples: 40,  specialIQ: 0.4 },
   normal: { name: 'Veteran', aimNoise: 0.05, samples: 90,  specialIQ: 0.7 },
   hard:   { name: 'Elite',   aimNoise: 0.025, samples: 160, specialIQ: 0.95 },
+};
+
+// How the planner turns a difficulty's aimNoise into jitter on the chosen aim, and how
+// much slack it leaves when checking that a move survives that jitter.
+export const AI_AIM = {
+  angleNoiseMul: 2.2,     // angle jitter = aimNoise x accuracy factor x this (radians)
+  powerNoiseMul: 1.5,     // power jitter = aimNoise x accuracy factor x this (fraction of power)
+  updraftCeilingMargin: 2, // Updraft apex must stay this far below PHYS.ceilingY
+  updraftMinDrop: 3,       // Updraft apex must be this high above the ground below, or its rain bursts on Skyla
+  ledgeMargin: 1,          // Updraft landing / Blink spot needs ground this far to either side (Updraft slides after the preview lands)
 };
 
 export const AI_NAMES = ['Rex', 'Nova', 'Juno', 'Kilo', 'Mira', 'Ozzy', 'Pax', 'Quill', 'Rune', 'Sable', 'Tango', 'Vex'];

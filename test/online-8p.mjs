@@ -68,6 +68,7 @@ await new Promise((r) => setTimeout(r, 200));
 host.send({ t: 'lobby.start' });
 for (const c of clients) await c.waitFor((m) => m.t === 'match');
 check(host.mirror.match.world.bots.length === 8, '8 bots in the match');
+console.log('     roster: ' + host.mirror.match.world.bots.map((b) => (b.isAI ? 'AI:' : '') + b.botId).join(','));
 check(new Set(clients.map((c) => c.mirror.yourBotId)).size === 4, 'each client is seated on its own bot');
 
 // Scripted actions: each client cycles missile / s1 / s2 / jump with varied aims.

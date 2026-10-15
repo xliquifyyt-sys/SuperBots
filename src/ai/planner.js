@@ -1,7 +1,7 @@
 // AI planner: for one bot, evaluates candidate actions by simulating them with the
 // world's preview function and picks the best-scoring one with difficulty-scaled noise.
 
-import { PHYS, DMG } from '../core/defs.js';
+import { PHYS, DMG, AI_AIM } from '../core/defs.js';
 
 const DEG = Math.PI / 180;
 const PROJECTILE_SPECIALS = ['siegeShell', 'emberSpit', 'staticField', 'anchorBolt', 'pinball', 'splitShot', 'singularity', 'toxicBomb'];
@@ -31,6 +31,7 @@ export class AIPlanner {
     for (const e of allEnemies) { const d = Math.hypot(e.x - b.x, e.y - b.y); if (d < 30) threat += (d < 14 ? 10 : 6); }
     threat *= dodgeMul * (b.hp < b.maxHp * 0.45 ? 1.5 : 1);
     this.threat = threat; // rewarded to jumps only: enemies fire at where we stand now
+    this.noise = noise;   // bestJump checks that an Updraft still lands under this jitter
 
     // ---- Projectile actions ----
     const projTypes = [];
@@ -74,9 +75,15 @@ export class AIPlanner {
 
     // Apply aim noise (angle jitter and power jitter) scaled by difficulty.
     const a = chosen.aim;
-    const ang = Math.atan2(a.dy, a.dx) + this.rng.range(-noise, noise) * 2.2;
-    const power = Math.max(0.15, Math.min(1, a.power * (1 + this.rng.range(-noise, noise) * 1.5)));
-    return { type: chosen.key, aim: { dx: Math.cos(ang), dy: Math.sin(ang), power }, param: chosen.param, locked: true, debug: chosen.debug };
+    const ang = Math.atan2(a.dy, a.dx) + this.rng.range(-noise, noise) * AI_AIM.angleNoiseMul;
+    const power = Math.max(0.15, Math.min(1, a.power * (1 + this.rng.range(-noise, noise) * AI_AIM.powerNoiseMul)));
+    const out = { dx: Math.cos(ang), dy: Math.sin(ang), power };
+    // Blink Strike goes to the map point that was scored; without it the sim falls back to the
+    // aim-line rule and Blink flies off over the void. Bastion Wall still uses the aim-line rule
+    // (its point would change Bulwark too, and a wall at that point can leave a gap narrower
+    // than a bot: see QA-1e).
+    if (chosen.debug === 'blinkStrike' && a.tx != null && a.ty != null) { out.tx = a.tx; out.ty = a.ty; }
+    return { type: chosen.key, aim: out, param: chosen.param, locked: true, debug: chosen.debug };
   }
 
   // How dangerous a spot is for bot b (higher = worse).
@@ -253,14 +260,21 @@ export class AIPlanner {
       // Blink picks a map point: try spots flanking each enemy plus a few safe retreats along the terrain.
       samples = [];
       for (const e of enemies) for (const off of [-3.2, -2.2, 2.2, 3.2]) samples.push({ dx: off < 0 ? -1 : 1, dy: 0, power: 1, tx: e.x + off, ty: e.y - 0.4 });
-      for (let i = 0; i < 6; i++) { const pt = w.randomGroundSpot(); if (pt) samples.push({ dx: 1, dy: 0, power: 1, tx: pt.x, ty: pt.y - 0.4 }); }
+      for (let i = 0; i < 6; i++) { const pt = w.randomGroundSpot(30, this.rng); if (pt) samples.push({ dx: 1, dy: 0, power: 1, tx: pt.x, ty: pt.y - 0.4 }); }
     }
+    // Updraft flies twice as high, so it can leave through the ceiling and a near-miss of a
+    // ledge drops it into the kill floor: keep every landing sample and pick the best one
+    // that still lands safely under this difficulty's aim jitter.
+    const updraft = type === 'updraft';
+    const scored = [];
     for (const aim of samples) {
       if (aim.tx == null && aim.dy > 0.2) continue; // jumps go up
       const pv = w.previewAction(b, type, aim);
       const imp = pv.impact;
       if (!imp || imp.type !== 'land' && imp.type !== 'blink') continue;
+      if (updraft && this.updraftTooHigh(b, pv)) continue;
       const lx = imp.x, ly = imp.y;
+      if ((updraft || type === 'blinkStrike') && !this.footingSafe(lx, ly)) continue; // Blink drops Phantom wherever the spot is
       const dangerThere = this.dangerAt(b, lx, ly);
       let score = (dangerHere - dangerThere) * 0.9 - 4; // moving costs a shot
       const moved = Math.hypot(lx - b.x, ly - b.y);
@@ -290,9 +304,63 @@ export class AIPlanner {
         score += nearest && Math.hypot(nearest.x - lx, nearest.y - ly) < 12 ? 14 : 2;
         score += 6; // it also fires
       }
-      if (score > (best ? best.score : -Infinity)) best = { key, aim, score, debug: type };
+      const cand = { key, aim, score, debug: type };
+      if (updraft) scored.push(cand);
+      if (score > (best ? best.score : -Infinity)) best = cand;
+    }
+    if (updraft && best) {
+      scored.sort((p, q) => q.score - p.score);
+      best = scored.find((c) => this.updraftSurvivesNoise(b, c.aim)) || null;
     }
     if (best && key !== 'jump') best.score *= 0.6 + this.diff.specialIQ * 0.6;
     return best;
+  }
+
+  // The preview calls a jump landed while the bot can still slide a little, so a spot at a
+  // ledge lip can slide off into the kill floor. Safe when ground (above the floor) lies
+  // under both sides of the landing spot within AI_AIM.ledgeMargin.
+  footingSafe(x, y) {
+    const w = this.world, m = AI_AIM.ledgeMargin;
+    const solids = w.map.terrain.concat(w.map.slopes || []);
+    for (const px of [x - m, x + m]) {
+      if (px < 0 || px > w.map.width) continue; // the arena edge stops the slide (or wraps)
+      if (!solids.some((rc) => px >= rc.x && px <= rc.x + rc.w && rc.y + rc.h > y && rc.y < w.lavaY)) return false;
+    }
+    return true;
+  }
+
+  // Updraft is unsafe when the apex leaves the arena through the top, or sits so close
+  // above something solid that its own rain bursts on Skyla (rain blasts hit their owner).
+  updraftTooHigh(b, pv) {
+    if (!pv.apex) return false;
+    const [ax, ay] = pv.apex;
+    const reach = (b.def.s1.radius || 0) + PHYS.botRadius; // a rain burst this close sideways still hits Skyla
+    return ay < PHYS.ceilingY + AI_AIM.updraftCeilingMargin || this.dropBelow(ax, ay, reach) < AI_AIM.updraftMinDrop;
+  }
+
+  // Vertical distance from (x, y) down to the first solid top (terrain, ramp box or wall) or the
+  // kill floor, over the strip x - half .. x + half.
+  dropBelow(x, y, half) {
+    const w = this.world;
+    let d = w.lavaY - y;
+    for (const rc of w.map.terrain.concat(w.map.slopes || [], w.walls.map((wl) => wl.rect))) {
+      if (x + half < rc.x || x - half > rc.x + rc.w || rc.y + rc.h <= y) continue;
+      d = Math.min(d, Math.max(0, rc.y - y));
+    }
+    return d;
+  }
+
+  // True when the Updraft still lands (not the floor, not the ceiling) at the edges of the jitter plan() adds.
+  updraftSurvivesNoise(b, aim) {
+    const n = this.noise || 0;
+    if (!n) return true;
+    const ang0 = Math.atan2(aim.dy, aim.dx), dA = n * AI_AIM.angleNoiseMul, dP = n * AI_AIM.powerNoiseMul;
+    for (const sa of [-1, 1]) for (const sp of [-1, 1]) {
+      const ang = ang0 + sa * dA;
+      const power = Math.max(0.15, Math.min(1, aim.power * (1 + sp * dP)));
+      const pv = this.world.previewAction(b, 'updraft', { dx: Math.cos(ang), dy: Math.sin(ang), power });
+      if (!pv.impact || pv.impact.type !== 'land' || this.updraftTooHigh(b, pv)) return false;
+    }
+    return true;
   }
 }
