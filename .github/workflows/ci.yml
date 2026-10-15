@@ -77,6 +77,10 @@ jobs:
           sudo mkdir -p /opt/cursor/artifacts && sudo chown -R "$USER" /opt/cursor
       - run: node test/online.mjs
       - run: node test/online-browser.mjs
+      - name: online lobby map labels (M0-07; CHROMIUM_PATH from the locate step)
+        run: node test/online-maps.mjs
+      - name: online settings layout (M0-13; CHROMIUM_PATH from the locate step)
+        run: node test/online-settings-layout.mjs
       - name: offline browser smoke
         run: |
           python3 -m http.server 8123 >/dev/null 2>&1 &

@@ -39,6 +39,8 @@ node test/bughunt.mjs 2
 node scripts/ci/balance-gate.mjs 2
 node test/online.mjs
 CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome node test/online-browser.mjs
+CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome node test/online-maps.mjs
+CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome node test/online-settings-layout.mjs
 python3 -m http.server 8123 & CHROMIUM_PATH=... node test/browser.mjs
 ```
 
