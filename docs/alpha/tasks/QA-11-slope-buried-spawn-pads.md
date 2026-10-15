@@ -1,12 +1,12 @@
 ---
-id: QA-7
+id: QA-11
 milestone: M2
 role: gameplay
 status: todo
 depends: [QA-2]
 severity: P3
 ---
-# QA-7: four spawn pads are drawn inside slope wedges and get pushed sideways on settle
+# QA-11: four spawn pads are drawn inside slope wedges and get pushed sideways on settle
 
 Found while working QA-2. `test/spawns.mjs` prints these as `info` lines (not failures):
 

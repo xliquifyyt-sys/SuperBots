@@ -66,7 +66,7 @@ Changed:
   Frozen Keel 1v1 starts on opposite shelves. On origin/main the same file fails 14 checks.
 - Spec: `tools/gen_spec.py` spawn-selection paragraph rewritten, `docs/spec/05-maps.md` regenerated,
   `docs/spec/11` test table gained the new gate.
-- New task QA-7: four pads (emberpit 9/21, glacierfort 13/35) sit inside slope wedges and are pushed
+- New task QA-11 (filed as QA-7, renamed: the nightly QA run took that id): four pads (emberpit 9/21, glacierfort 13/35) sit inside slope wedges and are pushed
   1.2-2.5 units sideways by settle (pre-existing; printed as info by test/spawns.mjs).
 
 Closest pair after (`pickSpawns`, n = minPlayers..maxPlayers):

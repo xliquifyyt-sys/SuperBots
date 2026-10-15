@@ -42,7 +42,7 @@ for (const id of MAP_IDS) {
   // Every picked pad holds its bot: after World.settle() (which drops bots onto the ground and
   // pushes them out of slopes) no bot has dropped more than 1 unit below its pad, and the settled
   // bots are still 4+ apart. Pads drawn inside a slope wedge get pushed out sideways; that is
-  // printed as info (tracked in QA-7), not failed.
+  // printed as info (tracked in QA-11), not failed.
   const bad = [], drift = new Set();
   let settledGap = Infinity;
   for (let n = m.minPlayers; n <= m.maxPlayers; n++) {
