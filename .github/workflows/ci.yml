@@ -45,6 +45,10 @@ jobs:
       - run: node test/features.mjs
       - run: node test/bughunt.mjs 2
       - run: node test/mapid.mjs
+      - name: generated spec matches the code (tools/gen_spec.py, M0-08a)
+        run: |
+          python3 tools/gen_spec.py
+          git diff --exit-code docs/spec/03-bots.md docs/spec/05-maps.md
 
   balance:
     name: balance band

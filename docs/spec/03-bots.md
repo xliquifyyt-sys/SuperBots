@@ -56,7 +56,7 @@ Implementation: knockMul(b) returns 0 only while Bulwark's centre is within `gua
 - How it resolves:
   - Player taps or drags anywhere on the map; the tap point is the wall position (aim.tx, aim.ty). AI aims use the legacy rule: 1.35 units toward the aim side of the caster.
   - Three stacked segments, each 0.4 wide x 0.85 tall (total column 0.4 x 2.55), centred on the point. The column is clamped inside the arena and pushed out of any terrain it overlaps.
-  - Each segment has wallHp HP (10). Projectiles that are not the owner's hit a segment and deal their damage to it; blasts within their radius also damage segments. Broken segments vanish (wallBreak event).
+  - Each segment has wallHp HP (10). Projectiles that are not the owner's hit a segment and deal their damage to it (10 for a projectile with no damage of its own, such as Toxic Bomb or Singularity); blasts within their radius damage segments by their full damage, the owner's own blasts included. Broken segments vanish (wallBreak event). All of a bot's walls vanish when it is eliminated.
   - Walls last turns:3 counters (placed turn plus two more), decremented at the start of each resolve.
   - Passive hook: while Bulwark's centre is within guardRange 2.5 of a standing segment it owns, Bulwark takes zero knockback (knockMul returns 0).
 
@@ -127,8 +127,8 @@ Implementation: spawnProjectile multiplies missile speed by 1.15 when the owner 
 - In-game text: Instant beam that pierces terrain and bots: 40 damage, then arcs to one more bot nearby for 15.
 - How it resolves:
   - Line from the caster along the aim across the whole map (length = hypot(mapW, mapH)). Ignores terrain and walls.
-  - Every living bot whose body outline (placed hull) comes within beamHalfWidth 0.15 of the beam segment takes 40 (label "Chain Arc"), ordered by distance along the beam. Bots behind the caster are not hit. (Before M0-03 this was a 0.75 circle around the centre.)
-  - Then the nearest bot within arcRange 6 of the FIRST hit bot that was not already hit takes arcDmg 15 (label "Arc"). No knockback from either hit.
+  - Every living bot whose body outline (placed hull) comes within beamHalfWidth 0.15 of the beam segment takes 40 (label "Chain Arc"), ordered by distance along the beam. The segment starts at the caster, so bots behind the caster are not hit unless their outline is within 0.15 of its centre. (Before M0-03 this was a 0.75 circle around the centre.)
+  - Then the nearest bot (centre to centre, allies included, caster excluded) within arcRange 6 of the FIRST hit bot that was not already hit takes arcDmg 15 (label "Arc"). No knockback from either hit.
   - Emits beam events for the renderer (lightning).
 
 ### S2: Static Field (`staticField`)
@@ -139,7 +139,7 @@ Implementation: spawnProjectile multiplies missile speed by 1.15 when the owner 
 - In-game text: Drops a wide field at impact: 30 damage, bots inside are Shocked (no specials for the next 2 turns).
 - How it resolves:
   - On impact: normal blast (30 dmg, radius 3) with effect {shocked: 3}, and a static field {r: 3, turns: 2} is left at the impact point.
-  - At end of turn, every bot inside the field gets Shocked for shockTurns (3 counters = no specials for the next 2 turns).
+  - At the end of the impact turn, once (the field is marked applied), every living bot whose outline is within r gets Shocked for shockTurns (3 counters = no specials for the next 2 turns), allies included. The field object lasts turns:2 but never re-applies. The blast itself only applies Shocked to bots it actually damaged.
 
 ## Warden (`warden`)
 
@@ -209,7 +209,7 @@ Implementation: Wind acceleration on airborne bots (windX x 0.25 per second) is 
 - In-game text: Long wind blast that shoves bots, projectiles and power-ups: 20 damage. Jumping into the wind fights the push.
 - How it resolves:
   - Cone of half-angle 30 degrees, reach 15, from the caster along the aim.
-  - Each enemy inside: 20 damage (label "Gale"), then a shove of 20 x knockMul(target) x brace along the aim, plus -2.5 vertical. brace = max(0.25, 1 - max(0, velocityIntoWind)/16), so a bot moving into the wind resists.
+  - Each other living bot whose centre is inside, allies included (0 damage to allies with friendly fire off, but still shoved): 20 damage (label "Gale"), then a shove of 20 x knockMul(target) x brace along the aim, plus -2.5 vertical. brace = max(0.25, 1 - max(0, velocityIntoWind)/16), so a bot moving into the wind resists.
   - Projectiles in the cone get +20 velocity along the aim; power-ups slide 3.5 units along the aim (clamped inside the map, dropped to ground).
 
 ## Phantom (`phantom`)
@@ -225,7 +225,7 @@ Implementation: Wind acceleration on airborne bots (windX x 0.25 per second) is 
 | Body outline | width -0.89 .. 1.03, height -0.64 .. 0.61 (world units, centre at 0,0, facing right) |
 
 **Passive: After a kill, next special cooldown is 1 turn shorter.**  
-Implementation: On a kill, killer.cdBonus = 1; the next special cast uses cd = max(1, sp.cd - 1) and clears the bonus.
+Implementation: On a kill (while Phantom is alive), killer.cdBonus = 1; the next special cast uses cd = max(1, sp.cd - 1) (minus a further 1 with fast cooldowns) and clears the bonus.
 
 ### S1: Blink Strike (`blinkStrike`)
 
@@ -248,8 +248,8 @@ Design default D-4 keeps Toxic Bomb; the GDD's Smoke Bomb (hides aim guides) is 
 - Numbers: `{"dmg": 5, "radius": 2.4}`
 - In-game text: Toxic cloud at impact: bots inside take 5 damage per tick, up to 35 this turn. The cloud clears when the turn ends.
 - How it resolves:
-  - No blast damage. On impact leaves a toxic field {r: 2.4, turns: 1}.
-  - While the turn resolves the field ticks every 0.4 s: every bot inside takes 5 (label "Toxic", credited to the owner), at most 7 ticks per bot (35 max). The cloud is removed at end of turn.
+  - No blast damage. On impact leaves a toxic field {r: 2.4, turns: 1} (r is BOTS.phantom.s2.radius; s2.dmg is not read, the tick damage is the literal 5).
+  - While the turn resolves the field ticks every 0.4 s: every bot whose outline is within r takes 5 (label "Toxic", credited to the owner except on the owner itself), at most 7 ticks per bot (35 max). The cloud is removed at end of turn.
 
 ## Ricochet (`ricochet`)
 
@@ -275,7 +275,7 @@ Implementation: doJump sets bounceLeft = 1; on terrain contact while airborne wi
 - Secondary parameter: Bounces [1, 2, 3, 4] (default 4).
 - How it resolves:
   - Secondary parameter: bounce count 1..4 (default 4), shown as a button during planning.
-  - Projectile body r 0.3 (sp.r), dmg 35, radius 0.9. On terrain contact while bounced < bounces: reflect velocity with 1.85x restitution and continue. Final impact damage = dmg + 5 x bounces taken.
+  - Projectile body r 0.3 (sp.r), dmg 35, radius 0.9. On terrain contact while bounced < bounces: the normal velocity component is reversed and scaled by 0.85 (v -= 1.85 x vn x n) and the shot continues. Bots and walls end it immediately. Final impact damage = dmg + 5 x bounces taken.
 
 ### S2: Split Shot (`splitShot`)
 
@@ -284,7 +284,7 @@ Implementation: doJump sets bounceLeft = 1; on terrain contact while airborne wi
 - Numbers: `{"dmg": 15, "radius": 0.8}`
 - In-game text: Projectile splits into 4 at apex: 15 damage each.
 - How it resolves:
-  - When vertical velocity crosses from up to down (apex), the shot splits into 4 children at angle offsets -32, -11, +11, +32 degrees with speed x1.1, body 0.14, life 5 s. Each child explodes for 15 / radius 0.8.
+  - When vertical velocity crosses from up to down (apex), the shot splits into 4 children at angle offsets -32, -11, +11, +32 degrees with speed x1.1, body 0.14, life 5 s. Each child explodes for 15 / radius 0.8. A shot that hits something before its apex explodes once for 15 / radius 0.8 and does not split.
 
 ## Gravitas (`gravitas`)
 
@@ -309,7 +309,7 @@ Implementation: knockMul(b) returns the heavy factor (0.6) although weight is me
 - In-game text: Pulls all bots within a huge radius toward the impact point for the rest of the turn.
 - How it resolves:
   - No blast damage. On impact sets the world singularity {x, y, r: 9.1, t: 2.6 s}.
-  - Every step, every living bot within r (and farther than 0.3) is accelerated toward the point at 16 units/s^2 and feels only half gravity. The turn cannot end while the pull is active.
+  - Every step, every living bot within r (and farther than 0.3), the caster included, is accelerated toward the point at 16 units/s^2 and feels only half gravity. The turn cannot end while the pull is active.
 
 ### S2: Shockwave (`shockwave`)
 
