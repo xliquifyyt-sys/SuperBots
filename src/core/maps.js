@@ -199,8 +199,8 @@ export const MAPS = {
       R(20, 13.5, 3, 0.8), R(27, 13.5, 3, 0.8),         // step stones to the centre
     ],
     slopes: [],
-    pads: [{ x: 5, y: 20, to: [25, 7.5], label: 'Rescue vent' },          // under the left shelf: fall past it and get thrown up to the tower cap
-           { x: 44, y: 20, to: [25, 7.5], label: 'Rescue vent' }],        // under the right shelf, same
+    pads: [{ x: 5, y: 20, to: [25, 7.3], label: 'Rescue vent' },          // under the left shelf: fall past it and get thrown up to the tower cap
+           { x: 44, y: 20, to: [25, 7.3], label: 'Rescue vent' }],        // under the right shelf, same
     spawns: [[2, 14.5], [7, 14.5], [12, 14.5], [16, 18.5], [34, 18.5], [38, 14.5], [43, 14.5], [48, 14.5]],
     powerups: [[25, 7.5], [8.5, 9.5], [41.5, 9.5], [15.5, 5], [34.5, 5], [25, 18.5], [21.5, 13], [28.5, 13]],
     killFloor: { type: 'void', y: 23 },
