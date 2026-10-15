@@ -189,3 +189,25 @@ self-eliminations) both skew these numbers.
 - **New tests (additions only, not in CI):** `test/turn-count.mjs` (QA-8). `test/qa-playthrough.mjs` gains
   `QA_SET=2` for the second map rotation.
 - **P0 still open on main:** QA-1 online desync (net-parity 15/30). It is waiting on Ganesh's call on PR #16 (H-05).
+
+## 2026-10-15 (evening) — builder run (producer)
+- **Main at start:** 263b17a; CI green on its PR head (#20), so no main fix needed. No human action on #8 / #16 since the last run.
+- **Attempted:** M0-15 (qa), M0-12 (gameplay, P1), QA-2 (gameplay, P1). Skipped: M0-10/M0-14 (planner.js,
+  conflicts with PR #16 on hold), M0-09 (depends on M0-06, blocked on H-04).
+- **Reviews:** M0-15 APPROVE, M0-12 APPROVE, QA-2 APPROVE (round 2). Each reviewer re-ran every gate in a fresh worktree.
+- **QA-2 round 1** was blocked: new spawns reshuffled matches and `bughunt 2` hit `mine inside terrain`
+  (QA-1d) in sim.js. M0-12's worker had hit the same bug and fixed it (`mineSpot()`), so QA-2 merged M0-12 in;
+  the new spawns then dropped `wallHit` from the random features batch, fixed with an explicit scenario.
+- **PRs:** #21 M0-15, #22 M0-12, #24 QA-2 — all CI green, auto-merged. #16 QA-1 + QA-1a brought up to main
+  (append-only conflicts), all gates green locally on a81a5e1, still on `hold` (H-05).
+- **Balance after today (main, `balance.mjs 3`):** bulwark 67, magmaw 40, volt 52, warden 60, skyla 14,
+  phantom 17, ricochet 55, gravitas 43. With #16 on top: 55/29/45/52/21/31/52/43; balance-gate 2 there has
+  Magmaw at 14% (floor 10%).
+- **Backlog:** M0-05 unblocked (todo). New task QA-11 (slope-buried spawn pads; renamed from QA-7, which the
+  nightly QA run took). Task-id collisions are possible when nightly QA and builder runs overlap.
+- **Reviewer notes left:** `test/spawns.mjs` is a CI gate but not in guard.sh's protected list; M0-12's
+  `freeSpotFor` still falls back to the raw exit when nothing within 6 fits (separation is the second guard);
+  Nimbus power-up point still at the old vent-exit height; Temple Crossing high pad is left-side only;
+  `features.mjs` events seen only by chance in the random batch are fragile.
+- **Gate times (2 cores, 3 workers in parallel):** determinism 43–66 s, headless 45–87 s, features 277–563 s,
+  bughunt 2 54–129 s, balance-gate 2 78–158 s, online 50 s, online-browser 34–152 s, browser 42–64 s.
