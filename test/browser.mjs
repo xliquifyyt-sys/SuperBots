@@ -113,3 +113,43 @@ if (notFound.length) { console.error('FAIL console 404s:', notFound); process.ex
   await b2.close();
   if (missing.length) { console.error('FAIL 404s on load:', missing); process.exit(1); }
 }
+// M0-11: Botpedia and lobby card text is never below 12px at phone width, and cards do not overflow.
+{
+  const b3 = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}), args: ['--no-sandbox'] });
+  const bad = [];
+  for (const [w, h] of [[390, 844], [1280, 720]]) {
+    const p3 = await b3.newPage({ viewport: { width: w, height: h } });
+    for (const [go, sel] of [['menu-botpedia', '#botpedia'], ['menu-lobby', '#bot-cards']]) {
+      await p3.goto((process.env.BASE_URL || 'http://localhost:8123') + '/index.html');
+      await p3.waitForSelector('#btn-quick');
+      await p3.click(`[data-go="${go}"]`);
+      await p3.waitForTimeout(300);
+      const r = await p3.evaluate((sel) => {
+        const out = { cards: 0, min: Infinity, small: [], overflow: [] };
+        for (const card of document.querySelectorAll(sel + ' .card')) {
+          out.cards++;
+          const cr = card.getBoundingClientRect();
+          if (card.scrollWidth > card.clientWidth + 1) out.overflow.push(card.dataset.bot);
+          for (const el of card.querySelectorAll('*')) {
+            if (!el.getClientRects().length) continue;
+            if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+            const fs = parseFloat(getComputedStyle(el).fontSize);
+            out.min = Math.min(out.min, fs);
+            if (fs < 12) out.small.push(card.dataset.bot + ' .' + (el.className || el.tagName) + ' ' + fs + 'px');
+            const er = el.getBoundingClientRect();
+            if (er.width && (er.right > cr.right + 0.5 || er.left < cr.left - 0.5)) out.overflow.push(card.dataset.bot + ' .' + (el.className || el.tagName));
+          }
+        }
+        return out;
+      }, sel);
+      if (r.cards < 8) bad.push(`${sel} at ${w}x${h} shows ${r.cards} cards`);
+      if (r.small.length) bad.push(`${sel} at ${w}x${h} text below 12px: ${r.small.join(', ')}`);
+      if (r.overflow.length) bad.push(`${sel} at ${w}x${h} overflow: ${r.overflow.join(', ')}`);
+      await p3.screenshot({ path: `test/shot-cards-${sel.slice(1)}-${w}x${h}.png`, fullPage: true });
+      console.log('card text min', sel, w + 'x' + h, r.min + 'px', r.cards, 'cards');
+    }
+    await p3.close();
+  }
+  await b3.close();
+  if (bad.length) { console.error('FAIL card text/overflow:', bad); process.exit(1); }
+}
