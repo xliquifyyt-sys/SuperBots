@@ -49,3 +49,16 @@ Agents write the exact specs as tasks M1-01 and M1-02 run; entries appear below.
 - **Do:** open the M0-06 PR, read the one-line test diff. If you agree, add the label `human-approved` and remove
   `hold`; CI re-runs and auto-merges. If you prefer "first listed wins", close the PR and mark M0-06 `done` with
   a note that ties stay as they are.
+
+### H-05 Merge decision for QA-1 (P0 online desync) — balance gate red by sample noise
+- **What:** PR #16 (branch `agent/QA-1-ai-blink-rng-desync`, label `hold`). The AI planner drew from the shared
+  world RNG on the server only, so every online match with a server-AI Phantom desyncs (main: 10/20 net-parity
+  matches desync; branch: 0/30, `online-8p` 3/3 green). Code fix is two lines, approved on correctness by the reviewer.
+- **Why it can't auto-merge:** `scripts/ci/balance-gate.mjs 2` goes red — Skyla 4% vs the 10% floor (main 11%).
+  No gameplay number changed; removing the stray RNG draw changes which random games the 28-game sample plays.
+  Over 8 seeds Skyla is ~13% before and after. Agents won't pick seeds or touch the gate.
+- **Do (pick one):**
+  1. Merge PR #16 manually despite the red `balance` check (fastest; restores online play with AI). Then set
+     QA-1 to `done` in `docs/alpha/tasks/QA-1-ai-blink-rng-desync.md` (or leave it; the next run will).
+  2. Or leave it on `hold`: agents work QA-1a (lift Skyla clear of the floor) next, rebase #16, and CI merges it
+     when green. Online games with AI Phantom stay broken until then.
