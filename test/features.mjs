@@ -153,6 +153,24 @@ for (let i = 0; i < 90; i++) {
   if (w.events.some((e) => e.type === 'wallHit')) seen.events.add('wallHit');
   else { errors++; console.log('ERROR Blink Strike shards into a Bastion Wall did not emit wallHit'); }
 }
+// Bastion Wall: a projectile weaker than a segment's HP chips it (wallHit) and the segment stands.
+// The random batch above only sees this when a sub-10-damage projectile meets a fresh segment, so
+// whether it shows up there depends on spawn positions (QA-2 moved them); cover it explicitly.
+{
+  const m = new Match([{ name: 'A', botId: 'volt', team: 0, isAI: true }, { name: 'B', botId: 'bulwark', team: 1, isAI: true }], { map: 'emberpit', hazards: false, powerups: 'off', airStrikes: 'off' }, 3);
+  m.start();
+  const w = m.world;
+  w.startTurn();
+  for (const b of w.bots) w.submit(b.id, { type: 'skip' });
+  w.resolve();
+  const [a, bw] = w.bots;
+  const wall = { rect: { x: a.x + 2.3, y: a.y - 1.2, w: 0.4, h: 1.7 }, owner: bw.id, hp: BOTS.bulwark.s1.wallHp, turns: 3, color: bw.color, seg: 0 };
+  w.walls.push(wall);
+  w.spawnProjectile(a, { dx: 1, dy: 0, power: 1 }, { kind: 'shard', dmg: BOTS.bulwark.s1.wallHp / 2 - 1, radius: 0.5 });
+  w.runToEnd();
+  if (w.events.some((e) => e.type === 'wallHit') && w.walls.includes(wall) && wall.hp > 0 && wall.hp < BOTS.bulwark.s1.wallHp) seen.events.add('wallHit');
+  else { errors++; console.log('ERROR wall chip: no wallHit or the segment broke/was untouched, hp', wall.hp); }
+}
 
 const allSpecials = BOT_IDS.flatMap((id) => [BOTS[id].s1.name, BOTS[id].s2.name]);
 const missingSpecials = allSpecials.filter((s) => !seen.specials.has(s));

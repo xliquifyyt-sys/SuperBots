@@ -65,7 +65,7 @@ export const MAPS = {
       R(20, 6.5, 6, 0.9),                               // crane arm (cover over the first tier)
     ],
     slopes: [S(20, 12.6, 4, 2.4, 1)],                   // ramp onto the first tier
-    spawns: [[2, 14.5], [6, 14.5], [15, 14.5], [19, 14.5], [27, 12.1], [35, 9.7], [43, 14.5], [22, 14.5]],
+    spawns: [[2, 14.5], [6.5, 14.5], [14.5, 14.5], [16.5, 9.5], [19, 14.5], [27, 12.1], [35, 9.7], [43, 14.5]],   // 8th pad on the catwalk (was 22,14.5 on the ramp foot, 3.0 from 19,14.5); 6 -> 6.5 and 15 -> 14.5 for margin
     powerups: [[23, 6], [43, 14.5], [5, 14.5], [16.5, 9.5], [28, 12.1], [36, 9.7], [10.5, 12.5], [2, 14.5]],
     killFloor: { type: 'lava', y: 18.6 },
     teleporters: true,
@@ -156,7 +156,7 @@ export const MAPS = {
       R(36, 6.5, 4, 0.8), R(36, 5.1, 0.8, 1.4),         // mirrored L above the right ledge, post at its left end
     ],
     slopes: [],
-    spawns: [[2, 15.5], [7.2, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [39.3, 15.5], [43, 15.5], [45.5, 15.5]],
+    spawns: [[2, 15.5], [5.5, 10.5], [7.2, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [40, 15.5], [44.5, 15.5]],   // 4 pads a side; the right ledge (39..46) only fits two 4+ apart
     powerups: [[23, 3], [23, 6.5], [5.5, 10.5], [40.5, 10.5], [14, 12.5], [32, 12.5], [2, 15.5], [44, 15.5]],
     mines: [],                                          // none at the start: one spawns every 3 turns
     killFloor: { type: 'water', y: 18.6 },
@@ -274,8 +274,12 @@ for (const m of Object.values(MAPS)) {
 export const MAP_IDS = Object.keys(MAPS);
 export const THEME_IDS = Object.keys(THEMES);
 
+// Pads are sorted left to right (then top to bottom) before picking, so n = 2 takes the two
+// outermost pads (mirrored on every map) and team mode's "teammates get adjacent pads" holds.
+// Evenly spaced picks over the sorted list; test/spawns.mjs asserts every pick is 4+ apart.
+// Pure function of (map, n): no RNG.
 export function pickSpawns(map, n) {
-  const s = map.spawns;
+  const s = map.spawns.map((p, i) => [p, i]).sort((a, b) => a[0][0] - b[0][0] || a[0][1] - b[0][1] || a[1] - b[1]).map((e) => e[0]);
   if (n >= s.length) return s.slice(0, n);
   if (n === 1) return [s[0]];
   const out = [];

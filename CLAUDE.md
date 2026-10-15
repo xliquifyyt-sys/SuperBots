@@ -32,6 +32,7 @@ code disagree, the running code is the truth and the doc is the bug.
 npm install
 node test/determinism.mjs 6      # MUST pass — online play depends on it
 node test/rules.mjs
+node test/spawns.mjs
 node test/headless.mjs 20
 node test/features.mjs
 node test/bughunt.mjs 2

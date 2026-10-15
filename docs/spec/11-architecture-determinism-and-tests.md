@@ -67,6 +67,7 @@ docs/                        GDD, roadmap, status, this spec
 | `node test/net-parity.mjs 2` | server-style (plans AI) vs client-style (replays actions) on every map, digests must match every turn (CI) |
 | `node test/ai-purity.mjs 1` | every `AIPlanner.plan()` call leaves `world.rng` and the world state untouched (CI) |
 | `node test/online-8p.mjs [map]` | real server, 4 ws clients + 4 server AI; every client digest-identical every turn |
+| `node test/spawns.mjs` | spawn picks 4+ units apart for every map and player count, mirrored 1v1 pads, no bot drops off its pad on settle (gate, QA-2) |
 | `node test/online.mjs` | scripted clients against the real server: friends, invite, full match, reconnect |
 | `node test/online-browser.mjs` | two Chromium windows through the real online menus (needs `CHROMIUM_PATH`) |
 | `node test/bughunt.mjs 5` | 8-bot invariant checks on every map (gate runs `2`) |
