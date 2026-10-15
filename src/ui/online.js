@@ -291,7 +291,7 @@ class Online {
     const settings = this.lobby.settings;
     for (const [key, label, opts, isBool] of SETTING_FIELDS) {
       const d = document.createElement('div');
-      d.className = 'setting';
+      d.className = 'setting' + (Object.keys(opts).length > 4 ? ' wide' : '');
       d.innerHTML = `<label>${label}</label>`;
       const seg = document.createElement('div');
       seg.className = 'seg';
