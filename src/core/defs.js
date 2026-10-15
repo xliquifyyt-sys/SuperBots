@@ -17,6 +17,9 @@ export const PHYS = {
   weightJump: { light: 1.18, medium: 1.0, heavy: 0.86 },
   mass: { light: 0.7, medium: 1.0, heavy: 1.6 },   // bot-bot collisions: heavies shove, lights get shoved
   botBump: 0.35,          // restitution between bots
+  sepPasses: 6,           // M0-12: max bot-bot separation passes per step when terrain pushes a separated bot back (keeps bots out of terrain)
+  mineClearance: 0.35,    // a spike mine's body radius that must clear every block where it spawns (QA-1d)
+  mineSpotTries: 8,       // random surface spots drawn for a spike mine before giving up
   hitRadius: { light: 0.62, medium: 0.7, heavy: 0.8 },   // bots are drawn 25% larger, so the hit circles grew with them
   botVisualScale: 1.25,   // sprite size multiplier  // what projectiles and blasts have to reach: the painted sprites are wider than the 0.5 body
   slopeGrip: 2.6,         // below this speed a bot on a ramp holds still instead of creeping down

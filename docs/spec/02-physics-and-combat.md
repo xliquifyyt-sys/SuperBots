@@ -22,6 +22,7 @@ Everything here is in `src/core/sim.js` with constants in `src/core/defs.js` (`P
 | weightKnockback | light 1.3, medium 1.0, heavy 0.6 | knockback taken multiplier |
 | mass | light 0.7, medium 1.0, heavy 1.6 | bot-bot collision mass |
 | botBump | 0.35 | restitution between bots |
+| sepPasses | 6 | max bot-bot separation passes per step when terrain pushes a separated bot back |
 | knockbackPerDamage | 0.336 units/s per damage point | base shove |
 | botVisualScale | 1.25 | sprites are drawn 25% larger than the 1-unit body |
 | botRadius | 0.5 | legacy radius, now used only for spawn helpers and particles |
@@ -105,7 +106,7 @@ Status and hazard damage ignores the host damage multiplier but still respects P
 
 ## Bot-bot collisions
 
-Every pair of living bots whose polygons overlap is separated in proportion to the other's mass, then an impulse with restitution 0.35 is applied along the contact normal using the two masses. A bot resting on top of another counts as grounded. Contact power-ups transfer on any contact: Toxin gives Poison (3 counters), Frost gives Frozen (2), Shockwire gives Shocked (2); the holder loses the charge.
+Every pair of living bots whose polygons overlap is separated in proportion to the other's mass, then an impulse with restitution 0.35 is applied along the contact normal using the two masses. A bot resting on top of another counts as grounded. Every bot the separation moved is then resolved against terrain again, because the push can shove a bot into a block (a bot arriving on top of one that stands on a platform) and the turn can end on the very next check. If terrain pushed a bot back into its partner, the pair is separated again, positions only (no second impulse, no second contact transfer), up to `sepPasses` times per step, so the partner gives way instead of the bot resting inside the block (M0-12). Contact power-ups transfer on any contact: Toxin gives Poison (3 counters), Frost gives Frozen (2), Shockwire gives Shocked (2); the holder loses the charge.
 
 ## Walls (Bastion Wall)
 
