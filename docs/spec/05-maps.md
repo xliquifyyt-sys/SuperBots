@@ -338,8 +338,8 @@ Each theme defines the procedural palette (used when painted art is missing) and
 **Power-up points**: [[25, 7.5], [8.5, 9.5], [41.5, 9.5], [15.5, 5], [34.5, 5], [25, 18.5], [21.5, 13], [28.5, 13]]
 
 **Teleporter pads** (touching one flings the bot to `to` with zero velocity; 0.8 s cooldown):
-- (5, 20) to [25, 7.5] (Rescue vent)
-- (44, 20) to [25, 7.5] (Rescue vent)
+- (5, 20) to [25, 7.3] (Rescue vent)
+- (44, 20) to [25, 7.3] (Rescue vent)
 
 **Hazards**:
 - **Gust** every 3 turns: windX is set to +/-11 (random side) for that turn only, 0 otherwise; warning the turn before. Wind accelerates airborne bots by windX x 0.25 per second and projectiles by windX x 0.6 per second. Skyla ignores the bot push.
