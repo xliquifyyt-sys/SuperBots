@@ -31,7 +31,7 @@ Each theme defines the procedural palette (used when painted art is missing) and
 
 ## Spawn selection
 
-`pickSpawns(map, n)` returns the first n pads when n >= 8, else pads at indices round(i x 7 / (n - 1)) so players spread across the map. In Teams mode the roster is sorted by team first so teammates get adjacent pads. Before turn 1 every bot is dropped straight down from its pad until it rests on terrain (`settle`).
+`pickSpawns(map, n)` first sorts the 8 pads left to right (ties: top to bottom, then list order), so the order they are written in `maps.js` does not matter. It returns all of them when n >= 8, else the sorted pads at indices round(i x 7 / (n - 1)). So n = 2 always takes the outermost pads, which are mirrored on every map (their x positions sum to the map width +- 1), and picks always run left to right. It is a pure function of (map, n) and draws no RNG. In Teams mode the roster is sorted by team first so teammates get adjacent pads. Before turn 1 every bot is dropped straight down from its pad until it rests on terrain (`settle`); a pad drawn inside a slope wedge is pushed out of the slope instead. `test/spawns.mjs` asserts, for every map and every n from minPlayers to maxPlayers, that no two picked pads (and no two settled bots) are closer than 4 units, that n = 2 is mirrored, and that no bot drops more than 1 unit below its pad.
 
 ## Per-map data
 
@@ -109,7 +109,7 @@ Each theme defines the procedural palette (used when painted art is missing) and
 |---|---|---|---|---|
 | 20 | 12.6 | 4 | 2.4 | 1 |
 
-**Spawn pads** (8, picked evenly spaced for fewer players): [[2, 14.5], [6, 14.5], [15, 14.5], [19, 14.5], [27, 12.1], [35, 9.7], [43, 14.5], [22, 14.5]]
+**Spawn pads** (8, picked evenly spaced for fewer players): [[2, 14.5], [6.5, 14.5], [14.5, 14.5], [16.5, 9.5], [19, 14.5], [27, 12.1], [35, 9.7], [43, 14.5]]
 
 **Power-up points**: [[23, 6], [43, 14.5], [5, 14.5], [16.5, 9.5], [28, 12.1], [36, 9.7], [10.5, 12.5], [2, 14.5]]
 
@@ -259,7 +259,7 @@ Each theme defines the procedural palette (used when painted art is missing) and
 | 36 | 6.5 | 4 | 0.8 |
 | 36 | 5.1 | 0.8 | 1.4 |
 
-**Spawn pads** (8, picked evenly spaced for fewer players): [[2, 15.5], [7.2, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [39.3, 15.5], [43, 15.5], [45.5, 15.5]]
+**Spawn pads** (8, picked evenly spaced for fewer players): [[2, 15.5], [5.5, 10.5], [7.2, 15.5], [15, 12.5], [31, 12.5], [34.5, 15.5], [40, 15.5], [44.5, 15.5]]
 
 **Power-up points**: [[23, 3], [23, 6.5], [5.5, 10.5], [40.5, 10.5], [14, 12.5], [32, 12.5], [2, 15.5], [44, 15.5]]
 

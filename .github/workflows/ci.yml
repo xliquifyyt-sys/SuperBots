@@ -41,6 +41,7 @@ jobs:
       - run: npm ci || npm install
       - run: node test/determinism.mjs 6
       - run: node test/rules.mjs
+      - run: node test/spawns.mjs
       - run: node test/headless.mjs 20
       - run: node test/features.mjs
       - run: node test/bughunt.mjs 2
