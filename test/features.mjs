@@ -46,38 +46,6 @@ for (let i = 0; i < 90; i++) {
   else { errors++; console.log('ERROR turn-cap tie did not enter Sudden Death'); }
 }
 
-// D-2: a power-up lasts TURN.powerupExpire turns counting its spawn turn, counts down with a
-// powerupCountdown event each turn start, and is removed with a powerupExpire event.
-{
-  const m = new Match(
-    [{ name: 'A', botId: 'volt', team: 0, isAI: true }, { name: 'B', botId: 'warden', team: 1, isAI: true }],
-    { map: 'emberpit', hazards: false, powerups: 'high', airStrikes: 'off' },
-    7,
-  );
-  m.start();
-  const w = m.world;
-  let pu = null, spawnTurn = 0, ok = true;
-  const counts = [];
-  for (let k = 0; k < 20 && ok; k++) {
-    w.startTurn();
-    if (!pu) {
-      if (w.powerups.length) { pu = w.powerups[0]; spawnTurn = w.turn; if (pu.turnsLeft !== TURN.powerupExpire) ok = false; }
-      continue;
-    }
-    const cd = w.events.find((e) => e.type === 'powerupCountdown' && e.id === pu.id);
-    const ex = w.events.find((e) => e.type === 'powerupExpire' && e.id === pu.id);
-    if (ex) {
-      if (w.turn - spawnTurn !== TURN.powerupExpire || w.powerups.includes(pu)) ok = false;
-      else { seen.events.add('powerupExpire'); }
-      break;
-    }
-    if (!cd || cd.turnsLeft !== TURN.powerupExpire - (w.turn - spawnTurn) || !w.powerups.includes(pu)) { ok = false; break; }
-    counts.push(cd.turnsLeft);
-  }
-  if (ok && pu && counts.join(',') === Array.from({ length: TURN.powerupExpire - 1 }, (_, i) => TURN.powerupExpire - 1 - i).join(',') && seen.events.has('powerupExpire')) seen.events.add('powerupCountdown');
-  else { errors++; console.log('ERROR power-up expiry (D-2): spawn turn', spawnTurn, 'countdown', counts.join(','), 'ok', ok); }
-}
-
 // M0-12: two bots through Nimbus rescue vents in the same turn (both vents share one exit),
 // and a bot sent to an exit another bot already stands on, all end the turn outside terrain
 // (hull more than 0.25 inside a solid fails) and not stacked inside each other.
@@ -131,6 +99,38 @@ for (let i = 0; i < 90; i++) {
     }
   }
   if (bad || n < 1000) { errors++; console.log(`ERROR mine spot (QA-1d): ${bad} of ${n} sampled spots overlap a block`); }
+}
+
+// D-2: a power-up lasts TURN.powerupExpire turns counting its spawn turn, counts down with a
+// powerupCountdown event each turn start, and is removed with a powerupExpire event.
+{
+  const m = new Match(
+    [{ name: 'A', botId: 'volt', team: 0, isAI: true }, { name: 'B', botId: 'warden', team: 1, isAI: true }],
+    { map: 'emberpit', hazards: false, powerups: 'high', airStrikes: 'off' },
+    7,
+  );
+  m.start();
+  const w = m.world;
+  let pu = null, spawnTurn = 0, ok = true;
+  const counts = [];
+  for (let k = 0; k < 20 && ok; k++) {
+    w.startTurn();
+    if (!pu) {
+      if (w.powerups.length) { pu = w.powerups[0]; spawnTurn = w.turn; if (pu.turnsLeft !== TURN.powerupExpire) ok = false; }
+      continue;
+    }
+    const cd = w.events.find((e) => e.type === 'powerupCountdown' && e.id === pu.id);
+    const ex = w.events.find((e) => e.type === 'powerupExpire' && e.id === pu.id);
+    if (ex) {
+      if (w.turn - spawnTurn !== TURN.powerupExpire || w.powerups.includes(pu)) ok = false;
+      else { seen.events.add('powerupExpire'); }
+      break;
+    }
+    if (!cd || cd.turnsLeft !== TURN.powerupExpire - (w.turn - spawnTurn) || !w.powerups.includes(pu)) { ok = false; break; }
+    counts.push(cd.turnsLeft);
+  }
+  if (ok && pu && counts.join(',') === Array.from({ length: TURN.powerupExpire - 1 }, (_, i) => TURN.powerupExpire - 1 - i).join(',') && seen.events.has('powerupExpire')) seen.events.add('powerupCountdown');
+  else { errors++; console.log('ERROR power-up expiry (D-2): spawn turn', spawnTurn, 'countdown', counts.join(','), 'ok', ok); }
 }
 
 const allSpecials = BOT_IDS.flatMap((id) => [BOTS[id].s1.name, BOTS[id].s2.name]);
