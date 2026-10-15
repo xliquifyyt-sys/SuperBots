@@ -44,8 +44,8 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
 
 - [x] `node test/net-parity.mjs 3` exits 0 (0 desynced).
 - [x] `node test/online-8p.mjs` passes 3 runs in a row.
-- [ ] `node test/determinism.mjs 6` and all CLAUDE.md gates are green. (all green except
-      `scripts/ci/balance-gate.mjs 2`: Skyla 4% vs the 10% floor, see Log and QA-1a)
+- [x] `node test/determinism.mjs 6` and all CLAUDE.md gates are green (on the tree combined with
+      QA-1a; balance-gate 2 Skyla 29%, verified by the reviewer on 34b187b).
 - [x] `test/net-parity.mjs 2` is added to `.github/workflows/ci.yml` (additions only).
 
 ## Log
