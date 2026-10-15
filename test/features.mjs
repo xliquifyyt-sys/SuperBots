@@ -76,6 +76,27 @@ for (let i = 0; i < 90; i++) {
   else { errors++; console.log('ERROR power-up expiry (D-2): spawn turn', spawnTurn, 'countdown', counts.join(','), 'ok', ok); }
 }
 
+// wallHit needs a projectile weaker than one wall segment, and only Blink Strike shards (8 vs 10 HP)
+// are. The batch above may never put a shard into a wall, so cover it with real actions:
+// Bulwark walls itself off, Phantom blinks to the far side, and its shards lock on to Bulwark.
+{
+  const m = new Match(
+    [{ name: 'A', botId: 'bulwark', team: 0 }, { name: 'B', botId: 'phantom', team: 1 }],
+    { map: 'frozenkeel', hazards: false, powerups: 'off', airStrikes: 'off' },
+    3,
+  );
+  m.start();
+  const w = m.world;
+  w.bots[0].x = 9; w.bots[0].y = 7.6; w.bots[1].x = 21; w.bots[1].y = 7.6; w.settle();
+  m.beginPlan();
+  m.submitAction(0, { type: 's1', aim: { dx: 1, dy: 0, power: 1, tx: 11, ty: 7.4 }, locked: true });
+  m.submitAction(1, { type: 's1', aim: { dx: -1, dy: 0, power: 1, tx: 13, ty: 7.6 }, locked: true });
+  m.beginResolve();
+  w.runToEnd();
+  if (w.events.some((e) => e.type === 'wallHit')) seen.events.add('wallHit');
+  else { errors++; console.log('ERROR Blink Strike shards into a Bastion Wall did not emit wallHit'); }
+}
+
 const allSpecials = BOT_IDS.flatMap((id) => [BOTS[id].s1.name, BOTS[id].s2.name]);
 const missingSpecials = allSpecials.filter((s) => !seen.specials.has(s));
 const missingPowerups = POWERUP_IDS.filter((p) => !seen.powerups.has(p));

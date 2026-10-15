@@ -885,7 +885,7 @@ export class World {
           this.kill(b, null, 'fell', 0);
         }
       }
-      if (b.y > this.map.height + 3 || b.y < -12) this.kill(b, null, 'fell', 0);
+      if (b.y > this.map.height + 3 || b.y < PHYS.ceilingY) this.kill(b, null, 'fell', 0);
     }
     // Toxic clouds tick while the turn resolves: 5 damage every 0.4s, at most 7 ticks per bot.
     for (const f of this.fields) {

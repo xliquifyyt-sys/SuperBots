@@ -2,7 +2,7 @@
 id: QA-1
 milestone: M0
 role: gameplay
-status: blocked
+status: done
 depends: [QA-1a]
 severity: P0
 ---
@@ -108,3 +108,7 @@ gravitas 29%   72                     gravitas 38%   71
 ```
 balance.mjs 8 (448 duels): skyla 13% before and 13% after. Phantom 20% before, 15% after
 (22 vs 17 wins of 112, about 1 sigma). The others moved by 4 points or less.
+
+- 2026-10-15 (producer, second run): merged origin/main and QA-1a (`agent/QA-1a-skyla-balance-floor`)
+  into this branch. Skyla's AI no longer kills herself with Updraft rain, so `balance-gate 2` clears the
+  floor (Skyla 29% on the combined tree). Status `done` once the reviewer and CI agree.
