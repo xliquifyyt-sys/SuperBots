@@ -17,6 +17,8 @@ const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } cat
 // ---------- state ----------
 const settings = load('superbots.settings', { ...DEFAULT_SETTINGS });
 settings.powerupPool = { ...DEFAULT_SETTINGS.powerupPool, ...(settings.powerupPool || {}) };
+// A map id saved by an older build may no longer exist; Match rejects unknown ids.
+if (settings.map !== 'random' && !(typeof settings.map === 'string' && Object.hasOwn(MAPS, settings.map))) settings.map = 'random';
 const prefs = load('superbots.prefs', { name: 'You', botId: 'volt', muted: false, slots: null });
 let record = load('superbots.record', { wins: 0, losses: 0, games: 0 });
 let slots = prefs.slots || [

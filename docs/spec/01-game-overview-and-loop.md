@@ -12,7 +12,7 @@ Modes: **Free-for-all** (every bot for itself) and **Teams** (up to 4 teams: Blu
 Main menu -> Quick 1v1 | Custom Game lobby -> [Turn loop] -> Results -> Rematch | Menu
 ```
 
-The lobby builds a roster of 2 to 8 players (name, bot, team, human or AI) and a settings object. `Match` picks the map (random among maps whose maxPlayers >= player count, or the chosen one), applies bot restrictions (mirror or random), assigns spawn pads, builds the `World`, and starts the loop.
+The lobby builds a roster of 2 to 8 players (name, bot, team, human or AI) and a settings object. `Match` picks the map (random among maps whose maxPlayers >= player count, or the chosen one; a known map that cannot seat the roster also falls back to a random eligible map, and an id that is not `random` or in `MAPS` throws an error listing the valid ids), applies bot restrictions (mirror or random), assigns spawn pads, builds the `World`, and starts the loop.
 
 ## Phases
 

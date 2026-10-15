@@ -47,6 +47,7 @@ jobs:
       # QA-1: server-style vs client-style replay must agree; AI planning must not touch the world.
       - run: node test/net-parity.mjs 2
       - run: node test/ai-purity.mjs 1
+      - run: node test/mapid.mjs
 
   balance:
     name: balance band

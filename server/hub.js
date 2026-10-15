@@ -3,6 +3,7 @@
 
 import { randomInt } from 'crypto';
 import { AI_NAMES, DEFAULT_SETTINGS } from '../src/core/defs.js';
+import { MAPS } from '../src/core/maps.js';
 import { Match, packAction, worldDigest } from '../src/core/match.js';
 import { addNotification, areFriends, friendIds, friendState, listNotifications, recordResult, userById } from './db.js';
 
@@ -26,7 +27,8 @@ export function sanitizeSettings(input = {}) {
   if (['none', 'mirror', 'random'].includes(src.restriction)) s.restriction = src.restriction;
   if (typeof src.friendlyFire === 'boolean') s.friendlyFire = src.friendlyFire;
   if (['easy', 'normal', 'hard'].includes(src.aiDifficulty)) s.aiDifficulty = src.aiDifficulty;
-  if (typeof src.map === 'string' && src.map.length < 40) s.map = src.map;
+  // Only 'random' or a real MAPS id; anything else falls back to the default so Match never throws.
+  if (src.map === 'random' || (typeof src.map === 'string' && Object.hasOwn(MAPS, src.map))) s.map = src.map;
   if (src.powerupPool && typeof src.powerupPool === 'object') {
     for (const k of Object.keys(s.powerupPool)) if (typeof src.powerupPool[k] === 'boolean') s.powerupPool[k] = src.powerupPool[k];
   }
