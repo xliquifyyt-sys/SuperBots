@@ -23,20 +23,20 @@ Full turn loop; 8 bots with passives and 16 specials including two point-target 
 
 ## Balance snapshot
 
-Measured 14 October 2026 on `main` at `06ac459` with `node test/balance.mjs 3`: AI-versus-AI 1v1 round robin, all 56 ordered pairings x 3 seeds = 168 duels, average 7.3 turns per duel.
+Measured 15 October 2026 after QA-1a (AI fixes for Skyla's Updraft and the AI's point-target moves; no ability numbers changed) with `node test/balance.mjs 3`: AI-versus-AI 1v1 round robin, all 56 ordered pairings x 3 seeds = 168 duels, average 6.9 turns per duel.
 
 | Bot | Win rate | Avg damage dealt per game | In 40-60% band |
 |---|---|---|---|
-| Warden | 69% | 101 | no (high) |
-| Bulwark | 62% | 105 | no (high) |
-| Volt | 55% | 106 | yes |
-| Ricochet | 52% | 101 | yes |
-| Magmaw | 45% | 65 | yes |
-| Gravitas | 29% | 73 | no (low) |
-| Phantom | 21% | 45 | no (low) |
-| Skyla | 12% | 49 | no (low) |
+| Bulwark | 60% | 110 | yes |
+| Volt | 57% | 107 | yes |
+| Warden | 52% | 105 | yes |
+| Ricochet | 40% | 100 | yes |
+| Magmaw | 36% | 65 | no (low) |
+| Phantom | 33% | 78 | no (low) |
+| Gravitas | 33% | 75 | no (low) |
+| Skyla | 26% | 57 | no (low) |
 
-Four of eight bots are inside the 40 to 60% target band; Skyla and Phantom are far below it. With 3 seeds each bot plays 42 duels, so one duel is about 2.4 points; treat differences under about 10 points as noise. Earlier figures (Warden 74%, Volt 64%, Bulwark 62%, Skyla 48%, Phantom 40%, Ricochet 38%, Gravitas 38%, Magmaw 33%) predate the v41 ability pass and are superseded. Refresh with `node test/balance.mjs 3`; the CI gate is `node scripts/ci/balance-gate.mjs 2`.
+Four of eight bots are inside the 40 to 60% target band and the spread is 26 to 60% (it was 12 to 69% before QA-1a). With 3 seeds each bot plays 42 duels, so one duel is about 2.4 points; treat differences under about 10 points as noise. The 8-seed run (`node test/balance.mjs 8`) gives Bulwark 51%, Volt 58%, Warden 56%, Ricochet 40%, Gravitas 40%, Magmaw 32%, Skyla 30%, Phantom 29%. The previous snapshot (14 October 2026, `06ac459`: Warden 69%, Bulwark 62%, Volt 55%, Ricochet 52%, Magmaw 45%, Gravitas 29%, Phantom 21%, Skyla 12%) is superseded: Skyla's Updraft rain was hitting Skyla herself, and AI Blinks ignored the spot the planner picked. Refresh with `node test/balance.mjs 3`; the CI gate is `node scripts/ci/balance-gate.mjs 2`.
 
 ## Known issues and inconsistencies
 
