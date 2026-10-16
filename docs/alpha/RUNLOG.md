@@ -227,3 +227,19 @@ self-eliminations) both skew these numbers.
 - **Gate times (2 cores, 2 workers in parallel):** determinism 44–54 s, headless 45–48 s, features 387–393 s, bughunt 2 83–95 s,
   bughunt 5 224 s, balance-gate 2 103–110 s, online 50 s, online-browser 67–83 s, browser 52–53 s.
 - **M0 left:** M0-14, M0-16 (both planner.js), QA-1 (#16 hold), M0-06 (#8 hold), M0-09. The two held PRs are the M0 critical path.
+
+## 2026-10-16 (evening) — builder run (producer)
+- **Main at start:** 03579bf; CI green on its PR head (#28), so no main fix needed. No human action on #8 (H-04) or #16 (H-05) since the last run.
+- **Attempted:** M0-16 (gameplay). Skipped: M0-14 (planner.js ~276 is inside held PR #16's hunk), M0-09 (depends on M0-06,
+  blocked on H-04), QA-1 (PR #16 on hold, H-05). No other M0 task was unblocked, so only one worker ran.
+- **M0-16:** `BOTS.volt.s1.aiTeammatePenalty: 40` in defs.js; new `World.beamSegment` shared by `World.chainArc` and the
+  planner; planner subtracts the penalty per teammate on the beam only with friendly fire on. features.mjs +22/−0.
+  Reviewer: 1,200 randomized setups, identical to main in every friendly-fire-off/FFA case; mutation tests fail the new check.
+  `balance.mjs 3` identical before/after (1v1). merge-tree with #16 clean.
+- **Reviews:** M0-16 APPROVE (round 1; reviewer re-ran every gate in its own worktree).
+- **PRs:** #29 M0-16 — CI green, auto-merged.
+- **Filed:** M2-06 (gameplay): planner's arc-jump bonus ignores a teammate the arc can jump to (from M0-16 notes).
+- **Gate times (2 cores, 1 worker + reviewer):** determinism 51–55 s, headless 46–48 s, features 406–431 s, bughunt 2 86–115 s,
+  balance-gate 2 103–106 s, online 49 s, online-browser 91–117 s, browser 50–53 s. CI on #29: ~7 min.
+- **M0 left:** M0-14 (needs #16 in first), QA-1 (#16 hold, H-05), M0-06 (#8 hold, H-04), M0-09 (after M0-06). Every remaining
+  M0 item now waits on Ganesh's two decisions; next run will idle on M0 unless they land.
