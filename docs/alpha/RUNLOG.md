@@ -243,3 +243,63 @@ self-eliminations) both skew these numbers.
   balance-gate 2 103–106 s, online 49 s, online-browser 91–117 s, browser 50–53 s. CI on #29: ~7 min.
 - **M0 left:** M0-14 (needs #16 in first), QA-1 (#16 hold, H-05), M0-06 (#8 hold, H-04), M0-09 (after M0-06). Every remaining
   M0 item now waits on Ganesh's two decisions; next run will idle on M0 unless they land.
+
+## 2026-10-16 (night) — nightly QA (qa)
+- **Main:** 18862f3 (run log after M0-16). PR #16 (QA-1 + QA-1a) is still on `hold` (H-05), so main does not carry the Blink fixes.
+- **Suites (2 cores, two lanes in parallel, so wall times run ~20% above a solo run):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 189 s |
+| rules | pass | 1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.0 turns) | 956 s |
+| bughunt 5 | pass — NO ISSUES FOUND (M0-05 fixed last night's step-rect false positive) | 238 s |
+| features | pass (no specials, power-ups or events missing) | 441 s |
+| headless 60 | pass (0 errors, 7 draws) | 188 s |
+| balance 4 | pass (report) | 227 s |
+| online | pass | 50 s |
+| online-browser | pass | 130 s |
+| browser (static :8123) | pass, no page errors | 48 s |
+| online-maps | pass | 4 s |
+| online-settings-layout | pass | 10 s |
+| spawns | pass | <1 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | pass (nimbus, 13 turns, 4 clients digest-identical) | 42 s |
+| terrain-embed 5 (not in CI) | pass — 1,854 cleanups, no bot embedded | 234 s |
+| net-parity 3 (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 40 s |
+| turn-count (not in CI) | **FAIL** — 18/18 off by one (known QA-8) | 24 s |
+| ai-selfkill 1 (report) | 53 undamaged self-eliminations in 280 hard 1v1s (18.9%, up from 15.4%) — QA-3 | 280 s |
+| qa-playthrough (set 1) | 5/5 reached results, 0 page errors | 344 s |
+| lobby-maplist (new, not in CI) | **FAIL** — 10px sub-labels, 45px buttons (QA-12) | 6 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.6 turns):**
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 68% | 101 |
+| magmaw | 41% | 60 |
+| volt | 52% | 112 |
+| warden | 59% | 95 |
+| skyla | 16% | 56 |
+| phantom | 20% | 43 |
+| ricochet | 52% | 92 |
+| gravitas | 41% | 70 |
+
+  In the 40–60% band: magmaw, volt, warden, ricochet, gravitas (gravitas up from 29%). Headless 60 FFA: Skyla 1/35 (3%),
+  Phantom 3/39 (8%), Ricochet 6/37 (16%); Warden 18/38 (47%) leads.
+- **Self-elimination rise (QA-3):** Phantom 18 (was 14), Magmaw 9 (was 5), worst phantom@frozenkeel 9. Root cause reproduced
+  (`node test/trace.mjs bulwark phantom frozenkeel 5105`): `AIPlanner.plan` drops the scored Blink point `tx`/`ty` when it
+  re-noises the aim, so Blink uses the 18-unit aim-line rule and lands in mid-air over the water. Already fixed on held PR #16;
+  logged in QA-3, no new task.
+- **UI playthroughs** (`node test/qa-playthrough.mjs docs/alpha/qa/2026-10-16`, set 1 since last night ran set 2): Volt v Magmaw on
+  Ember Pit at 390x844, Bulwark v Phantom+Skyla on Frozen Keel at 1280x720, Ricochet v Gravitas on Canopy Ruins at 390x844,
+  Warden in a 6p teams game on Temple Crossing at 1280x720, Skyla in a 4p FFA on Neon Alley at 390x844. All five reached
+  results with no page errors. The 390 runs repeat QA-4 (results table clipped), QA-5 (turn label wraps), QA-6 (enemies
+  off-screen on Neon Alley) and QA-10 (Nova/Mira and You/Nova tags overlap). The AI Magmaw on Ember Pit died on T5 with
+  0 damage taken (QA-3). Evidence: `docs/alpha/qa/2026-10-16/`.
+- **Filed:** QA-12 (P2, M1, client-ui): lobby map picker sub-labels 10px, buttons 45px, ragged rows on phones.
+  QA-13 (P3, M1, client-ui): local player reads "You (you)" in the roster and results. QA-14 (P3, M1, client-ui): in-world
+  "AIR STRIKE" callout has no outline and fades to pale pink on Frozen Keel's sky.
+- **New test (additions only, not in CI):** `test/lobby-maplist.mjs` (QA-12; exits 1 on main).
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30). Waiting on Ganesh's call on PR #16 (H-05). No CI gate is red on main.

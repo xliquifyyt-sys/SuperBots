@@ -38,3 +38,12 @@ Actual: it picks those moves.
 - [ ] All CLAUDE.md gates are green.
 
 ## Log
+
+- 2026-10-16 (qa, nightly on 18862f3): `node test/ai-selfkill.mjs 1` → 53/280 (18.9%), up from 43 (15.4%).
+  Phantom 18 (was 14), Magmaw 9 (was 5); worst bot@map phantom@frozenkeel 9. Reproduced
+  `node test/trace.mjs bulwark phantom frozenkeel 5105`: on T1 the planner scores a point-target Blink
+  (`tx`/`ty`), but `AIPlanner.plan` rebuilds the chosen aim as `{dx, dy, power}` and drops `tx`/`ty`, so
+  the sim's `blinkSpot` uses the aim-line rule: Phantom blinks 18 units from (27.5, 11.4) to (19.25, 11.17)
+  in mid-air and falls into the water (verified with a script reading `pendingActions[1].aim` and the
+  `blink` event). Held PR #16 (QA-1) already carries the `tx`/`ty` pass-through and a `footingSafe` check,
+  so most of the Phantom share should drop when #16 lands; re-measure then.
