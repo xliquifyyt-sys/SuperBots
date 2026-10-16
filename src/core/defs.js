@@ -94,7 +94,7 @@ export const BOTS = {
     id: 'volt', name: 'Volt', cls: 'Medium marksman', hp: 130, weight: 'medium', accuracy: 'high',
     color: '#ffe23a', shape: 'bolt', desc: 'The reliable marksman. Beams ignore walls.',
     passive: 'Missile speed +15%.',
-    s1: { id: 'chainArc', name: 'Chain Arc', cd: 3, desc: 'Instant beam that pierces terrain and bots: 40 damage, then arcs to one more bot nearby for 15.', dmg: 40, arcDmg: 15, arcRange: 6, beamHalfWidth: 0.15 },   // beam hits a bot whose body outline comes within beamHalfWidth of the line
+    s1: { id: 'chainArc', name: 'Chain Arc', cd: 3, desc: 'Instant beam that pierces terrain and bots: 40 damage, then arcs to one more bot nearby for 15.', dmg: 40, arcDmg: 15, arcRange: 6, beamHalfWidth: 0.15, aiTeammatePenalty: 40 },   // beam hits a bot whose body outline comes within beamHalfWidth of the line; aiTeammatePenalty: AI score cost per teammate on the beam when friendly fire is on (M0-16)
     s2: { id: 'staticField', name: 'Static Field', cd: 4, desc: 'Drops a wide field at impact: 30 damage, bots inside are Shocked (no specials for the next 2 turns).', dmg: 30, radius: 3, shockTurns: 3 },
   },
   warden: {

@@ -191,11 +191,14 @@ export class AIPlanner {
         for (const e of enemies) {
           const dx = e.x - b.x, dy = e.y - b.y, d = Math.hypot(dx, dy) || 1;
           const aim = { dx: dx / d, dy: dy / d, power: 1 };
-          // Same body-outline test as World.chainArc (spec 03): beam segment vs placed hull.
-          const len = Math.hypot(w.map.width, w.map.height), ex = b.x + aim.dx * len, ey = b.y + aim.dy * len;
+          // Same segment and body-outline test as World.chainArc (spec 03): beam segment vs placed hull.
+          const { x2: ex, y2: ey } = w.beamSegment(b, aim);
           let hits = 0;
           for (const o of enemies) if (distSegPoly(b.x, b.y, ex, ey, w.botPoly(o)) <= sp.beamHalfWidth) hits++;
-          const score = (30 * hits + (hits && enemies.some((o) => o !== e && Math.hypot(o.x - e.x, o.y - e.y) < sp.arcRange) ? 15 : 0)) * (0.7 + iq * 0.5);
+          // The beam hits teammates too; with friendly fire on they take the full damage (M0-16).
+          let allies = 0;
+          if (w.settings.friendlyFire) for (const o of w.bots) if (o.alive && o !== b && w.sameTeam(o, b) && distSegPoly(b.x, b.y, ex, ey, w.botPoly(o)) <= sp.beamHalfWidth) allies++;
+          const score = (30 * hits + (hits && enemies.some((o) => o !== e && Math.hypot(o.x - e.x, o.y - e.y) < sp.arcRange) ? 15 : 0) - sp.aiTeammatePenalty * allies) * (0.7 + iq * 0.5);
           if (!best || score > best.score) best = { key: slot, aim, score, debug: 'chainArc' };
         }
         return best;
