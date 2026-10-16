@@ -3,6 +3,8 @@
 
 import { PHYS, DMG } from '../core/defs.js';
 
+import { distSegPoly } from '../core/sim.js';
+
 const DEG = Math.PI / 180;
 const PROJECTILE_SPECIALS = ['siegeShell', 'emberSpit', 'staticField', 'anchorBolt', 'pinball', 'splitShot', 'singularity', 'toxicBomb'];
 const JUMP_SPECIALS = ['moltenSlam', 'updraft', 'blinkStrike'];
@@ -189,10 +191,12 @@ export class AIPlanner {
         for (const e of enemies) {
           const dx = e.x - b.x, dy = e.y - b.y, d = Math.hypot(dx, dy) || 1;
           const aim = { dx: dx / d, dy: dy / d, power: 1 };
+          // Same body-outline test as World.chainArc (spec 03): beam segment vs placed hull.
+          const len = Math.hypot(w.map.width, w.map.height), ex = b.x + aim.dx * len, ey = b.y + aim.dy * len;
           let hits = 0;
-          for (const o of enemies) { const t = (o.x - b.x) * aim.dx + (o.y - b.y) * aim.dy; if (t > 0 && Math.hypot(o.x - (b.x + aim.dx * t), o.y - (b.y + aim.dy * t)) < 0.7) hits++; }
-          const score = 30 * hits + (hits && enemies.some((o) => o !== e && Math.hypot(o.x - e.x, o.y - e.y) < 6) ? 15 : 0);
-          if (!best || score > best.score) best = { key: slot, aim, score: score * (0.7 + iq * 0.5), debug: 'chainArc' };
+          for (const o of enemies) if (distSegPoly(b.x, b.y, ex, ey, w.botPoly(o)) <= sp.beamHalfWidth) hits++;
+          const score = (30 * hits + (hits && enemies.some((o) => o !== e && Math.hypot(o.x - e.x, o.y - e.y) < sp.arcRange) ? 15 : 0)) * (0.7 + iq * 0.5);
+          if (!best || score > best.score) best = { key: slot, aim, score, debug: 'chainArc' };
         }
         return best;
       }
