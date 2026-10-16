@@ -123,7 +123,7 @@ Implementation: spawnProjectile multiplies missile speed by 1.15 when the owner 
 
 - Cooldown: 3 turns (fast cooldowns setting: 2).
 - Kind: Instant beam.
-- Numbers: `{"dmg": 40, "arcDmg": 15, "arcRange": 6, "beamHalfWidth": 0.15}`
+- Numbers: `{"dmg": 40, "arcDmg": 15, "arcRange": 6, "beamHalfWidth": 0.15, "aiTeammatePenalty": 40}`
 - In-game text: Instant beam that pierces terrain and bots: 40 damage, then arcs to one more bot nearby for 15.
 - How it resolves:
   - Line from the caster along the aim across the whole map (length = hypot(mapW, mapH)). Ignores terrain and walls.

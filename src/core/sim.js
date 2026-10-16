@@ -586,9 +586,15 @@ export class World {
     }
   }
 
-  chainArc(b, aim, sp) {
+  // Chain Arc beam segment: caster -> caster + aim x map diagonal. Shared with the AI planner
+  // (src/ai/planner.js) so the sim and the planner's hit test cannot drift apart.
+  beamSegment(b, aim) {
     const len = Math.hypot(this.map.width, this.map.height);
-    const ex = b.x + aim.dx * len, ey = b.y + aim.dy * len;
+    return { x1: b.x, y1: b.y, x2: b.x + aim.dx * len, y2: b.y + aim.dy * len };
+  }
+
+  chainArc(b, aim, sp) {
+    const { x2: ex, y2: ey } = this.beamSegment(b, aim);
     this.beams.push({ x1: b.x, y1: b.y, x2: ex, y2: ey, color: b.color, t: this.time });
     this.emit('beam', { x1: b.x, y1: b.y, x2: ex, y2: ey, color: b.color });
     const hit = [];

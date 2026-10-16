@@ -152,11 +152,33 @@ for (let i = 0; i < 90; i++) {
   else { errors++; console.log('ERROR wall chip: no wallHit or the segment broke/was untouched, hp', wall.hp); }
 }
 
+// M0-16: the AI's Chain Arc score counts teammates on the beam when friendly fire is on.
+// Volt at (10,10); two teammates and two enemies on the line to the right, a lone enemy straight up.
+// Friendly fire off: the line through two enemies wins. On: the two allies cost more than the
+// two enemies are worth, so the AI aims at the lone enemy instead.
+{
+  const chainArcAim = (friendlyFire) => {
+    const ids = ['volt', 'warden', 'warden', 'warden', 'warden', 'warden'];
+    const m = new Match(ids.map((botId, k) => ({ name: 'C' + k, botId, team: k < 3 ? 0 : 1, isAI: true })), { mode: 'teams', map: 'emberpit', hazards: false, powerups: 'off', airStrikes: 'off', friendlyFire }, 16);
+    m.start();
+    const w = m.world;
+    const pos = [[10, 10], [14, 10], [18, 10], [22, 10], [26, 10], [10, 2]];
+    w.bots.forEach((o, k) => { o.x = pos[k][0]; o.y = pos[k][1]; o.vx = 0; o.vy = 0; });
+    const volt = w.bots[0], enemies = w.enemiesOf(volt);
+    const c = m.ai.evaluateInstant(volt, 's1', volt.def.s1, enemies, enemies, 0);
+    return c && c.aim;
+  };
+  const off = chainArcAim(false), on = chainArcAim(true);
+  if (off && on && off.dx > 0.99 && on.dy < -0.99) seen.events.add('aiChainArcFriendlyFire');
+  else { errors++; console.log('ERROR M0-16 chainArc aim with friendly fire off/on:', JSON.stringify(off), JSON.stringify(on)); }
+}
+
 const allSpecials = BOT_IDS.flatMap((id) => [BOTS[id].s1.name, BOTS[id].s2.name]);
 const missingSpecials = allSpecials.filter((s) => !seen.specials.has(s));
 const missingPowerups = POWERUP_IDS.filter((p) => !seen.powerups.has(p));
 const wantEvents = ['explosion', 'damage', 'eliminated', 'pickup', 'jump', 'fire', 'beam', 'blink', 'gale', 'crusher', 'geyser', 'reactorPulse', 'airstrike', 'toxic', 'singularity', 'reflect', 'wallBreak', 'bounce', 'contact', 'suddenDeath', 'split', 'patch', 'teleport', 'deflector', 'wallHit'];
 wantEvents.push('powerupCountdown', 'powerupExpire');
+wantEvents.push('aiChainArcFriendlyFire');
 const missingEvents = wantEvents.filter((e) => !seen.events.has(e));
 console.log(`${matches} matches, ${errors} errors, ${Date.now() - t0}ms`);
 console.log('maps:', [...seen.maps].join(', '));
