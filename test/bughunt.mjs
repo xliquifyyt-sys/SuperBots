@@ -48,8 +48,20 @@ for (let run = 0; run < runs; run++) {
         for (const b of w.bots) {
           if (!b.alive) continue;
           for (const rc of w.map.terrain) {
+            // M0-05: stair-step rects (rc.step) are AI/spawn helpers built from slopes; the sim
+            // collides with the slope triangle instead (World.physTerrain drops them), and the
+            // lowest column overhangs the ramp foot by up to 0.5. The slope faces are checked below.
+            if (rc.step) continue;
             const depth = circleRectDepth(b.x, b.y, 0.5, rc);
             if (depth > 0.25) report('bot embedded in terrain', `${w.map.id} T${m.turn} ${b.botId} @${b.x.toFixed(1)},${b.y.toFixed(1)} depth ${depth.toFixed(2)}`);
+          }
+          // M0-05: bots sunk into a ramp, measured against the sloped face the sim collides with.
+          for (const s of w.map.slopes || []) {
+            if (b.x <= s.x || b.x >= s.x + s.w || b.y >= s.y + s.h + 0.5 || b.y <= s.y - 0.5) continue;
+            const [ax, ay] = s.dir === 1 ? [s.x, s.y + s.h] : [s.x, s.y], [bx, by] = s.dir === 1 ? [s.x + s.w, s.y] : [s.x + s.w, s.y + s.h];
+            const len = Math.hypot(bx - ax, by - ay), above = ((by - ay) * (b.x - ax) - (bx - ax) * (b.y - ay)) / len;   // > 0 above the face
+            const depth = 0.5 - above;   // above < 0: centre is behind the face
+            if (depth > 0.25) report('bot embedded in ramp', `${w.map.id} T${m.turn} ${b.botId} @${b.x.toFixed(1)},${b.y.toFixed(1)} depth ${depth.toFixed(2)}`);
           }
           if (b.y > w.lavaY + 0.2) report('bot alive below kill floor', `${w.map.id} T${m.turn} ${b.botId} y=${b.y.toFixed(1)} lava=${w.lavaY.toFixed(1)}`);
           if (b.x < -0.5 || b.x > w.map.width + 0.5) report('bot outside map', `${w.map.id} T${m.turn} ${b.botId} x=${b.x.toFixed(1)}`);
