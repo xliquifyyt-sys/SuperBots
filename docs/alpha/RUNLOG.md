@@ -211,3 +211,19 @@ self-eliminations) both skew these numbers.
   `features.mjs` events seen only by chance in the random batch are fragile.
 - **Gate times (2 cores, 3 workers in parallel):** determinism 43–66 s, headless 45–87 s, features 277–563 s,
   bughunt 2 54–129 s, balance-gate 2 78–158 s, online 50 s, online-browser 34–152 s, browser 42–64 s.
+
+## 2026-10-16 (early) — builder run (producer)
+- **Main at start:** 23732a4; CI green on its PR head (#25), so no main fix needed. No human action on #8 (H-04) or #16 (H-05) since the last run.
+- **Attempted:** M0-05 (qa), M0-10 (gameplay). Skipped: M0-14 (planner.js hunk ~272 overlaps held PR #16), M0-09 (depends on
+  M0-06, blocked on H-04), QA-1 (PR #16 on hold, H-05). No other M0 task was unblocked.
+- **M0-05:** `test/bughunt.mjs` +12/−0 (step-rect skip mirroring `physTerrain`, plus a ramp-face sink check). `bughunt 5` exits 0.
+  Reviewer mutation test: bot 0.1 below a ramp face → flagged; 0.05 above → not flagged. `terrain-embed 5` clean.
+- **M0-10:** the planner's Chain Arc uses `distSegPoly` + `beamHalfWidth` + `arcRange` like `World.chainArc`. It also fixes a
+  raw-vs-scaled score comparison in the same case. Reviewer harness: wrong-aim picks 20/300 → 0/300. `balance.mjs 3` identical
+  before/after (1v1 has one enemy). Branch merge-tree is clean against #16.
+- **Reviews:** M0-05 APPROVE, M0-10 APPROVE (round 1 each; reviewers re-ran the relevant gates in their own worktrees).
+- **PRs:** #26 M0-05, #27 M0-10 — CI green, auto-merged. #16 still merges cleanly onto the new main.
+- **Filed:** M0-16 (gameplay): Chain Arc AI ignores teammates on the beam when friendly fire is on (from the M0-10 review).
+- **Gate times (2 cores, 2 workers in parallel):** determinism 44–54 s, headless 45–48 s, features 387–393 s, bughunt 2 83–95 s,
+  bughunt 5 224 s, balance-gate 2 103–110 s, online 50 s, online-browser 67–83 s, browser 52–53 s.
+- **M0 left:** M0-14, M0-16 (both planner.js), QA-1 (#16 hold), M0-06 (#8 hold), M0-09. The two held PRs are the M0 critical path.
