@@ -173,12 +173,28 @@ for (let i = 0; i < 90; i++) {
   else { errors++; console.log('ERROR M0-16 chainArc aim with friendly fire off/on:', JSON.stringify(off), JSON.stringify(on)); }
 }
 
+// M0-14: the AI values a power-up by whether it can still reach it. Landing on it scores in full
+// even on its last turn; a landing that only gets closer scores while the rest of the way fits in
+// the turns left after this one, and nothing once the power-up will vanish first.
+{
+  const m = new Match([{ name: 'A', botId: 'volt', team: 0, isAI: true }, { name: 'B', botId: 'volt', team: 1, isAI: true }], { map: 'emberpit', hazards: false, powerups: 'off', airStrikes: 'off' }, 5);
+  m.start();
+  const b = m.world.bots[0]; b.x = 10; b.y = 10;
+  const pu = (turnsLeft) => ({ x: 22, y: 10, id: 'amp', turnsLeft });
+  const onIt = [6, 1].map((t) => m.ai.powerupValue(b, pu(t), 22, 10));
+  const closer = [6, 2, 1].map((t) => m.ai.powerupValue(b, pu(t), 16, 10)); // 6 left to go: one more turn
+  const ok = onIt[0] === onIt[1] && onIt[1] > 0 && closer[0] > 0 && closer[1] === closer[0] && closer[2] === 0 && closer[0] < onIt[0];
+  if (ok) seen.events.add('aiPowerupExpiry');
+  else { errors++; console.log('ERROR M0-14 power-up value by turnsLeft: on it', onIt.join(','), 'closer', closer.join(',')); }
+}
+
 const allSpecials = BOT_IDS.flatMap((id) => [BOTS[id].s1.name, BOTS[id].s2.name]);
 const missingSpecials = allSpecials.filter((s) => !seen.specials.has(s));
 const missingPowerups = POWERUP_IDS.filter((p) => !seen.powerups.has(p));
 const wantEvents = ['explosion', 'damage', 'eliminated', 'pickup', 'jump', 'fire', 'beam', 'blink', 'gale', 'crusher', 'geyser', 'reactorPulse', 'airstrike', 'toxic', 'singularity', 'reflect', 'wallBreak', 'bounce', 'contact', 'suddenDeath', 'split', 'patch', 'teleport', 'deflector', 'wallHit'];
 wantEvents.push('powerupCountdown', 'powerupExpire');
 wantEvents.push('aiChainArcFriendlyFire');
+wantEvents.push('aiPowerupExpiry');
 const missingEvents = wantEvents.filter((e) => !seen.events.has(e));
 console.log(`${matches} matches, ${errors} errors, ${Date.now() - t0}ms`);
 console.log('maps:', [...seen.maps].join(', '));
