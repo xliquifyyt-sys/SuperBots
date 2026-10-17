@@ -328,3 +328,10 @@ self-eliminations) both skew these numbers.
 - **Not started:** M1 work. producer.md picks only from the earliest open milestone; added decision **D-7** to
   `docs/alpha/HUMAN_QUEUE.md` so Ganesh can allow M1 to run in parallel with one edit.
 - **PRs:** this run log only. No gates run (no code changed).
+
+## 2026-10-17 (evening) — builder run (producer)
+- **Main at start:** a242130; CI green on its PR head (#34) and Pages deploy green. No main fix needed.
+- **Attempted:** nothing. No change since the 11:30 run: PR #16 (QA-1, H-05) and PR #8 (M0-06, H-04) still carry `hold`,
+  no new commits or comments; D-7 still "no". `git merge-tree` against a242130: both still merge cleanly.
+  M0-09 depends on M0-06. M1 work not started (D-7).
+- **PRs:** this run log only. No gates run (no code changed).
