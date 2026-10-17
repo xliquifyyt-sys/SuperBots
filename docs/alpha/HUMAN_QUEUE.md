@@ -37,6 +37,7 @@ Agents write the exact specs as tasks M1-01 and M1-02 run; entries appear below.
 | D-4 | Phantom s2: Toxic Bomb (current) or Smoke Bomb that hides aim guides (GDD)? | keep Toxic Bomb |
 | D-5 | Destructible terrain in alpha? | yes, for Gravitas/Magmaw specials only (M3) |
 | D-6 | Roster for alpha: current 8 bots, or add more? | current 8 |
+| D-7 | While M0 waits only on H-04/H-05, may builder runs start M1 tasks (client-ui QA fixes, M1-03..05) in parallel? Change the default to **yes** here to unblock the pipeline. | no — builders idle until M0 closes |
 
 ## Approvals
 
