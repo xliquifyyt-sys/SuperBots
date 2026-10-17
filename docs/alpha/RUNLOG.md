@@ -303,3 +303,19 @@ self-eliminations) both skew these numbers.
   "AIR STRIKE" callout has no outline and fades to pale pink on Frozen Keel's sky.
 - **New test (additions only, not in CI):** `test/lobby-maplist.mjs` (QA-12; exits 1 on main).
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30). Waiting on Ganesh's call on PR #16 (H-05). No CI gate is red on main.
+
+## 2026-10-17 — builder run (producer)
+- **Main at start:** 25a8a10; CI green on its PR head (#31), so no main fix needed. No human action on #8 (H-04) or #16 (H-05) since the last run.
+- **Attempted:** M0-14 (gameplay). Skipped: QA-1 (PR #16 on hold, H-05), M0-06 (PR #8 on hold, H-04), M0-09 (depends on M0-06).
+  No other M0 task was unblocked, so only one worker ran. Previous runs deferred M0-14 behind #16; this run did it with a hard
+  constraint that `git merge-tree` against #16's head exits 0 (verified by worker and reviewer).
+- **M0-14:** new `AI_POWERUP` block in defs.js (replaces planner literals); `AIPlanner.powerupValue` gives full value on pickup
+  at any `turnsLeft`, a small approach value (≤ 5.5) for landings that get closer, and 0 when the power-up expires first.
+  features.mjs +16/−0 (`aiPowerupExpiry`). `balance.mjs 3`: bulwark 67→57, gravitas 43→50, magmaw 40→43, rest unchanged.
+- **Reviews:** M0-14 APPROVE (round 1; reviewer re-ran every gate in its own worktree). Nits: second defs import line (deliberate,
+  avoids #16's import hunk); the approach term is new behaviour (`approachMul: 0` restores the old).
+- **PRs:** #32 M0-14 — CI green (~7 min), auto-merged. #16 and #8 still merge cleanly onto the new main.
+- **Gate times (2 cores, 1 worker then reviewer):** determinism 38–40 s, headless 45–145 s, features 341–351 s, bughunt 2 69–203 s,
+  balance-gate 2 86–228 s, online 50 s, online-browser 26–89 s, browser 46–47 s.
+- **M0 left:** QA-1 (#16 hold, H-05), M0-06 (#8 hold, H-04), M0-09 (after M0-06). Every remaining M0 item now waits on Ganesh.
+  Unless he acts or allows M1 work to start in parallel, the next builder run has nothing to pick up.
