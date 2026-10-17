@@ -335,3 +335,64 @@ self-eliminations) both skew these numbers.
   no new commits or comments; D-7 still "no". `git merge-tree` against a242130: both still merge cleanly.
   M0-09 depends on M0-06. M1 work not started (D-7).
 - **PRs:** this run log only. No gates run (no code changed).
+
+## 2026-10-17 (night) — nightly QA (qa)
+- **Main:** 36997cd (run log 2026-10-17c). PR #16 (QA-1 Blink desync fix) and PR #8 (M0-06) still on `hold`, so main
+  does not carry the Blink fixes.
+- **Suites (2 cores, two lanes in parallel, so wall times run ~20% above a solo run):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 134 s |
+| rules | pass | 1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 786 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 211 s |
+| features | pass (90 matches, 0 errors; no specials, power-ups or events missing) | 356 s |
+| headless 60 | pass (0 errors, 4 draws) | 150 s |
+| balance 4 | pass (report) | 189 s |
+| balance-gate 2 (CI) | pass | 89 s |
+| online | pass | 50 s |
+| online-browser | pass | 118 s |
+| browser (static :8123) | pass, no page errors | 54 s |
+| online-maps | pass | 4 s |
+| online-settings-layout | pass | 9 s |
+| spawns | pass | <1 s |
+| mapid | pass | 2 s |
+| online-8p (not in CI) | pass (nimbus, 18 turns, 4 clients digest-identical) | 57 s |
+| terrain-embed 5 (not in CI) | pass — 1,906 cleanups, no bot embedded | 196 s |
+| net-parity 3 (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 37 s |
+| turn-count (not in CI) | **FAIL** — 20/20 off by one (known QA-8) | 21 s |
+| lobby-maplist (not in CI) | **FAIL** — 10px sub-labels, 45px buttons (known QA-12) | 3 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, up from 18.9%) — QA-3 | 213 s |
+| qa-playthrough (set 2) | 5/5 reached results, 0 page errors | 211 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):**
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  In the 40–60% band: bulwark (down from 68% after M0-14), magmaw, volt, ricochet, gravitas. Warden 61% just above.
+  Skyla 14% and Phantom 16% stay far below; both lead the self-elimination counts (phantom 17, skyla 14 of 58;
+  worst phantom@frozenkeel 9). Headless 60 FFA: Skyla 0/35 (0%), Phantom 6/39 (15%); Magmaw 13/36 (36%) leads.
+- **UI playthroughs** (`QA_SET=2 node test/qa-playthrough.mjs docs/alpha/qa/2026-10-17`; last night ran set 1): Magmaw v
+  Ricochet on Magma Works at 1280x720, Phantom v Warden+Volt on Glacier Fortress at 390x844, Gravitas v Skyla on Cloud
+  Steps at 1280x720, Bulwark in a 4p teams game on Nimbus Reach at 390x844, Volt in a 5p FFA on Skyline Grid at 1280x720.
+  All five reached results with no page errors. Repeats seen: QA-4 (results table clipped at 390), QA-5 (turn label
+  wraps), QA-6 (no enemy on screen at Glacier Fortress T1), QA-8 (results say 4 turns, last death T3), QA-9 (SKIP/FIRE
+  unreadable on Cloud Steps and Nimbus), QA-10 (You/Nova tags overlap on Nimbus), QA-12, QA-13 ("You (you)"), and QA-3
+  (AI Warden on Skyline Grid died T3 with 0 damage taken). Cloud Steps/Nimbus cloud puffs render as flat outlined circles;
+  left to M3-01 (art pass). Evidence: `docs/alpha/qa/2026-10-17/` (screenshots as JPEG, `report.json`).
+- **Filed:** QA-15 (P2, M1, client-ui): portrait playback/plan camera leaves ~70% empty sky, bots ~18px tall on Glacier
+  Fortress. QA-16 (P3, M1, client-ui): floating damage number drawn over the HP chip hides the HP value. QA-17 (P3, M1,
+  client-ui): local player's KO callout reads "You KO".
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16 (H-05).
+  No CI gate is red on main and no new crash or desync was found.
