@@ -319,3 +319,12 @@ self-eliminations) both skew these numbers.
   balance-gate 2 86–228 s, online 50 s, online-browser 26–89 s, browser 46–47 s.
 - **M0 left:** QA-1 (#16 hold, H-05), M0-06 (#8 hold, H-04), M0-09 (after M0-06). Every remaining M0 item now waits on Ganesh.
   Unless he acts or allows M1 work to start in parallel, the next builder run has nothing to pick up.
+
+## 2026-10-17 (11:30 UTC) — builder run (producer)
+- **Main at start:** 01bf3bb; CI green on its PR head (#33) and Pages deploy green. No main fix needed.
+- **Attempted:** nothing. Every open M0 item still waits on Ganesh: QA-1 (PR #16, `hold`, H-05), M0-06 (PR #8, `hold`,
+  H-04), M0-09 (depends on M0-06). Neither PR changed since the last run (no label change, no new commits).
+  `git merge-tree` against main 01bf3bb: #16 and #8 both still merge cleanly.
+- **Not started:** M1 work. producer.md picks only from the earliest open milestone; added decision **D-7** to
+  `docs/alpha/HUMAN_QUEUE.md` so Ganesh can allow M1 to run in parallel with one edit.
+- **PRs:** this run log only. No gates run (no code changed).
