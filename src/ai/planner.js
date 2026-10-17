@@ -4,6 +4,7 @@
 import { PHYS, DMG } from '../core/defs.js';
 
 import { distSegPoly } from '../core/sim.js';
+import { AI_POWERUP } from '../core/defs.js';
 
 const DEG = Math.PI / 180;
 const PROJECTILE_SPECIALS = ['siegeShell', 'emberSpit', 'staticField', 'anchorBolt', 'pinball', 'splitShot', 'singularity', 'toxicBomb'];
@@ -100,6 +101,19 @@ export class AIPlanner {
     for (const e of w.enemiesOf(b)) if (Math.hypot(e.x - x, e.y - y) < 2.5) near++;
     if (near >= 2) d += 10 * near;
     return d;
+  }
+
+  // What landing at (lx, ly) is worth toward power-up pu (M0-14). A pickup this turn scores in
+  // full even on the power-up's last turn; getting closer scores a little, but only if the rest
+  // of the way fits in the turns it has left after this one.
+  powerupValue(b, pu, lx, ly) {
+    const P = AI_POWERUP;
+    const full = pu.id === 'repair' && b.hp < b.maxHp * P.repairHpFrac ? P.repairValue : P.value;
+    const dThen = Math.hypot(pu.x - lx, pu.y - ly);
+    if (dThen < P.pickupRange) return full;
+    if (Math.ceil((dThen - P.pickupRange) / P.reachPerTurn) > pu.turnsLeft - 1) return 0; // gone before we get there
+    const closed = Math.hypot(pu.x - b.x, pu.y - b.y) - dThen;
+    return closed > 0 ? full * P.approachMul * Math.min(1, closed / P.reachPerTurn) : 0;
   }
 
   aimSamples(count) {
@@ -276,7 +290,7 @@ export class AIPlanner {
       if (type === 'jump' && !wantMove && (this.threat || 0) < 8 && !camping) score -= 10;
       if (type === 'jump' && camping && moved > 2) score += 6 + 3 * Math.min(4, b.stillTurns); // sitting in one spot under fire gets stale
       // Power-ups
-      for (const pu of w.powerups) { const d = Math.hypot(pu.x - lx, pu.y - ly); if (d < 1.4) score += pu.id === 'repair' && b.hp < b.maxHp * 0.7 ? 34 : 22; }
+      for (const pu of w.powerups) score += this.powerupValue(b, pu, lx, ly);
       // Spacing from enemies
       if (nearest) {
         const dNow = Math.hypot(nearest.x - b.x, nearest.y - b.y), dThen = Math.hypot(nearest.x - lx, nearest.y - ly);

@@ -150,6 +150,20 @@ export const POWERUPS = {
 };
 export const POWERUP_IDS = Object.keys(POWERUPS);
 
+// How the AI planner values a power-up from a candidate landing spot (M0-14). A landing within
+// pickupRange takes it this turn, so it scores in full on any turn it is still on the field. A
+// landing that only gets closer scores approachMul of the value per reachPerTurn units closed,
+// and only when the units still left can be covered in the turns the power-up has after this one
+// (turnsLeft - 1): an approach toward a power-up that will vanish first is worth nothing.
+export const AI_POWERUP = {
+  value: 22,            // any power-up taken this turn
+  repairValue: 34,      // Repair Kit when below repairHpFrac of max HP
+  repairHpFrac: 0.7,
+  pickupRange: 1.4,     // landing this close counts as a pickup this turn
+  reachPerTurn: 6,      // units a bot can expect to close toward a power-up per later turn
+  approachMul: 0.25,    // value fraction per reachPerTurn units closed this turn (capped at 1 x reachPerTurn)
+};
+
 // ---------- Host settings ----------
 export const SETTING_OPTIONS = {
   mode: ['ffa', 'teams'],
