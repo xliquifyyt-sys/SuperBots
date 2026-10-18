@@ -396,3 +396,13 @@ self-eliminations) both skew these numbers.
   client-ui): local player's KO callout reads "You KO".
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16 (H-05).
   No CI gate is red on main and no new crash or desync was found.
+
+## 2026-10-18 — builder run (producer)
+- **Main:** 36c1776 (nightly QA 2026-10-17). Fast gates re-run here: determinism 6 pass (41 s), rules pass, spawns pass.
+  Nightly QA had every CI gate green on 36997cd; the only change since is docs/evidence.
+- **Backlog:** M0 is still the earliest open milestone. Open M0 tasks: M0-06 `blocked` (H-04, PR #8 on `hold`),
+  M0-09 `todo` but depends on M0-06, QA-1 `todo` with its fix already on PR #16 (H-05, `hold`). No HUMAN_QUEUE
+  item is marked DONE and D-7 is still "no", so no M1 task was started.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh (unchanged since 2026-10-15):** H-05 (lift `hold` on #16 and click "Update branch" — fixes the
+  P0 online desync), H-04 (`human-approved` on #8), or set D-7 to yes so builders can work the 13 ready M1 tasks.
