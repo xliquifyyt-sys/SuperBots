@@ -20,4 +20,16 @@ for (let i = 0; i < N; i++) {
   if (r.turns !== lastDeath) { bad++; if (bad <= 5) console.log(`MISMATCH seed ${7000 + i} ${settings.map} ${n}p: reports ${r.turns} turns, last death on turn ${lastDeath}`); }
 }
 console.log(`${checked} elimination wins checked, ${bad} report the wrong turn count`);
+// QA-8 (2026-10-18 nightly): a match ended by the turn cap must report exactly turnCap turns; the UI
+// showed "Frozen Keel · 21 turns · turn cap" with a 20-turn cap.
+let capChecked = 0, capBad = 0;
+for (let i = 0; i < N; i++) {
+  const players = [0, 1].map((k) => ({ name: 'P' + k, botId: BOT_IDS[(i + k * 3) % BOT_IDS.length], team: k, isAI: true }));
+  const settings = { mode: 'ffa', map: MAP_IDS[i % MAP_IDS.length], aiDifficulty: 'normal', powerups: 'normal', turnCap: 2, onTurnCap: 'hp' };
+  const r = Match.simulateHeadless(players, settings, 7500 + i);
+  if (!r.winner.byCap) continue;
+  capChecked++;
+  if (r.turns !== settings.turnCap) { bad++; capBad++; if (capBad <= 5) console.log(`CAP MISMATCH seed ${7500 + i} ${settings.map}: reports ${r.turns} turns, cap ${settings.turnCap}`); }
+}
+console.log(`${capChecked} turn-cap wins checked, ${capBad} report the wrong turn count`);
 process.exit(bad ? 1 : 0);
