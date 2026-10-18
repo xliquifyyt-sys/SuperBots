@@ -31,3 +31,7 @@ Expected: "N turns" = turns actually resolved. Actual: N + 1.
 - [ ] determinism 6, features, online gates green; no `defs.js` change.
 
 ## Log
+- 2026-10-18 nightly QA: also seen on turn-cap wins. UI playthrough m2 (Bulwark v Phantom+Skyla, Frozen Keel,
+  1280x720) ended "Frozen Keel · 21 turns · turn cap" with a 20-turn cap
+  (`docs/alpha/qa/2026-10-18/m2-frozenkeel-1280x720-result.jpg`). Added a turn-cap invariant to
+  `test/turn-count.mjs` (turnCap 2, seeds 7500+): 19/19 cap wins report 3 turns. A fix must turn both halves green.

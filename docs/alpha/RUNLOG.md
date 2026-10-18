@@ -424,3 +424,62 @@ self-eliminations) both skew these numbers.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"; fixes the P0 online desync), H-04
   (`human-approved` on #8), or D-7 → yes to let builders work the ready M1/QA client-ui tasks.
+
+## 2026-10-18 (night) — nightly QA (qa)
+- **Main:** 7a4ecdd (run log 2026-10-18c). No code change since last night's 36997cd (docs and evidence only), so
+  results match 2026-10-17 almost exactly. PR #16 (QA-1 Blink desync fix) and PR #8 (M0-06) still on `hold`.
+- **Suites (2 cores, two lanes in parallel):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 129 s |
+| rules | pass | 1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 732 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 204 s |
+| features | pass (90 matches; no specials, power-ups or events missing) | 342 s |
+| headless 60 | pass (0 errors, 4 draws, avg 9.5 turns) | 141 s |
+| balance 4 | pass (report) | 172 s |
+| balance-gate 2 (CI) | pass | 92 s |
+| online | pass | 50 s |
+| online-browser | pass | 115 s |
+| browser (static :8123) | pass, no page errors | 62 s |
+| online-maps | pass | 4 s |
+| online-settings-layout | pass | 9 s |
+| spawns | pass | <1 s |
+| mapid | pass | 2 s |
+| online-8p (not in CI) | pass (nimbus, 15 turns, 4 clients digest-identical) | 48 s |
+| terrain-embed 5 (not in CI) | pass — 1,906 cleanups, no bot embedded | 199 s |
+| net-parity 3 (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 34 s |
+| turn-count (not in CI) | **FAIL** — 20/20 elimination wins and (new check) 19/19 turn-cap wins off by one (QA-8) | 21 s |
+| lobby-maplist (not in CI) | **FAIL** — 10px sub-labels, 45px buttons (known QA-12) | 4 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 209 s |
+| qa-playthrough (set 1) | 5/5 reached results, 0 page errors | 340 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below. Headless 60 FFA: Skyla 0/35, Phantom 6/39.
+- **UI playthroughs** (`node test/qa-playthrough.mjs docs/alpha/qa/2026-10-18`, set 1): Volt v Magmaw on Ember Pit at
+  390x844, Bulwark v Phantom+Skyla on Frozen Keel at 1280x720, Ricochet v Gravitas on Canopy Ruins at 390x844, Warden
+  in a 6p teams game on Temple Crossing at 1280x720, Skyla in a 4p FFA on Neon Alley at 390x844. All five reached
+  results, no page errors. Repeats: QA-3 (AI Magmaw on Ember Pit died T4 with 0 taken; teammates Juno/Magmaw and
+  Mira/Phantom both died T1 with 0 taken on Temple Crossing), QA-4 (results table clipped at 390, 3/3 phone matches),
+  QA-5 (turn label wraps at 390, every turn), QA-6 (Ember Pit T1 phone: no enemy on screen), QA-7 (roster over the
+  right ice ledge on Frozen Keel), QA-8 (Frozen Keel ended "21 turns · turn cap" with a 20-turn cap), QA-13
+  ("You (you)"), QA-15 (Canopy Ruins portrait playback ~60% empty sky). Evidence: `docs/alpha/qa/2026-10-18/`.
+- **Filed:** QA-18 (P3, M1, client-ui): floating combat text and the struck bot clipped at the viewport edge during
+  playback ("Frie…" for a `Friendly` label on Temple Crossing). **Test added:** turn-cap half of the QA-8 invariant in
+  `test/turn-count.mjs` (additions only); QA-8 Log updated.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16 (H-05).
+  No CI gate is red on main and no new crash or desync was found.
