@@ -492,3 +492,12 @@ self-eliminations) both skew these numbers.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"; fixes the P0 online desync), H-04
   (`human-approved` on #8), or D-7 → yes to let builders work the ready M1/QA client-ui tasks.
+
+## 2026-10-19b — builder run (producer)
+- **Main:** 93e319a (run log 2026-10-19). Fast gates re-run here: determinism 6 pass (53 s), rules pass, spawns pass.
+- **Backlog:** unchanged. M0 is still the earliest open milestone: M0-06 `blocked` (H-04, PR #8 on `hold`), M0-09
+  depends on M0-06, QA-1 fix sits on PR #16 (H-05, `hold`). PRs #8 and #16 still have no activity since 2026-10-15.
+  No HUMAN_QUEUE item is marked DONE and D-7 is still "no", so no M1 task was started.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"; fixes the P0 online desync), H-04
+  (`human-approved` on #8), or D-7 → yes to let builders work the ready M1/QA client-ui tasks.
