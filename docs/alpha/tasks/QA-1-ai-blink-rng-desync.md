@@ -48,3 +48,7 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
 - [ ] `test/net-parity.mjs 2` is added to `.github/workflows/ci.yml` (additions only).
 
 ## Log
+- 2026-10-19 nightly QA (main deaafb4): still open. `node test/net-parity.mjs` 14/30 desynced (e.g. `DESYNC
+  skylinegrid seed 31900 after turn 3 (AI: skyla,phantom,ricochet,gravitas)`). `node test/online-8p.mjs` (Nimbus, real
+  server, 4 ws clients + 4 random server AI) FAILED tonight: all 4 clients diverge from the server digest from turn 5
+  (it passed last night, so it depends on the random AI roster, as this task predicts).
