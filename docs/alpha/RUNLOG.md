@@ -600,3 +600,67 @@ self-eliminations) both skew these numbers.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"; fixes the P0 online desync), H-04
   (`human-approved` on #8), or D-7 → yes to let builders work the 15 ready M1/QA client-ui tasks.
+
+## 2026-10-20 (night) — nightly QA (qa)
+- **Main:** 8d68a46 (run log 2026-10-20c). No code change since the last nightly's ea2c494 (run logs only), so suite
+  results match 2026-10-19. PR #16 (QA-1 Blink desync fix) and PR #8 (M0-06) still on `hold`, no activity since 10-15.
+- **Suites (2 cores, two lanes in parallel, so wall times run above a solo run):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 172 s |
+| rules | pass | 1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 961 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 263 s |
+| features | pass (no specials, power-ups or events missing) | 449 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 212 s |
+| balance 4 | pass (report) | 221 s |
+| balance-gate 2 (CI) | pass | 108 s |
+| online | pass | 50 s |
+| online-browser | pass | 100 s |
+| browser (static :8123) | pass, no page errors | 59 s |
+| online-maps | pass | 4 s |
+| online-settings-layout | pass | 10 s |
+| spawns | pass | <1 s |
+| mapid | pass | 2 s |
+| online-8p (not in CI) | pass — Nimbus, 7 turns, all 4 clients digest-identical (roster-dependent; failed last night, QA-1 still open) | 24 s |
+| terrain-embed (not in CI) | pass — 30 eight-bot matches, 1,104 cleanups, no bot embedded | 160 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 44 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 31 s |
+| lobby-maplist (not in CI) | **FAIL** — 10px sub-labels, 45px buttons (QA-12) | 3 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 2 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 267 s |
+| trace (smoke) | pass | 1 s |
+| qa-playthrough (set 1) | 5/5 reached results, 0 page errors | 292 s |
+| fx-occlusion (new, not in CI) | **FAIL** — toxic cloud hides 86% of a bot at 0.3 s, 75% at 0.6 s (QA-20); 6 other effects ok | 5 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below. Headless 60 FFA: Skyla 0/35, Phantom 6/39.
+- **UI playthroughs** (`node test/qa-playthrough.mjs docs/alpha/qa/2026-10-20`, set 1): Volt v Magmaw on Ember Pit at
+  390x844, Bulwark v Phantom+Skyla on Frozen Keel at 1280x720, Ricochet v Gravitas on Canopy Ruins at 390x844, Warden in
+  a 6p teams game on Temple Crossing at 1280x720, Skyla in a 4p FFA on Neon Alley at 390x844. All five reached results,
+  no page errors. Repeats: QA-4 (results table clipped at 390, 3/3 phone matches), QA-5 (turn label wraps at 390, every
+  phone turn), QA-7 (roster panel covers the health power-up at Frozen Keel's top-right, T6), QA-13 ("You (you)"),
+  QA-14 (hazard label low contrast on Temple Crossing), QA-15 (Ember Pit and Canopy Ruins portrait cleanup: map in the
+  bottom ~35%, rest empty sky). Checked and not a bug: the tall 3-segment blue bar beside Nova on Frozen Keel T5 is
+  Bulwark's Bastion Wall (the script cast it). Noted, no task: grey square debris particles hang in the air and over
+  the water on Frozen Keel T6 — procedural stand-ins until the VFX sheets arrive (art queue).
+  Evidence: `docs/alpha/qa/2026-10-20/` (JPEG).
+- **Filed:** QA-20 (P2, M1, client-ui): Toxic Bomb's procedural cloud draws opaque lime squares over the bot inside it,
+  hiding the bot, its name tag and HP chip for ~1 s (Temple Crossing T2). **Test added:** `test/fx-occlusion.mjs` (new
+  file, drives the real `handleEvent`/`emit`).
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
+  (H-05). No CI gate is red on main and no new crash was found.
