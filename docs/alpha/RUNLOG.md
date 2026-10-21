@@ -664,3 +664,12 @@ self-eliminations) both skew these numbers.
   file, drives the real `handleEvent`/`emit`).
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
   (H-05). No CI gate is red on main and no new crash was found.
+
+## 2026-10-21 — builder run (producer)
+- **Main:** dc404bd (nightly QA 2026-10-20). Fast gates re-run here: determinism 6 pass (40 s), rules pass, spawns pass.
+- **Backlog:** unchanged. M0 is still the earliest open milestone: M0-06 `blocked` (H-04, PR #8 on `hold`), M0-09
+  depends on M0-06, QA-1 fix on PR #16 (H-05, `hold`). Neither PR has had activity since 2026-10-15. No HUMAN_QUEUE
+  item is marked DONE and D-7 is still "no", so no M1 task was started (QA-20 is now a 16th ready M1/QA task).
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"; fixes the P0 online desync), H-04
+  (`human-approved` on #8), or D-7 → yes to let builders work the ready M1/QA client-ui tasks.
