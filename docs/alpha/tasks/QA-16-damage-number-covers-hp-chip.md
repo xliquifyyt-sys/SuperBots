@@ -30,3 +30,5 @@ Related: M1-04 (damage numbers follow the hit bot) — fix both together if conv
 - [ ] Browser smoke gate and determinism 6 green.
 
 ## Log
+- 2026-10-21 nightly QA: `node test/label-tag-overlap.mjs` (new, filed with QA-21) also covers this: the `-25`
+  damage number rises onto the name text (36% at zoom 22, 76% at zoom 40) and `blocked` onto the HP chip (26–50%).
