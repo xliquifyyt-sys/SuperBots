@@ -779,3 +779,70 @@ self-eliminations) both skew these numbers.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"; fixes the P0 online desync), H-04
   (`human-approved` on #8), or D-7 → yes to let builders work the ready M1/QA client-ui tasks.
+
+## 2026-10-22 (night) — nightly QA (qa)
+- **Main:** 1a83620 (run log 2026-10-22c). No code change since the last nightly's 6e00e01 (run logs only), so every
+  seeded suite matches 2026-10-21. PR #16 (QA-1 Blink desync fix) and PR #8 (M0-06) still on `hold`.
+- **Suites (2 cores, one lane, sequential):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 124 s |
+| rules | pass | <1 s |
+| spawns | pass | <1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 729 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 202 s |
+| features | pass (no specials, power-ups or events missing) | 343 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death, avg 9.5 turns) | 144 s |
+| balance 4 | pass (report) | 172 s |
+| balance-gate 2 (CI) | pass | 84 s |
+| online | pass | 49 s |
+| online-browser | pass | 80 s |
+| online-maps | pass | 3 s |
+| online-settings-layout | pass | 7 s |
+| browser (static :8123) | pass, no page errors | 49 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | pass — Nimbus, 30 turns, all 4 clients digest-identical | 88 s |
+| terrain-embed (not in CI) | pass — 30 eight-bot matches, 1,104 cleanups, no bot embedded | 128 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 34 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 23 s |
+| lobby-maplist (not in CI) | **FAIL** — 10px sub-labels, 45px buttons (QA-12) | 2 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 1 s |
+| fx-occlusion (not in CI) | **FAIL** — toxic cloud hides the bot (QA-20) | 1 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 bot labels cover the bot's own name/HP chip (QA-21, QA-16) | 2 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 213 s |
+| nameplate-edge (new, not in CI) | **FAIL** — 29 pad nameplates clipped at 390x844, 0 at 1280x720 (QA-22) | 2 s |
+| qa-playthrough (set 1) | 5/5 reached results, 0 page errors | 326 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below. Headless 60 FFA: Skyla 0/35, Phantom 6/39.
+- **UI playthroughs** (`node test/qa-playthrough.mjs docs/alpha/qa/2026-10-22`, set 1): Volt v Magmaw on Ember Pit
+  at 390x844, Bulwark v Phantom+Skyla on Frozen Keel at 1280x720 (turn-cap win), Ricochet v Gravitas on Canopy Ruins
+  at 390x844 (turn cap), Warden in a 6p teams game on Temple Crossing at 1280x720, Skyla in a 4p FFA on Neon Alley
+  at 390x844. All five reached results, no page errors. Repeats: QA-4 (results table clipped at 390, Neon Alley),
+  QA-5 (turn label wraps at 390, every phone turn), QA-8 (results say 21 turns for a 20-turn cap), QA-13
+  ("You (you)"), QA-14 (Air Strike label low-contrast on Ember Pit and Canopy Ruins), QA-15 (portrait playback
+  frames the whole map), QA-21 ("Amp" label on Mira's tag, Temple Crossing T2), QA-3 (Temple Crossing ended in a
+  SHARED WIN — the spec'd simultaneous wipe — after four bots on both teams died on T5, two of them having taken
+  0–15 damage, i.e. falls; Juno/Magmaw fell on T1 with 0 dealt/taken, Kilo/Skyla on T1 in a re-run). A re-run of
+  Temple Crossing with an `eliminated`-event hook ended differently (the match seed is `Date.now()`), so the wipe
+  is not reproducible from the script; logged as QA-3 evidence, no new task. Evidence: `docs/alpha/qa/2026-10-22/`
+  (JPEG).
+- **Filed:** QA-22 (P3, M1, client-ui): the portrait plan camera cuts nameplates at the screen edge, your own HP chip
+  included (Canopy Ruins T5 "120" cut at x=0; Ember Pit T5 "No…"). **Test added:** `test/nameplate-edge.mjs` (new
+  file; real `fitForPlan`/`toScreen` plus `drawBots`' nameplate formulas over every map's pads).
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
+  (H-05). No CI gate is red on main and no new crash was found.
