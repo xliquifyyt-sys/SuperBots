@@ -871,3 +871,66 @@ self-eliminations) both skew these numbers.
   HUMAN_QUEUE unchanged: no item marked DONE, D-7 still "no", so no M1 task was started.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-10-23 (night) — nightly QA (qa)
+- **Main:** 35e681b (run log 2026-10-23c). No code change since the last nightly's 1a83620 (run logs only), so every
+  seeded suite matches 2026-10-22. PR #16 (QA-1 fix) and PR #8 (M0-06) still on `hold`. Chromium 1243.
+- **Suites (2 cores, one lane, sequential):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 98 s |
+| rules | pass | 1 s |
+| spawns | pass | <1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 590 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 158 s |
+| features | pass (no specials, power-ups or events missing) | 270 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 113 s |
+| balance 4 | pass (report) | 136 s |
+| balance-gate 2 (CI) | pass | 67 s |
+| online | pass | 49 s |
+| online-browser | pass | 62 s |
+| online-maps | pass | 3 s |
+| online-settings-layout | pass | 7 s |
+| browser (static :8123) | pass, no page errors | 46 s |
+| mapid | pass | <1 s |
+| online-8p (not in CI) | **FAIL** — Nimbus, 16 turns, all 4 clients diverge from the server digest at T7 (QA-1; passed last night, random AI roster) | 49 s |
+| terrain-embed (not in CI) | pass — 30 eight-bot matches, 1,104 cleanups, no bot embedded | 105 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 26 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 17 s |
+| lobby-maplist (not in CI) | **FAIL** — 10px sub-labels, 45px buttons (QA-12) | 2 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 2 s |
+| fx-occlusion (not in CI) | **FAIL** — toxic cloud hides the bot (QA-20) | 1 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 1 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped at 390x844 (QA-22) | 1 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 169 s |
+| qa-playthrough (set 2) | 5/5 reached results, 0 page errors | 185 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below. Headless 60 FFA: Skyla 0/35, Phantom 6/39.
+- **UI playthroughs** (`QA_SET=2 node test/qa-playthrough.mjs docs/alpha/qa/2026-10-23`): Magmaw v Ricochet on
+  Magma Works at 1280x720, Phantom v Warden+Volt on Glacier Fortress at 390x844, Gravitas v Skyla on Cloud Steps at
+  1280x720, Bulwark in a 4p teams game on Nimbus Reach at 390x844, Volt in a 5p FFA on Skyline Grid at 1280x720.
+  All five reached results, no page errors. Repeats: QA-4 (results table clipped at 390, Glacier Fortress and
+  Nimbus), QA-5 (turn label wraps on every phone turn), QA-9 (SKIP / disabled FIRE unreadable on Cloud Steps and
+  Nimbus), QA-13 ("You (you)"), QA-15 (portrait playback frames the whole map, Glacier Fortress T5), QA-16 ("-25"
+  over your own HP chip, Skyline Grid T6 and Cloud Steps T6), QA-19 ("STATIC FIELD" pill over Volt at the right edge,
+  Glacier Fortress T5), QA-21 ("Toxin" on your tag, Magma Works T2), QA-12 (ragged map rows in the phone lobby),
+  QA-3 (Skyline Grid: Juno/Warden died with 0 damage taken, i.e. a fall). Evidence: `docs/alpha/qa/2026-10-23/` (JPEG).
+- **Filed:** QA-23 (P3, M1, client-ui): the results table has no solid backing, so on sky maps the animated birds and
+  islands scroll through the stat rows (`m4-nimbus-390x844-result.jpg`). QA-1 log updated with tonight's online-8p failure.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30, online-8p failed tonight), unchanged; waiting on
+  Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash was found.

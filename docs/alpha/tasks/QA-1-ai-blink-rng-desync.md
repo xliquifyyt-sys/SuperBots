@@ -52,3 +52,6 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
   skylinegrid seed 31900 after turn 3 (AI: skyla,phantom,ricochet,gravitas)`). `node test/online-8p.mjs` (Nimbus, real
   server, 4 ws clients + 4 random server AI) FAILED tonight: all 4 clients diverge from the server digest from turn 5
   (it passed last night, so it depends on the random AI roster, as this task predicts).
+- 2026-10-23 nightly QA (main 35e681b): still open. `node test/net-parity.mjs` 14/30 desynced (same seeds). `node
+  test/online-8p.mjs` (Nimbus) FAILED again: all 4 clients diverge from the server digest from turn 7 (bot 2 alive
+  with 15 HP on the clients, dead on the server); it passed on 2026-10-22, consistent with the random AI roster.
