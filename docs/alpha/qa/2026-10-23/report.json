@@ -1,0 +1,59 @@
+[
+  {
+    "tag": "m1-magmaworks-1280x720",
+    "turns": 6,
+    "secs": 36,
+    "state": null,
+    "result": "DEFEAT\n\nNova · Magma Works · 7 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tMagmaw\t0\t35\t180\t0\t2\t6\nNova\tRicochet\t25\t120\t135\t1\t5\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  },
+  {
+    "tag": "m2-glacierfort-390x844",
+    "turns": 5,
+    "secs": 31,
+    "state": null,
+    "result": "DEFEAT\n\nJuno · Glacier Fortress · 6 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tPhantom\t0\t0\t45\t0\t0\t1\nNova\tWarden\t0\t70\t60\t0\t2\t5\nJuno\tVolt\t105\t44\t25\t0\t3\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": [
+      "T1: turn-label wraps (TURN 1 / 20)",
+      "results table cells off-screen: Player | Died | You (you) | 1 | Nova | 5"
+    ]
+  },
+  {
+    "tag": "m3-cloudsteps-1280x720",
+    "turns": 8,
+    "secs": 43,
+    "state": null,
+    "result": "DEFEAT\n\nNova · Cloud Steps · 9 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tGravitas\t0\t25\t135\t0\t3\t8\nNova\tSkyla\t25\t75\t105\t0\t2\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  },
+  {
+    "tag": "m4-nimbus-390x844",
+    "turns": 7,
+    "secs": 37,
+    "state": null,
+    "result": "DEFEAT\n\nOrange team · Nimbus Reach · 8 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tBulwark\t0\t25\t140\t0\t2\t7\nNova\tMagmaw\t31\t60\t109\t1\t3\t—\nJuno\tPhantom\t0\t108\t120\t0\t3\t4\nKilo\tRicochet\t96\t140\t24\t0\t4\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": [
+      "T1: turn-label wraps (TURN 1 / 20)",
+      "T2: turn-label wraps (TURN 2 / 20)",
+      "T3: turn-label wraps (TURN 3 / 20)",
+      "T4: turn-label wraps (TURN 4 / 20)",
+      "T5: turn-label wraps (TURN 5 / 20)",
+      "T6: turn-label wraps (TURN 6 / 20)",
+      "T7: turn-label wraps (TURN 7 / 20)",
+      "results table cells off-screen: Player | Died | You (you) | 7 | Nova | —"
+    ]
+  },
+  {
+    "tag": "m5-skylinegrid-1280x720",
+    "turns": 7,
+    "secs": 38,
+    "state": null,
+    "result": "DEFEAT\n\nMira · Skyline Grid · 8 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tVolt\t0\t75\t130\t0\t1\t7\nNova\tGravitas\t0\t0\t175\t0\t2\t5\nJuno\tWarden\t0\t70\t0\t0\t2\t5\nKilo\tSkyla\t0\t0\t90\t0\t1\t1\nMira\tBulwark\t95\t135\t45\t1\t2\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  }
+]
