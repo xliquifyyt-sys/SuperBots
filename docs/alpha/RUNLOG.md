@@ -964,3 +964,67 @@ self-eliminations) both skew these numbers.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (merge #16 or remove `hold` + "Update branch"), H-04 (`human-approved` on #8),
   or set D-7 → yes so builders can start M1/QA client-ui tasks in parallel.
+
+## 2026-10-24 (night) — nightly QA (qa)
+- **Main:** 068a8b9 (run log 2026-10-24c). No code change since the last nightly's 35e681b (run logs only), so every
+  seeded suite matches 2026-10-23. PR #16 (QA-1 fix) and PR #8 (M0-06) still on `hold`. Chromium 1243
+  (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`). This container is ~1.5x slower than last night's.
+- **Suites (2 cores, one lane, sequential):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 134 s |
+| rules | pass | 1 s |
+| spawns | pass | <1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 909 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 253 s |
+| features | pass (no specials, power-ups or events missing) | 419 s |
+| headless 60 | pass (0 errors) | 168 s |
+| balance 4 | pass (report) | 202 s |
+| balance-gate 2 (CI) | pass | 93 s |
+| online | pass | 50 s |
+| online-browser | pass | 106 s |
+| online-maps | pass | 5 s |
+| online-settings-layout | pass | 9 s |
+| browser (static :8123) | pass, no page errors | 51 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | **FAIL** — Nimbus, 9 turns, all 4 clients diverge from the server digest at T4 (QA-1) | 41 s |
+| terrain-embed (not in CI) | pass — no bot embedded | 152 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 36 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 26 s |
+| lobby-maplist (not in CI) | **FAIL** — 10px sub-labels, 45px buttons (QA-12) | 3 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 2 s |
+| fx-occlusion (not in CI) | **FAIL** — 7 effects, 1 hides the bot (QA-20) | 1 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 2 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped at 390x844 (QA-22) | 1 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 227 s |
+| qa-playthrough (set 1) | 5/5 reached results, 0 page errors | 255 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below. Headless 60 FFA: Skyla 0/35, Phantom 6/39.
+- **UI playthroughs** (`node test/qa-playthrough.mjs docs/alpha/qa/2026-10-24`, set 1): Volt v Magmaw on Ember Pit at
+  390x844, Bulwark v Phantom+Skyla on Frozen Keel at 1280x720, Ricochet v Gravitas on Canopy Ruins at 390x844, Warden
+  in a 6p teams game on Temple Crossing at 1280x720, Skyla in a 4p FFA on Neon Alley at 390x844. All five reached
+  results, no page errors. Repeats only: QA-4 (results table cut at 390 on all three phone runs), QA-5 (turn label
+  wraps on every phone turn), QA-8 (Ember Pit "9 turns", player died T8 of 8 played), QA-13 ("You (you)"), QA-15
+  (portrait playback frames bots ~18px tall, Neon Alley T6), QA-16 ("-10" over your tag, Frozen Keel T6), QA-17
+  ("You KO", Temple Crossing T2), QA-18 (Temple Crossing T2: a bot at x<0 with its nameplate cut at 1280x720),
+  QA-10/QA-21 (Ember Pit T6: Nova stands on you, its body and "TOXIN!" hide your nameplate), QA-23 (graveyard
+  skull shows through the results rows, Temple Crossing), QA-3 (Temple Crossing: Nova/Volt died T4 with 0 damage
+  taken, i.e. a fall). Evidence: `docs/alpha/qa/2026-10-24/` (JPEG).
+- **Filed:** nothing new; QA-1 log updated with tonight's online-8p failure.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30, online-8p failed), unchanged; waiting on Ganesh's
+  call on PR #16 (H-05). No CI gate is red on main and no new crash was found.
