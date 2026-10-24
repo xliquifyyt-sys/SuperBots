@@ -934,3 +934,15 @@ self-eliminations) both skew these numbers.
   islands scroll through the stat rows (`m4-nimbus-390x844-result.jpg`). QA-1 log updated with tonight's online-8p failure.
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30, online-8p failed tonight), unchanged; waiting on
   Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash was found.
+
+## 2026-10-24 — builder run (producer)
+- **Main:** ec11524 (nightly QA 2026-10-23). Every CLAUDE.md gate re-run here, all pass: determinism 6 (40 s),
+  rules (1 s), spawns (<1 s), headless 20 (48 s), features (371 s), bughunt 2 (75 s), balance-gate 2 (91 s),
+  online (49 s), online-browser (91 s), online-maps (3 s), online-settings-layout (8 s), browser :8123 (48 s).
+  Chromium is now at `/opt/pw-browsers/chromium-1243/chrome-linux64/chrome` (the `chrome-linux/` path in CLAUDE.md
+  no longer exists; use `require('playwright').chromium.executablePath()`).
+- **Backlog:** unchanged. M0 still the earliest open milestone: M0-06 `blocked` (H-04, PR #8 on `hold`, last
+  updated 2026-10-14), M0-09 depends on M0-06, QA-1 fix on PR #16 (H-05, `hold`, last updated 2026-10-15).
+  HUMAN_QUEUE unchanged: no item marked DONE, D-7 still "no", so no M1 task was started.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
