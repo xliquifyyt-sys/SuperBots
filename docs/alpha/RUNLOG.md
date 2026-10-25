@@ -1037,3 +1037,12 @@ self-eliminations) both skew these numbers.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (merge #16 or remove `hold` + "Update branch"), H-04 (`human-approved` on #8),
   or set D-7 → yes so builders can start M1/QA client-ui tasks in parallel.
+
+## 2026-10-25b — builder run (producer)
+- **Main:** 1a5468f (run log only; code identical to ec11524). Re-ran here: determinism 6 (44 s), rules (1 s),
+  spawns (<1 s) — all pass.
+- **Backlog:** unchanged. M0-06 `blocked` (H-04, PR #8 `hold`), M0-09 depends on M0-06, QA-1 fix on PR #16
+  (H-05, `hold`). Neither PR touched since 2026-10-14/15. HUMAN_QUEUE: no item marked DONE, D-7 still "no".
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (merge #16 or remove `hold` + "Update branch"), H-04 (`human-approved` on #8),
+  or set D-7 → yes so builders can start M1/QA client-ui tasks in parallel.
