@@ -108,7 +108,7 @@ const ffa = [
   m.world.bots[0].hp = 40;
   m.world.bots[1].hp = 40;
   m.checkWin();
-  check(m.winner && m.winner.type === 'player' && m.winner.byCap && !m.world.suddenDeath, 'HP tiebreak does not start Sudden Death');
+  check(m.winner && m.winner.type === 'draw' && m.winner.byCap && !m.world.suddenDeath, 'HP tiebreak does not start Sudden Death');
 }
 
 // --- aim guide length follows accuracy ---
@@ -177,6 +177,39 @@ const ffa = [
   const enemyWall = seg(bul.x + 1.4); enemyWall.owner = w.bots[1].id;
   w.walls = [enemyWall]; bul.wallImmune = false;
   check(w.knockMul(bul) > 0, 'standing beside someone else\'s wall grants nothing');
+}
+
+// --- M0-03: a tied turn-cap HP tiebreak is a draw, not the first entry ---
+{
+  const m = match(ffa, { turnCap: 1, onTurnCap: 'hp' }, 23);
+  m.turn = 2;
+  m.world.bots[0].hp = 30; m.world.bots[1].hp = 55; m.world.bots[2].hp = 55;
+  m.checkWin();
+  check(m.winner && m.winner.type === 'draw' && !m.winner.shared && m.winner.byCap, 'tied HP at the cap is a draw');
+  check(m.winner && m.winner.ids.length === 2 && m.winner.ids.includes(1) && m.winner.ids.includes(2), 'the draw is between the tied bots only');
+  check(!m.world.suddenDeath && m.world.bots.every((b) => b.alive), 'the HP draw does not start Sudden Death or kill anyone');
+}
+{
+  const m = match(ffa.slice(0, 2), { turnCap: 1, onTurnCap: 'hp' }, 24);
+  m.turn = 2;
+  m.world.bots[0].hp = 41; m.world.bots[1].hp = 40;
+  m.checkWin();
+  check(m.winner && m.winner.type === 'player' && m.winner.ids[0] === 0 && m.winner.byCap, 'a clear HP lead at the cap still wins outright');
+}
+{
+  const teams = [
+    { name: 'A1', botId: 'volt', team: 0, isAI: true },
+    { name: 'A2', botId: 'bulwark', team: 0, isAI: true },
+    { name: 'B1', botId: 'magmaw', team: 1, isAI: true },
+    { name: 'B2', botId: 'warden', team: 1, isAI: true },
+  ];
+  const m = match(teams, { mode: 'teams', turnCap: 1, onTurnCap: 'hp' }, 25);
+  m.turn = 2;
+  const [a1, a2, b1, b2] = m.world.bots;
+  a1.hp = 50; a2.hp = 30; b1.hp = 40; b2.hp = 40;
+  m.checkWin();
+  check(m.winner && m.winner.type === 'draw' && m.winner.byCap && m.winner.ids.length === 4, 'tied team HP totals at the cap are a draw');
+  check(m.winner && m.winner.teams && m.winner.teams.includes(0) && m.winner.teams.includes(1), 'the team draw names both tied teams');
 }
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
