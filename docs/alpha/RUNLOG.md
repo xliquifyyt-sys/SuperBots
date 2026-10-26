@@ -1146,3 +1146,74 @@ self-eliminations) both skew these numbers.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (merge #16 or remove `hold` + "Update branch"), H-04 (`human-approved` on #8),
   or D-7 → yes.
+
+## 2026-10-26 (night) — nightly QA (qa)
+- **Main:** edeeb0f (run log 2026-10-26c). No code change since ec11524 (docs only), so every seeded suite matches
+  2026-10-25. PR #16 (QA-1 fix) and PR #8 (M0-06) still on `hold`. Chromium 1243
+  (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`). Container ~2x faster than last night's.
+- **Suites (2 cores, one lane, sequential):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 101 s |
+| rules | pass | <1 s |
+| spawns | pass | <1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 607 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 166 s |
+| features | pass (no specials, power-ups or events missing) | 283 s |
+| headless 60 | pass (0 errors, 4 draws, avg 9.5 turns) | 124 s |
+| balance 4 | pass (report) | 146 s |
+| balance-gate 2 (CI) | pass | 71 s |
+| online | pass | 49 s |
+| online-browser | pass | 82 s |
+| online-maps | pass | 3 s |
+| online-settings-layout | pass | 8 s |
+| browser (static :8123) | pass, no page errors | 47 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | **FAIL** — Nimbus, 12 turns, all 4 clients diverge from the server digest at T4 (QA-1) | 96 s |
+| terrain-embed (not in CI) | pass — no bot embedded (1104 cleanups) | 111 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 29 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 19 s |
+| lobby-maplist (not in CI) | **FAIL** — 10px sub-labels, 45px buttons (QA-12) | 2 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 1 s |
+| fx-occlusion (not in CI) | **FAIL** — 7 effects, 1 hides the bot (QA-20) | 1 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 2 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped at 390x844 (QA-22) | 1 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 179 s |
+| qa-playthrough (set 1) | 5/5 reached results, 0 page errors | 313 s |
+| qa-playthrough (new set 3) | 5/5 reached results, 0 page errors | 340 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below. Headless 60 FFA: Skyla 0/35, Phantom 6/39.
+- **UI playthroughs.** Set 1 (`node test/qa-playthrough.mjs docs/alpha/qa/2026-10-26`): Volt v Magmaw on Ember Pit
+  390x844, Bulwark v Phantom+Skyla on Frozen Keel 1280x720, Ricochet v Gravitas on Canopy Ruins 390x844, Warden in a
+  6p teams game on Temple Crossing 1280x720, Skyla in a 4p FFA on Neon Alley 390x844. Because the code has not changed
+  since ec11524, I added **set 3** to `test/qa-playthrough.mjs` (additions only, `QA_SET=3`) with pairings neither set
+  covers: Skyla v Phantom on Canopy Ruins 1280x720, Gravitas v Volt+Warden on Skyline Grid 390x844, Ricochet in a 4p
+  teams game on Glacier Fortress 1280x720, Magmaw v Bulwark on Cloud Steps 390x844, Phantom in a 6p FFA on Magma Works
+  1280x720. All ten reached results with no page errors. New: **QA-25** (explosion smoke drawn as hard grey squares
+  floating in the air; Magma Works T5, Frozen Keel T6). Repeats: QA-3 (Skyla died T2 untouched on Frozen Keel; Skyla T1 and Magmaw
+  T4 on Temple Crossing; Volt T7 on Skyline Grid; Ricochet T2 on Magma Works), QA-4 (results table cut on all five
+  phone matches), QA-5 (turn label wraps every phone turn), QA-6 (T1 plan shows only you: Canopy Ruins, Skyline Grid,
+  Cloud Steps), QA-7 (Glacier Fortress T7: Skyla's Updraft callout and nameplate under the roster and sound button),
+  QA-8 (Frozen Keel "21 turns · turn cap" with cap 20), QA-9 (FIRE/SKIP near-invisible on Cloud Steps), QA-10 (Nova
+  over Kilo on Magma Works T2), QA-13 ("You (you)"), QA-15 (phone bots ~18px), QA-19/QA-21 ("UPDRAFT" past its pill,
+  over Ozzy's name), QA-20 (lime toxic squares over You on Canopy Ruins T2 and Temple Crossing T2), QA-22 (Ember Pit T5,
+  Neon Alley T1 tags cut at the right edge), QA-23 (pickups/terrain through the results table). Evidence:
+  `docs/alpha/qa/2026-10-26/` and `docs/alpha/qa/2026-10-26/set3/` (JPEG).
+- **Filed:** QA-25 (P3, client-ui). QA-1 log updated with tonight's online-8p failure.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30, online-8p failed), unchanged; waiting on Ganesh's
+  call on PR #16 (H-05). No CI gate is red on main and no new crash was found.

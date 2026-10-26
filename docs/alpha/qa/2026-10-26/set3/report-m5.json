@@ -1,0 +1,11 @@
+[
+  {
+    "tag": "m5-magmaworks-1280x720",
+    "turns": 7,
+    "secs": 56,
+    "state": null,
+    "result": "DEFEAT\n\nOzzy · Magma Works · 10 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tPhantom\t0\t25\t135\t0\t0\t3\nNova\tWarden\t0\t95\t136\t0\t2\t4\nJuno\tGravitas\t0\t100\t147\t0\t2\t6\nKilo\tRicochet\t0\t57\t0\t0\t1\t2\nMira\tVolt\t0\t219\t143\t1\t5\t9\nOzzy\tSkyla\t20\t115\t150\t2\t5\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  }
+]
