@@ -25,6 +25,14 @@ if (process.env.QA_SET === '2') MATCHES.splice(0, MATCHES.length,
   { vp: [390, 844], me: 'bulwark', ai: ['magmaw', 'phantom', 'ricochet'], map: 'nimbus', mode: 'teams' },
   { vp: [1280, 720], me: 'volt', ai: ['gravitas', 'warden', 'skyla', 'bulwark'], map: 'skylinegrid', mode: 'ffa' },
 );
+// QA_SET=3 is an extra exploratory set: map/bot/viewport pairings not covered by sets 1 and 2.
+if (process.env.QA_SET === '3') MATCHES.splice(0, MATCHES.length,
+  { vp: [1280, 720], me: 'skyla', ai: ['phantom'], map: 'canopyruins', mode: 'ffa' },
+  { vp: [390, 844], me: 'gravitas', ai: ['volt', 'warden'], map: 'skylinegrid', mode: 'ffa' },
+  { vp: [1280, 720], me: 'ricochet', ai: ['bulwark', 'skyla', 'magmaw'], map: 'glacierfort', mode: 'teams' },
+  { vp: [390, 844], me: 'magmaw', ai: ['bulwark'], map: 'cloudsteps', mode: 'ffa' },
+  { vp: [1280, 720], me: 'phantom', ai: ['warden', 'gravitas', 'ricochet', 'volt', 'skyla'], map: 'magmaworks', mode: 'ffa' },
+);
 let seed = 12345; const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH, args: ['--no-sandbox'] });
 const report = [];
