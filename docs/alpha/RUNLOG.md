@@ -1244,3 +1244,69 @@ self-eliminations) both skew these numbers.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (merge #16 or remove `hold` + "Update branch"), H-04 (`human-approved` on #8),
   or D-7 → yes.
+
+## 2026-10-27 (night) — nightly QA (qa)
+- **Main:** e8a5813 (run log 2026-10-27c). No code change under `src/ server/` since ec11524 (last test change: the
+  qa-playthrough set 3 addition), so every seeded suite matches 2026-10-26. PR #16 (QA-1 fix) and PR #8 (M0-06) still
+  on `hold`. Chromium 1243 (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`). Container ~2x slower than last
+  night's (same results, longer walls).
+- **Suites (2 cores, one lane, sequential):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 209 s |
+| rules | pass | 1 s |
+| spawns | pass | <1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 1281 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 328 s |
+| features | pass (90 matches, 0 errors; no specials, power-ups or events missing) | 588 s |
+| headless 60 | pass (0 errors, 4 draws, avg 9.5 turns) | 258 s |
+| balance 4 | pass (report) | 298 s |
+| balance-gate 2 (CI) | pass | 142 s |
+| online | pass | 50 s |
+| online-browser | pass | 111 s |
+| online-maps | pass | 4 s |
+| online-settings-layout | pass | 10 s |
+| browser (static :8123) | pass, no page errors | 59 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | **FAIL** — Nimbus, 17 turns, all 4 clients diverge from the server digest at T4 (QA-1) | 137 s |
+| terrain-embed (not in CI) | pass — no bot embedded (1104 cleanups) | 222 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 54 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 38 s |
+| lobby-maplist (not in CI) | **FAIL** — 10px sub-labels, 45px buttons (QA-12) | 3 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 2 s |
+| fx-occlusion (not in CI) | **FAIL** — 7 effects, 1 hides the bot (QA-20) | 2 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 2 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped at 390x844 (QA-22) | 1 s |
+| callout-nameplate (new, not in CI) | **FAIL** — 32/32 special callouts cover the caster's nameplate (QA-26) | 2 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 367 s |
+| qa-playthrough (set 2) | 5/5 reached results, 0 page errors | 259 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below. Headless 60 FFA: Skyla 0/35, Phantom 6/39.
+- **UI playthroughs** (`QA_SET=2 node test/qa-playthrough.mjs docs/alpha/qa/2026-10-27`): Magmaw v Ricochet on Magma
+  Works 1280x720, Phantom v Warden+Volt on Glacier Fortress 390x844, Gravitas v Skyla on Cloud Steps 1280x720, Bulwark
+  in a 4p teams game on Nimbus Reach 390x844, Volt in a 5p FFA on Skyline Grid 1280x720. All five reached results with
+  no page errors. New: **QA-26** (special callout pill pops on the caster's own name tag and fades into a blank grey
+  tile on bright maps: Nimbus T6 over Kilo, Glacier Fortress T6 over Juno); added `test/callout-nameplate.mjs`
+  (new file, 32/32 fail on main). Repeats: QA-3 (Juno/Volt fell T6 untouched on Glacier Fortress; Juno/Phantom died T2
+  untouched on Nimbus; Kilo/Skyla out T1 on Skyline Grid), QA-4 (results table cut on both phone matches), QA-5 (turn
+  label wraps every phone turn), QA-6 (T1 plan shows only you on Glacier Fortress), QA-9 (FIRE/SKIP near-invisible on
+  Cloud Steps), QA-10 (You and Kilo nameplates stacked on Nimbus T5), QA-13 ("You (you)"), QA-25 (grey smoke squares on
+  Cloud Steps T6 and Nimbus T6). Evidence: `docs/alpha/qa/2026-10-27/` (JPEG).
+- **Filed:** QA-26 (P2, client-ui). QA-1 log updated with tonight's online-8p and net-parity failures.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30, online-8p failed), unchanged; waiting on Ganesh's
+  call on PR #16 (H-05). No CI gate is red on main and no new crash was found.
