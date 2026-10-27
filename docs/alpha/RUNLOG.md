@@ -1217,3 +1217,12 @@ self-eliminations) both skew these numbers.
 - **Filed:** QA-25 (P3, client-ui). QA-1 log updated with tonight's online-8p failure.
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30, online-8p failed), unchanged; waiting on Ganesh's
   call on PR #16 (H-05). No CI gate is red on main and no new crash was found.
+
+## 2026-10-27 — builder run (producer)
+- **Main:** 713abde (nightly QA 2026-10-26). Only change since ec11524 under `src/ server/ test/` is the
+  qa-playthrough set 3 addition (8 lines). Re-ran here: determinism 6, rules, spawns — all pass (28 s).
+- **Backlog:** unchanged. M0-06 `blocked` (H-04, PR #8 `hold`, no `human-approved`), M0-09 depends on M0-06,
+  QA-1 fix on PR #16 (H-05, `hold`). Neither PR touched since 2026-10-14/15. HUMAN_QUEUE: no item DONE, D-7 "no".
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (merge #16 or remove `hold` + "Update branch"), H-04 (`human-approved` on #8),
+  or D-7 → yes.
