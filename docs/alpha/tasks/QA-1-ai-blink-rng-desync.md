@@ -65,3 +65,6 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
   desynced (same seeds, e.g. `DESYNC skylinegrid seed 31900 after turn 3`). `node test/online-8p.mjs` (Nimbus)
   FAILED: all 4 clients diverge from the server digest from turn 4 (12-turn match); the 4 clients still agree with
   each other.
+- 2026-10-27 nightly QA (main e8a5813, no code change since ec11524): unchanged. `node test/net-parity.mjs` 14/30
+  desynced. `node test/online-8p.mjs` (Nimbus) FAILED: all 4 clients diverge from the server digest from turn 4
+  (17-turn match); the 4 clients still agree with each other. Fix still on held PR #16 (H-05).
