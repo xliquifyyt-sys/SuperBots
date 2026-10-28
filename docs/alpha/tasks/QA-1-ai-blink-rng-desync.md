@@ -68,3 +68,7 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
 - 2026-10-27 nightly QA (main e8a5813, no code change since ec11524): unchanged. `node test/net-parity.mjs` 14/30
   desynced. `node test/online-8p.mjs` (Nimbus) FAILED: all 4 clients diverge from the server digest from turn 4
   (17-turn match); the 4 clients still agree with each other. Fix still on held PR #16 (H-05).
+- 2026-10-28 nightly QA (main d82628c, no code change since ec11524): unchanged. `node test/net-parity.mjs` 14/30
+  desynced. `node test/online-8p.mjs` (Nimbus) passed this time — a 9-turn match, all 4 clients digest-identical to
+  the server. The 8p match is not seeded, so a short game can end before the AI Phantom plans a Blink; one pass is
+  not evidence of a fix. Fix still on held PR #16 (H-05).
