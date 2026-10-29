@@ -72,3 +72,5 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
   desynced. `node test/online-8p.mjs` (Nimbus) passed this time — a 9-turn match, all 4 clients digest-identical to
   the server. The 8p match is not seeded, so a short game can end before the AI Phantom plans a Blink; one pass is
   not evidence of a fix. Fix still on held PR #16 (H-05).
+- 2026-10-29 (qa nightly): unchanged on main d2d9df1 — `node test/net-parity.mjs` 14/30 server/client matches
+  desynced; `node test/online-8p.mjs` (Nimbus, 11 turns, unseeded) passed. Fix still on held PR #16 (H-05).
