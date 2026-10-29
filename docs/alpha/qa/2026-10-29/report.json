@@ -1,0 +1,87 @@
+[
+  {
+    "tag": "m1-emberpit-390x844",
+    "turns": 12,
+    "secs": 64,
+    "state": null,
+    "result": "DEFEAT\n\nNova · Ember Pit · 13 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tVolt\t0\t50\t90\t0\t5\t12\nNova\tMagmaw\t70\t50\t110\t0\t2\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": [
+      "T1: turn-label wraps (TURN 1 / 20)",
+      "T2: turn-label wraps (TURN 2 / 20)",
+      "T3: turn-label wraps (TURN 3 / 20)",
+      "T4: turn-label wraps (TURN 4 / 20)",
+      "T5: turn-label wraps (TURN 5 / 20)",
+      "T6: turn-label wraps (TURN 6 / 20)",
+      "T7: turn-label wraps (TURN 7 / 20)",
+      "T8: turn-label wraps (TURN 8 / 20)",
+      "T9: turn-label wraps (TURN 9 / 20)",
+      "T10: turn-label wraps (TURN 10 / 20)",
+      "T11: turn-label wraps (TURN 11 / 20)",
+      "T12: turn-label wraps (TURN 12 / 20)",
+      "results table cells off-screen: Player | Died | You (you) | 12 | Nova | —"
+    ]
+  },
+  {
+    "tag": "m2-frozenkeel-1280x720",
+    "turns": 12,
+    "secs": 66,
+    "state": null,
+    "result": "DEFEAT\n\nJuno · Frozen Keel · 13 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tBulwark\t0\t0\t58\t0\t4\t12\nNova\tPhantom\t0\t26\t142\t0\t5\t9\nJuno\tSkyla\t64\t190\t66\t1\t8\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  },
+  {
+    "tag": "m3-canopyruins-390x844",
+    "turns": 13,
+    "secs": 82,
+    "state": null,
+    "result": "DEFEAT\n\nNova · Canopy Ruins · 15 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tRicochet\t0\t40\t125\t0\t2\t14\nNova\tGravitas\t90\t125\t40\t1\t4\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": [
+      "T1: turn-label wraps (TURN 1 / 20)",
+      "T2: turn-label wraps (TURN 2 / 20)",
+      "T3: turn-label wraps (TURN 3 / 20)",
+      "T4: turn-label wraps (TURN 4 / 20)",
+      "T5: turn-label wraps (TURN 5 / 20)",
+      "T6: turn-label wraps (TURN 6 / 20)",
+      "T7: turn-label wraps (TURN 7 / 20)",
+      "T8: turn-label wraps (TURN 8 / 20)",
+      "T9: turn-label wraps (TURN 9 / 20)",
+      "T10: turn-label wraps (TURN 10 / 20)",
+      "T11: turn-label wraps (TURN 11 / 20)",
+      "T12: turn-label wraps (TURN 12 / 20)",
+      "T13: turn-label wraps (TURN 13 / 20)",
+      "results table cells off-screen: Player | Died | You (you) | 14 | Nova | —"
+    ]
+  },
+  {
+    "tag": "m4-templecrossing-1280x720",
+    "turns": 17,
+    "secs": 118,
+    "state": null,
+    "result": "DEFEAT\n\nOrange team · Temple Crossing · 21 turns · turn cap\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tWarden\t0\t0\t24\t0\t0\t3\nNova\tVolt\t0\t24\t20\t0\t2\t3\nJuno\tMagmaw\t62\t98\t78\t0\t8\t—\nKilo\tSkyla\t0\t20\t132\t0\t5\t8\nMira\tPhantom\t0\t28\t85\t0\t6\t12\nOzzy\tGravitas\t130\t103\t82\t0\t5\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  },
+  {
+    "tag": "m5-neonalley-390x844",
+    "turns": 9,
+    "secs": 46,
+    "state": null,
+    "result": "VICTORY\n\nYou · Neon Alley · 10 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tSkyla\t110\t56\t60\t0\t3\t—\nNova\tRicochet\t0\t129\t143\t0\t4\t7\nJuno\tBulwark\t0\t85\t209\t0\t5\t9\nKilo\tWarden\t0\t241\t195\t2\t4\t9\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": [
+      "T1: turn-label wraps (TURN 1 / 20)",
+      "T2: turn-label wraps (TURN 2 / 20)",
+      "T3: turn-label wraps (TURN 3 / 20)",
+      "T4: turn-label wraps (TURN 4 / 20)",
+      "T5: turn-label wraps (TURN 5 / 20)",
+      "T6: turn-label wraps (TURN 6 / 20)",
+      "T7: turn-label wraps (TURN 7 / 20)",
+      "T8: turn-label wraps (TURN 8 / 20)",
+      "T9: turn-label wraps (TURN 9 / 20)",
+      "results table cells off-screen: Player | Died | You (you) | — | Nova | 7"
+    ]
+  }
+]
