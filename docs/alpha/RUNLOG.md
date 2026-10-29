@@ -1421,3 +1421,13 @@ self-eliminations) both skew these numbers.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch", or merge it), H-04 (`human-approved` on
   #8), or D-7 → yes (lets builders start the parked M1/QA tasks).
+
+## 2026-10-29b — builder run (producer)
+- **Main:** 693822d (run log 2026-10-29). No `src/` or `server/` change since the last builder run. Re-ran here:
+  determinism 6, rules, spawns — all pass (71 s).
+- **Backlog:** unchanged. M0 open: M0-06 `blocked` (H-04, PR #8 `hold`, no `human-approved`), M0-09 depends on
+  M0-06, QA-1 fix on PR #16 (H-05, `hold`). Neither PR touched since 2026-10-14/15. HUMAN_QUEUE: no item DONE,
+  D-7 still "no", so M1 and QA client-ui tasks stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch", or merge it), H-04 (`human-approved` on
+  #8), or D-7 → yes (lets builders start the parked M1/QA tasks).
