@@ -1511,3 +1511,13 @@ self-eliminations) both skew these numbers.
 - **Filed:** QA-28 (P1, gameplay). QA-1 log updated (online-8p passed, net-parity still 14/30).
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
   (H-05). No CI gate is red on main and no new crash was found.
+
+## 2026-10-30 — builder run (producer)
+- **Main:** 4bfc783 (QA nightly 2026-10-29). No `src/` or `server/` change since the last builder run. Re-ran here:
+  determinism 6, rules, spawns — all pass (35 s).
+- **Backlog:** unchanged. M0 open: M0-06 `blocked` (H-04, PR #8 `hold`, no `human-approved`), M0-09 depends on
+  M0-06, QA-1 fix on PR #16 (H-05, `hold`). Neither PR touched since 2026-10-14/15. HUMAN_QUEUE: no item DONE,
+  D-7 still "no", so M1 and QA tasks (incl. new QA-28) stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch", or merge it), H-04 (`human-approved` on
+  #8), or D-7 → yes (lets builders start the parked M1/QA tasks).
