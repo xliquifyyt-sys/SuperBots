@@ -1540,3 +1540,73 @@ self-eliminations) both skew these numbers.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch", or merge it), H-04 (`human-approved` on
   #8), or D-7 → yes.
+
+## 2026-10-30 (night) — nightly QA (qa)
+- **Main:** 51ffdbd (run log 2026-10-30c). No change under `src/ server/ test/` since the 2026-10-29 nightly, so every
+  seeded suite matches last night. PR #16 (QA-1 fix) and PR #8 (M0-06) still on `hold`.
+  Chromium 1243 (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, one lane, sequential):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 182 s |
+| rules | pass | 0 s |
+| spawns | pass | 1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 1100 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 302 s |
+| features | pass (90 matches, 0 errors; no specials, power-ups or events missing) | 506 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 224 s |
+| balance 4 | pass (report) | 277 s |
+| balance-gate 2 (CI) | pass | 139 s |
+| online | pass | 49 s |
+| online-browser | pass | 69 s |
+| online-maps | pass | 4 s |
+| online-settings-layout | pass | 9 s |
+| browser (static :8123) | pass, no page errors | 50 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | **FAIL** — Nimbus, 18 turns: all 4 clients diverge from the server digest from turn 4 (known P0 QA-1) | 144 s |
+| terrain-embed (not in CI) | pass — no bot embedded (1104 cleanups) | 210 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 51 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 34 s |
+| lobby-maplist (not in CI) | **FAIL** — 10px sub-labels, 45px buttons (QA-12) | 3 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 2 s |
+| fx-occlusion (not in CI) | **FAIL** — 7 effects, 1 hides the bot (QA-20) | 1 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 2 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped at 390x844 (QA-22) | 2 s |
+| callout-nameplate (not in CI) | **FAIL** — 32/32 special callouts cover the caster's nameplate (QA-26) | 1 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 369 s |
+| ringout-credit 1 (report) | 39/39 kill-floor knock-outs credit nobody; 124/256 decisive winners show 0 KOs — QA-27 | 371 s |
+| team-win-credit 1 (report) | 18 of 23 team wins leave out 34 dead teammates of the winning team — QA-28 | 131 s |
+| qa-playthrough (set 2) | 5/5 reached results, 0 page errors | 286 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below. Headless 60 FFA: Skyla 0/35, Phantom 6/39.
+- **UI playthroughs** (`QA_SET=2 node test/qa-playthrough.mjs docs/alpha/qa/2026-10-30`; set 2 last ran 10-27): Magmaw
+  v Ricochet on Magma Works 1280x720 (VICTORY, 16 turns), Phantom v Warden+Volt on Glacier Fortress 390x844 (DEFEAT),
+  Gravitas v Skyla on Cloud Steps 1280x720 (VICTORY), Bulwark in a 4p teams game on Nimbus 390x844 (DEFEAT, "Orange
+  team"), Volt in a 5p FFA on Skyline Grid 1280x720 (VICTORY). All five reached results with no page errors. Nothing
+  new found; repeats only: QA-4 (results table cut at the left on both phone matches), QA-5 (turn label wraps every
+  phone turn), QA-6 (Glacier Fortress T5 plan shows only you), QA-7 (Skyline Grid T2: a "-25" and the top-right
+  ledge drawn under the roster), QA-8 (Magma Works "16 turns" after 14 played), QA-9 (SKIP almost invisible on the
+  Nimbus sky, T6), QA-13 ("You (you)"), QA-15 (phone bots ~18px), QA-22 ("Juno"/"Nova" nameplates cut at the right
+  edge on Glacier Fortress T2 and Nimbus T6), QA-23 (birds and the map through the results table on Nimbus and
+  Skyline Grid), QA-25 (grey smoke squares over "You" on Magma Works T6 and Cloud Steps T6), QA-27 (Skyline Grid: 4
+  deaths, 0 KOs credited; Cloud Steps winner dealt 0 damage), QA-28 (Nimbus teams: only the surviving Magmaw row is
+  marked a winner). Cloud Steps/Nimbus cloud undersides are still flat white circles — art, tracked by M3-01, not
+  filed. Evidence: `docs/alpha/qa/2026-10-30/` (JPEG).
+- **Filed:** none new. QA-1 log updated (online-8p failed tonight, net-parity still 14/30).
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30; online-8p desynced from turn 4 tonight), unchanged;
+  waiting on Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash was found.
