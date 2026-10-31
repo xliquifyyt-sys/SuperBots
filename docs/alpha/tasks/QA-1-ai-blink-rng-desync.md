@@ -78,3 +78,6 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
   desynced. `node test/online-8p.mjs` (Nimbus, 18 turns, unseeded) **FAILED**: all 4 clients diverge from the server
   digest from turn 4 (bot 4 HP 57 on clients vs 70 on server), yet the 4 clients agree with each other — the
   server-only RNG draw pattern this task describes. Fix still on held PR #16 (H-05).
+- 2026-10-31 (qa nightly): unchanged on main f1787ee — `node test/net-parity.mjs` 14/30 server/client matches
+  desynced (e.g. bot 7 HP 85 on server vs 125 on client). `node test/online-8p.mjs` (Nimbus, 9 turns, unseeded)
+  passed tonight — it is timing-dependent, so a pass is not evidence of a fix. Fix still on held PR #16 (H-05).
