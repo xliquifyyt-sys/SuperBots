@@ -1709,3 +1709,13 @@ self-eliminations) both skew these numbers.
 - **Filed:** none new. QA-1 log updated (net-parity still 14/30; online-8p passed tonight, unseeded).
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
   (H-05). No CI gate is red on main and no new crash was found.
+
+## 2026-11-01 — builder run (producer)
+- **Main:** 0498098 (QA nightly 2026-10-31). No `src/` or `server/` change since the last builder run. Re-ran here:
+  npm install, determinism 6, rules, spawns — all pass (41 s).
+- **Backlog:** unchanged. PR #8 (M0-06, H-04) and PR #16 (QA-1, H-05) both still `hold`, no `human-approved`
+  (last updated 10-14 / 10-15). HUMAN_QUEUE: no item DONE, D-7 still "no", so M0-09 (depends M0-06), M1 and QA tasks
+  stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch", or merge it), H-04 (`human-approved` on
+  #8), or D-7 → yes.
