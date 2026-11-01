@@ -1739,3 +1739,72 @@ self-eliminations) both skew these numbers.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch", or merge it), H-04 (`human-approved` on
   #8), or D-7 → yes.
+
+## 2026-11-01 (night) — nightly QA (qa)
+- **Main:** e921640 (run log 2026-11-01c). No change under `src/ server/ test/` since the 2026-10-30 nightly, so every
+  seeded suite matches last night. PR #16 (QA-1 fix) and PR #8 (M0-06) still on `hold`.
+  Chromium 1243 (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, one lane, sequential):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 191 s |
+| rules | pass | 1 s |
+| spawns | pass | 0 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 1233 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 332 s |
+| features | pass (0 errors; no specials, power-ups or events missing) | 532 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 232 s |
+| balance 4 | pass (report) | 279 s |
+| balance-gate 2 (CI) | pass | 147 s |
+| online | pass | 50 s |
+| online-browser | pass | 115 s |
+| online-maps | pass | 5 s |
+| online-settings-layout | pass | 11 s |
+| browser (static :8123) | pass, no page errors | 58 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | pass — Nimbus, 15 turns, all 4 clients end on the same digest (unseeded) | 49 s |
+| terrain-embed (not in CI) | pass — no bot embedded (1104 cleanups) | 213 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 55 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 39 s |
+| lobby-maplist (not in CI) | **FAIL** — 10px sub-labels, 45px buttons (QA-12) | 3 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 2 s |
+| fx-occlusion (not in CI) | **FAIL** — 7 effects, 1 hides the bot (QA-20) | 2 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 2 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped at 390x844 (QA-22) | 2 s |
+| callout-nameplate (not in CI) | **FAIL** — 32/32 special callouts cover the caster's nameplate (QA-26) | 2 s |
+| label-stack (new, not in CI) | **FAIL** — 12/12 same-tick label pairs overprint (new QA-29) | 2 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 360 s |
+| ringout-credit 1 (report) | 124/256 decisive winners show 0 KOs (48.4%, unchanged) — QA-27 | 354 s |
+| team-win-credit 1 (report) | 18 of 23 team wins leave out 34 dead teammates of the winning team — QA-28 | 130 s |
+| qa-playthrough (set 1) | 5/5 reached results, 0 page errors | 293 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below. Headless 60 FFA: Skyla 0/35, Phantom 6/39.
+- **UI playthroughs** (`node test/qa-playthrough.mjs docs/alpha/qa/2026-11-01`; set 1 last ran 10-29): Volt v Magmaw
+  on Ember Pit 390x844 (DEFEAT, 9 turns, Volt 0 dealt), Bulwark v Phantom+Skyla on Frozen Keel 1280x720 (VICTORY),
+  Ricochet v Gravitas on Canopy Ruins 390x844 (DEFEAT, 20 turns), Warden in a 6p teams game on Temple Crossing
+  1280x720 (DEFEAT, "Orange team"), Skyla in a 4p FFA on Neon Alley 390x844 (DEFEAT, Skyla 0 dealt). All five
+  reached results with no page errors. **New:** QA-29 — "TOXIN!" and "POISON" printed on top of each other (Frozen
+  Keel T2). Repeats: QA-4 (results table cut at the left on all three phone matches), QA-5 (turn label wraps every
+  phone turn), QA-8 (results "9 turns" after 8 played), QA-10 (You/Nova tags overlap, Neon Alley T5), QA-13
+  ("You (you)"), QA-15 (phone bots ~18px), QA-17 ("You KO", Temple Crossing T6), QA-23 (map and mines through the
+  results table), QA-25 (square smoke puffs, Temple Crossing T6), QA-27 (Ember Pit winner Magmaw 0 KOs), QA-28
+  (Temple Crossing: Ozzy on the winning Orange team, died T6, not credited). Evidence: `docs/alpha/qa/2026-11-01/`
+  (JPEG).
+- **Filed:** QA-29 (P2, client-ui, M1) with new `test/label-stack.mjs`.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
+  (H-05). No CI gate is red on main and no new crash was found.
