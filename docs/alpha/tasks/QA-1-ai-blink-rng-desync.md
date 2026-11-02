@@ -81,3 +81,7 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
 - 2026-10-31 (qa nightly): unchanged on main f1787ee — `node test/net-parity.mjs` 14/30 server/client matches
   desynced (e.g. bot 7 HP 85 on server vs 125 on client). `node test/online-8p.mjs` (Nimbus, 9 turns, unseeded)
   passed tonight — it is timing-dependent, so a pass is not evidence of a fix. Fix still on held PR #16 (H-05).
+- 2026-11-02 (qa nightly): unchanged on main 125bb33 — `node test/net-parity.mjs` 14/30 matches desynced (same
+  seeds, e.g. bot 7 HP 85 server vs 125 client). `node test/online-8p.mjs` (Nimbus, 15 turns, unseeded) FAILED
+  tonight: all 4 clients diverge from the server digest from turn 4 (bot 0 x 749 server vs 1936 client) while
+  agreeing with each other. Fix still on held PR #16 (H-05).
