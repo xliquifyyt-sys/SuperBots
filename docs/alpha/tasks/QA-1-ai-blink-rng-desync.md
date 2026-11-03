@@ -85,3 +85,7 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
   seeds, e.g. bot 7 HP 85 server vs 125 client). `node test/online-8p.mjs` (Nimbus, 15 turns, unseeded) FAILED
   tonight: all 4 clients diverge from the server digest from turn 4 (bot 0 x 749 server vs 1936 client) while
   agreeing with each other. Fix still on held PR #16 (H-05).
+- 2026-11-03 (qa nightly): unchanged on main 073bc82 — `node test/net-parity.mjs` 14/30 matches desynced (same
+  seeds, e.g. bot 7 HP 85 server vs 125 client). `node test/online-8p.mjs` (Nimbus, 14 turns) FAILED again: all 4
+  clients leave the server digest at turn 5 (bot 0 x 1573 client vs 1578 server) and agree with each other. Fix
+  still on held PR #16 (H-05).
