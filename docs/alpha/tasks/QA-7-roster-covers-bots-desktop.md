@@ -29,3 +29,6 @@ Actual: the opponent's name and HP are unreadable for the whole match.
 - [ ] Browser smoke gate green.
 
 ## Log
+- 2026-11-03 (qa nightly): also on Magma Works 6p at 1280x720 (`QA_SET=3 node test/qa-playthrough.mjs <dir> 4`):
+  Skyla hovers top-right under `#roster`, and her UPDRAFT callout pill shows through the Nova row, garbling it.
+  `docs/alpha/qa/2026-11-03/m5-magmaworks-1280x720-plan-T5.jpg`.
