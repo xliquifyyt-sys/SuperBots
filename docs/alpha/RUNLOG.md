@@ -1998,3 +1998,11 @@ self-eliminations) both skew these numbers.
 - **Filed:** nothing new. Logs added to QA-1 (online-8p failed again) and QA-7 (Magma Works case).
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30, online-8p failed tonight), unchanged; waiting on
   Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash was found.
+
+## 2026-11-04 — builder run (producer)
+- **Main:** 78d69b1 (QA nightly 2026-11-03). Only QA docs and `test/rotate-midmatch.mjs` landed since the last
+  builder run; no `src/` or `server/` change. Re-ran here: npm install, determinism 6, rules, spawns — all pass (35 s).
+- **Backlog:** unchanged. PR #8 (M0-06, H-04) and PR #16 (QA-1, H-05) both still `hold`, no `human-approved`
+  (last updated 10-14 / 10-15). HUMAN_QUEUE: no item DONE, D-7 still "no", so M0-09, M1 and QA tasks stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
