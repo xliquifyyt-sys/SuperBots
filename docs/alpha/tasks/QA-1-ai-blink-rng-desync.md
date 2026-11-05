@@ -94,3 +94,6 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
   `node test/online-8p.mjs` PASSED tonight, but the Nimbus match ended in 8 turns (14 last night, same code), before
   the turn-5+ divergence seen before had room to show — online-8p length depends on live timing, so a pass there is
   not evidence of a fix. Fix still on held PR #16 (H-05).
+- 2026-11-05 (qa nightly): unchanged on main d78cdfc — `node test/net-parity.mjs` 14/30 matches desynced (same
+  seeds, e.g. seed 31900 bot 7 HP 85 server vs 125 client). `node test/online-8p.mjs` passed, Nimbus 14 turns.
+  Fix still on held PR #16 (H-05).
