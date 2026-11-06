@@ -1,0 +1,20 @@
+[
+  {
+    "tag": "m1-neonalley-844x390",
+    "turns": 17,
+    "secs": 100,
+    "state": null,
+    "result": "VICTORY\n\nYou · Neon Alley · 19 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tWarden\t50\t50\t80\t0\t4\t—\nNova\tSkyla\t0\t80\t145\t0\t7\t18\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  },
+  {
+    "tag": "m2-templecrossing-844x390",
+    "turns": 8,
+    "secs": 63,
+    "state": null,
+    "result": "DEFEAT\n\nJuno · Temple Crossing · 12 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tVolt\t0\t30\t133\t0\t1\t2\nNova\tPhantom\t0\t16\t65\t0\t1\t1\nJuno\tRicochet\t5\t205\t115\t1\t7\t—\nKilo\tMagmaw\t0\t155\t158\t1\t2\t11\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  }
+]
