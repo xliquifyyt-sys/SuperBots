@@ -42,3 +42,6 @@ Related: QA-4 (the same table is cut off at phone width; fix together).
 
 ## Log
 - 2026-10-23 nightly QA: filed.
+- 2026-11-06 nightly QA (set 3): same class seen on dark maps too — world sprites draw over the results UI, not just
+  the table: a health crate over the "DEFEAT" title (`docs/alpha/qa/2026-11-06/m5-magmaworks-1280x720-result.png`)
+  and Juno's "130" nameplate showing through the REMATCH button (`m3-glacierfort-1280x720-result.png`).

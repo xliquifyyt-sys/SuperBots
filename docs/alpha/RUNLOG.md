@@ -2220,3 +2220,83 @@ self-eliminations) both skew these numbers.
   QA tasks stay parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-06 (night) — nightly QA (qa)
+- **Main:** ad3060b (run log 2026-11-06c). Only run-log commits since the 2026-11-05 nightly; no `src/` or `server/`
+  change, so every seeded suite matches last night. PR #16 (QA-1 fix) and PR #8 (M0-06) still on `hold`.
+  Chromium 1243 (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, two lanes in parallel, so wall times include contention):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 131 s |
+| rules | pass | 1 s |
+| spawns | pass | 0 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 767 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 200 s |
+| features | pass (0 errors; no specials, power-ups or events missing) | 347 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 150 s |
+| balance 4 | pass (report) | 186 s |
+| balance-gate 2 (CI) | pass | 87 s |
+| online | pass | 49 s |
+| online-browser | pass | 116 s |
+| online-maps | pass | 3 s |
+| online-settings-layout | pass | 7 s |
+| browser (static :8123) | pass, no page errors | 50 s |
+| mapid | pass | 0 s |
+| online-8p (not in CI) | pass — Nimbus, 12 turns, all 4 client digests equal | 40 s |
+| terrain-embed (not in CI) | pass — no bot embedded (1104 cleanups) | 116 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 35 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 25 s |
+| lobby-maplist (not in CI) | **FAIL** — 10px sub-labels, 45px buttons (QA-12) | 2 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 2 s |
+| fx-occlusion (not in CI) | **FAIL** — 7 effects, 1 hides the bot (QA-20) | 1 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 1 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped at 390x844 (QA-22) | 2 s |
+| callout-nameplate (not in CI) | **FAIL** — 32/32 special callouts cover the caster's nameplate (QA-26) | 2 s |
+| label-stack (not in CI) | **FAIL** — 12/12 same-tick label pairs overprint (QA-29) | 1 s |
+| screen-overflow (not in CI) | **FAIL** — 3 landscape-phone cases lose content above the top edge (QA-30) | 4 s |
+| aim-readout-overlap (new, not in CI) | **FAIL** — readout under JUMP at 740x360 and 844x390 (QA-31) | ~60 s |
+| rotate-midmatch (not in CI) | pass | 45 s |
+| quit-requeue (not in CI) | pass | 38 s |
+| rematch-record (not in CI) | pass | 103 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 202 s |
+| ringout-credit 1 (report) | 124/256 decisive winners show 0 KOs (48.4%, unchanged) — QA-27 | 197 s |
+| team-win-credit 1 (report) | 18 of 23 team wins leave out 34 dead teammates of the winning team — QA-28 | 73 s |
+| qa-playthrough (set 3) | 5/5 reached results, 0 page errors | 288 s |
+| qa-playthrough (new set 4, landscape 844x390) | 2/2 reached results, 0 page errors, 0 HUD issues flagged | 165 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below. Headless 60 FFA: Skyla 0/35, Phantom 6/39.
+- **UI playthroughs** (`QA_SET=3 node test/qa-playthrough.mjs docs/alpha/qa/2026-11-06`; set 3 last ran 11-03):
+  Skyla v Phantom on Canopy Ruins 1280x720 (DEFEAT, Skyla died T16), Gravitas v Volt+Warden on Skyline Grid 390x844
+  (DEFEAT; Gravitas dealt 0), Ricochet in a 4p teams game on Glacier Fortress 1280x720 (DEFEAT, "Blue team", You
+  KO'd T2), Magmaw v Bulwark on Cloud Steps 390x844 (DEFEAT), Phantom in a 6p FFA on Magma Works 1280x720 (DEFEAT,
+  Volt won on 5 HP). All five reached results with no page errors. Repeats seen in the screenshots: QA-3 (Skyline
+  Grid: Volt died T4 having taken 0; Magma Works: Ricochet died T3 having taken 0), QA-4 (results table cut at the
+  left on Skyline Grid phone), QA-5 (turn label wraps every phone turn), QA-8 (results say one turn more than
+  played), QA-9 (SKIP almost invisible on Cloud Steps), QA-21 ("Reflector Coat" tag over Nova's nameplate, Magma
+  Works T2), QA-22 (nameplate clipped at the left edge, Skyline Grid T5), QA-23 (world sprites over the results UI —
+  a crate over "DEFEAT", a nameplate through REMATCH; logged on QA-23), QA-27 (Warden won Skyline Grid with 0 KOs),
+  QA-28 (Kilo, dead Blue teammate, not credited), QA-29 ("You KO" / "-25" overprint, Glacier Fortress T2).
+- **Exploratory (landscape phone in-match):** added `QA_SET=4` to `test/qa-playthrough.mjs` — Warden v Skyla on Neon
+  Alley and Volt v Phantom+Ricochet+Magmaw on Temple Crossing, both at 844x390
+  (`docs/alpha/qa/2026-11-06/landscape/`). Both reached results, no page errors; the results screen fits. Found the
+  aim readout running under the JUMP button (readout is hidden only at ≤640px wide); kept as new
+  `test/aim-readout-overlap.mjs` (fails 2/6 viewports on main).
+- **Filed:** QA-31 (P2, client-ui) aim readout under the action bar on landscape phones. Logs added to QA-1, QA-23.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
+  (H-05). No CI gate is red on main and no new crash was found.

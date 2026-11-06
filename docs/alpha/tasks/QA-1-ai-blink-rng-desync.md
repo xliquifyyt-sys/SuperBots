@@ -97,3 +97,6 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
 - 2026-11-05 (qa nightly): unchanged on main d78cdfc — `node test/net-parity.mjs` 14/30 matches desynced (same
   seeds, e.g. seed 31900 bot 7 HP 85 server vs 125 client). `node test/online-8p.mjs` passed, Nimbus 14 turns.
   Fix still on held PR #16 (H-05).
+- 2026-11-06 (qa nightly): unchanged on main ad3060b — `node test/net-parity.mjs` 14/30 matches desynced (same
+  seeds, e.g. skylinegrid seed 31900 bot 7 HP 85 server vs 125 client after turn 3). `node test/online-8p.mjs`
+  passed, Nimbus 12 turns. Fix still on held PR #16 (H-05).

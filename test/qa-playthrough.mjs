@@ -33,6 +33,11 @@ if (process.env.QA_SET === '3') MATCHES.splice(0, MATCHES.length,
   { vp: [390, 844], me: 'magmaw', ai: ['bulwark'], map: 'cloudsteps', mode: 'ffa' },
   { vp: [1280, 720], me: 'phantom', ai: ['warden', 'gravitas', 'ricochet', 'volt', 'skyla'], map: 'magmaworks', mode: 'ffa' },
 );
+// QA_SET=4: landscape phone (844x390, iPhone 12-14 held sideways; the spec says landscape first) in-match HUD probe.
+if (process.env.QA_SET === '4') MATCHES.splice(0, MATCHES.length,
+  { vp: [844, 390], me: 'warden', ai: ['skyla'], map: 'neonalley', mode: 'ffa' },
+  { vp: [844, 390], me: 'volt', ai: ['phantom', 'ricochet', 'magmaw'], map: 'templecrossing', mode: 'ffa' },
+);
 let seed = 12345; const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH, args: ['--no-sandbox'] });
 const report = [];
