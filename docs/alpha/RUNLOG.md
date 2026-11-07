@@ -2300,3 +2300,12 @@ self-eliminations) both skew these numbers.
 - **Filed:** QA-31 (P2, client-ui) aim readout under the action bar on landscape phones. Logs added to QA-1, QA-23.
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
   (H-05). No CI gate is red on main and no new crash was found.
+
+## 2026-11-07 — builder run (producer)
+- **Main:** 6d24981 (QA nightly 2026-11-06). No `src/` or `server/` change since the last run. Re-ran here:
+  npm install, determinism 6, rules, spawns — all pass (33 s).
+- **Backlog:** unchanged. M0 open items: M0-06 (blocked, PR #8 waits on H-04 `human-approved`), M0-09 (depends on
+  M0-06), QA-1 (P0, fix on PR #16, `hold`, waits on H-05). Neither PR updated since 10-14 / 10-15. HUMAN_QUEUE: no
+  item DONE, D-7 still "no", so M1 and QA client-ui tasks stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
