@@ -76,7 +76,7 @@ On elimination by damage (not a fall) the bot **self-destructs**: a blast of 30 
 Checked at the start of every announce.
 - **FFA**: one living bot left wins. **Teams**: one team with a living bot left wins.
 - **Zero standing**: all remaining bots died in the same turn. Those bots share the win (`winner.type === 'draw'`, `shared: true`). This does not start Sudden Death, including a wipe that happens during a Sudden Death round already started by a turn-cap tie.
-- **Turn cap** (host setting 20, 30, 40 or off): once `turn > cap`, the player or team with the highest total HP wins. On a tie, the `onTurnCap` setting decides: `hp` picks the first tied entry; `suddenDeath` eliminates everyone else and runs Sudden Death among the tied bots.
+- **Turn cap** (host setting 20, 30, 40 or off): once `turn > cap`, the player or team with the highest total HP wins. On a tie, the `onTurnCap` setting decides: `hp` ends the match as a draw between the tied bots or teams (`winner.type === 'draw'`, `byCap: true`, no `shared` flag, so the result screen reads DRAW; teams also list `teams`); `suddenDeath` eliminates everyone else and runs Sudden Death among the tied bots.
 
 ## Sudden Death
 
