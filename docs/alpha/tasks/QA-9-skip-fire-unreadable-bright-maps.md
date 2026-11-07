@@ -29,3 +29,5 @@ Actual: the labels are close to background colour on the Cloud Steps sky (eyebal
 - [ ] Browser smoke gate green.
 
 ## Log
+- 2026-11-07 nightly QA: also at tablet landscape 1024x768 on Nimbus Reach — SKIP is a pale cyan box with no
+  readable label (`docs/alpha/qa/2026-11-07/set5/m3-nimbus-1024x768-resolve-T2.png`).

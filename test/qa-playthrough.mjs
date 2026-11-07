@@ -38,6 +38,12 @@ if (process.env.QA_SET === '4') MATCHES.splice(0, MATCHES.length,
   { vp: [844, 390], me: 'warden', ai: ['skyla'], map: 'neonalley', mode: 'ffa' },
   { vp: [844, 390], me: 'volt', ai: ['phantom', 'ricochet', 'magmaw'], map: 'templecrossing', mode: 'ffa' },
 );
+// QA_SET=5: viewports no other set covers — small Android phone (360x640) and tablets (768x1024, 1024x768).
+if (process.env.QA_SET === '5') MATCHES.splice(0, MATCHES.length,
+  { vp: [360, 640], me: 'phantom', ai: ['bulwark'], map: 'frozenkeel', mode: 'ffa' },
+  { vp: [768, 1024], me: 'skyla', ai: ['gravitas', 'magmaw'], map: 'magmaworks', mode: 'ffa' },
+  { vp: [1024, 768], me: 'ricochet', ai: ['volt', 'warden', 'phantom'], map: 'nimbus', mode: 'teams' },
+);
 let seed = 12345; const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH, args: ['--no-sandbox'] });
 const report = [];
