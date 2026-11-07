@@ -2309,3 +2309,12 @@ self-eliminations) both skew these numbers.
   item DONE, D-7 still "no", so M1 and QA client-ui tasks stay parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-07b — builder run (producer)
+- **Main:** fbfa1ae (run log 2026-11-07). No `src/` or `server/` change since the last run. Re-ran here:
+  npm install, determinism 6, rules, spawns — all pass (36 s).
+- **Backlog:** unchanged. M0 open items: M0-06 (blocked, PR #8 `hold`, waits on H-04 `human-approved`), M0-09
+  (depends on M0-06), QA-1 (P0, fix on PR #16, `hold`, waits on H-05). Neither PR updated since 10-14 / 10-15.
+  HUMAN_QUEUE: no item DONE, D-7 still "no", so M1 and QA client-ui tasks stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
