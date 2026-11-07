@@ -1,0 +1,47 @@
+[
+  {
+    "tag": "m1-frozenkeel-360x640",
+    "turns": 4,
+    "secs": 41,
+    "state": null,
+    "result": "DEFEAT\n\nNova · Frozen Keel · 6 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tPhantom\t0\t0\t95\t0\t1\t5\nNova\tBulwark\t140\t55\t0\t0\t3\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": [
+      "T1: action-bar off-screen [-4,576,270,632]",
+      "T1: act-jump off-screen [-4,576,60,632]",
+      "T1: btn-fire off-screen [280,576,364,632]",
+      "T1: turn-label wraps (TURN 1 / 20)",
+      "T2: action-bar off-screen [-4,576,270,632]",
+      "T2: act-jump off-screen [-4,576,60,632]",
+      "T2: btn-fire off-screen [280,576,364,632]",
+      "T2: turn-label wraps (TURN 2 / 20)",
+      "T3: action-bar off-screen [-4,576,270,632]",
+      "T3: act-jump off-screen [-4,576,60,632]",
+      "T3: btn-fire off-screen [280,576,364,632]",
+      "T3: turn-label wraps (TURN 4 / 20)",
+      "T4: action-bar off-screen [-4,576,270,632]",
+      "T4: act-jump off-screen [-4,576,60,632]",
+      "T4: btn-fire off-screen [280,576,364,632]",
+      "T4: turn-label wraps (TURN 5 / 20)",
+      "results table cells off-screen: Player | Bot | Specials | Died | You (you) | Phantom"
+    ]
+  },
+  {
+    "tag": "m2-magmaworks-768x1024",
+    "turns": 16,
+    "secs": 93,
+    "state": null,
+    "result": "DEFEAT\n\nJuno · Magma Works · 18 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tSkyla\t0\t0\t85\t0\t2\t4\nNova\tGravitas\t0\t175\t180\t0\t3\t17\nJuno\tMagmaw\t40\t147\t150\t1\t6\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  },
+  {
+    "tag": "m3-nimbus-1024x768",
+    "turns": 14,
+    "secs": 78,
+    "state": null,
+    "result": "DEFEAT\n\nBlue team · Nimbus Reach · 15 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tRicochet\t0\t53\t145\t0\t3\t10\nNova\tVolt\t0\t145\t136\t0\t4\t8\nJuno\tWarden\t4\t156\t186\t2\t5\t—\nKilo\tPhantom\t0\t60\t123\t0\t5\t14\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  }
+]

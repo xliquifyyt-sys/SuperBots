@@ -30,3 +30,6 @@ Actual: the first and last columns are clipped and can't be reached.
 - [ ] The browser smoke gate is green.
 
 ## Log
+- 2026-11-07 nightly QA: worse at 360x640 (new `QA_SET=5`) — the whole Player column is off the left edge, so the
+  table shows no names at all, only "Bot HP Dealt…" (`docs/alpha/qa/2026-11-07/set5/m1-frozenkeel-360x640-result.png`).
+  Still seen at 390x844 on all three set-1 phone matches.
