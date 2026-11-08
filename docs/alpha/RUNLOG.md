@@ -2417,3 +2417,12 @@ self-eliminations) both skew these numbers.
   HUMAN_QUEUE: no item DONE, D-7 still "no", so M1 and the QA client-ui tasks (now incl. QA-32, QA-33) stay parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-08b — builder run (producer)
+- **Main:** d761f62 (run log #120). No code change since the last builder run. Re-ran here: npm install,
+  determinism 6, rules, spawns — all pass (28 s).
+- **Backlog:** unchanged. PR #8 (M0-06, `hold`, last update 10-14) and PR #16 (QA-1 P0, `hold`, last update 10-15)
+  untouched; no HUMAN_QUEUE item marked DONE; D-7 still "no". M0-09 depends on M0-06, so M0 cannot close and M1 and
+  the client-ui QA fixes stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
