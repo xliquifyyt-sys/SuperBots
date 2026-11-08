@@ -2407,3 +2407,13 @@ self-eliminations) both skew these numbers.
   orphan dot. Logs added to QA-4, QA-9.
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
   (H-05). No CI gate is red on main and no new crash was found.
+
+## 2026-11-08 — builder run (producer)
+- **Main:** 5e2e579 (QA nightly 2026-11-07, #119). No `src/` or `server/` change since the last builder run (only
+  `test/plan-bar-fit.mjs`, the QA_SET=5 playthrough set and task files). Re-ran here: npm install, determinism 6,
+  rules, spawns — all pass (37 s).
+- **Backlog:** unchanged. M0 open items: M0-06 (blocked, PR #8 `hold`, waits on H-04 `human-approved`), M0-09
+  (depends on M0-06), QA-1 (P0, fix on PR #16, `hold`, waits on H-05). Neither PR updated since 10-14 / 10-15.
+  HUMAN_QUEUE: no item DONE, D-7 still "no", so M1 and the QA client-ui tasks (now incl. QA-32, QA-33) stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
