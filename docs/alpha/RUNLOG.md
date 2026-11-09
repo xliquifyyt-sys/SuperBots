@@ -2511,3 +2511,12 @@ self-eliminations) both skew these numbers.
 - **Filed:** QA-34 (P2, client-ui) playback camera cuts bots high in the air. Log added to QA-1.
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30, online-8p failed tonight), unchanged; waiting on
   Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash was found.
+
+## 2026-11-09 — builder run (producer)
+- **Main:** 842da70 (QA nightly 2026-11-08, #123). Only `test/playback-framing.mjs` and docs added since the last
+  builder run; no `src/` or `server/` change. Re-ran here: npm install, determinism 6, rules, spawns — all pass (54 s).
+- **Backlog:** unchanged. M0 open items: M0-06 (blocked, PR #8 `hold`, last update 10-14, waits on H-04), M0-09
+  (depends on M0-06), QA-1 (P0, fix on PR #16 `hold`, last update 10-15, waits on H-05). HUMAN_QUEUE unchanged since
+  10-27, no item DONE; D-7 still "no", so M1 and the client-ui QA fixes (QA-4..QA-34) stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
