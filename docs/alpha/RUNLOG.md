@@ -2528,3 +2528,12 @@ self-eliminations) both skew these numbers.
   PR #16 `hold`, waits on H-05). HUMAN_QUEUE unchanged since 10-27, no item DONE; D-7 still "no".
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-09c — builder run (producer)
+- **Main:** 966f9e3 (run log 2026-11-09b, #125). No code change since the last builder run. Re-ran here: npm install,
+  determinism 6, rules, spawns — all pass (44 s).
+- **Backlog:** unchanged. M0 open: M0-06 (blocked, PR #8 `hold`, last update 10-14, waits on H-04), M0-09 (depends on
+  M0-06), QA-1 (P0, PR #16 `hold`, last update 10-15, waits on H-05). HUMAN_QUEUE unchanged since 10-27, no item DONE;
+  D-7 still "no", so M1 and the client-ui QA fixes stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
