@@ -104,3 +104,6 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
   desynced. `node test/online-8p.mjs` (Nimbus) FAILED this time (passed 11-07; the AI roster is random): all 4
   clients diverge from the server digest from turn 4 (13-turn match); the 4 clients still agree with each other.
   Fix still on held PR #16 (H-05).
+- 2026-11-09 nightly QA (main 07a6942, no code change since 11-08): unchanged. `node test/net-parity.mjs` 14/30
+  desynced (e.g. Skyline Grid seed 31900 after turn 3: bot 7 HP 85 on the server, 125 on the client).
+  `node test/online-8p.mjs` passed this time (random AI roster). Fix still on held PR #16 (H-05).
