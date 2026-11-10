@@ -42,3 +42,5 @@ the line from `POWERUPS`. No gameplay number changes.
 ## Log
 
 - 2026-11-09 (qa): filed; `test/help-text.mjs` added.
+- 2026-11-10 (qa nightly): still fails. Note: the sim keeps Rally Beacon active for 3 turns, not the 2 in defs
+  (filed as QA-36), so settle QA-36 first and make the help text match the result.

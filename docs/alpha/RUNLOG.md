@@ -2637,3 +2637,86 @@ self-eliminations) both skew these numbers.
   "no", so M1 and the client-ui QA fixes stay parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-10 (night) — nightly QA (qa)
+- **Main:** ec2c004 (run log 2026-11-10b, #129). Only run-log commits since the 2026-11-09 nightly; no `src/`,
+  `server/` or `test/` change, so every seeded suite matches last night. PR #16 (QA-1 fix) and PR #8 (M0-06) still
+  on `hold`. Chromium 1243 (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, two lanes in parallel, so wall times include contention):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 129 s |
+| rules | pass | 1 s |
+| spawns | pass | 0 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 751 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 195 s |
+| features | pass (90 matches, 0 errors; no specials, power-ups or events missing) | 328 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death, avg 9.5 turns) | 144 s |
+| balance 4 | pass (report) | 176 s |
+| balance-gate 2 (CI) | pass | 87 s |
+| online | pass | 50 s |
+| online-browser | pass | 116 s |
+| online-maps | pass | 3 s |
+| online-settings-layout | pass | 8 s |
+| browser (static :8123) | pass, no page errors | 48 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | pass — 8-bot Nimbus, 13 turns, all 4 clients on the server digest | 40 s |
+| terrain-embed (not in CI) | pass — no bot embedded | 127 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 34 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 23 s |
+| lobby-maplist (not in CI) | **FAIL** — 45px map buttons (QA-12) | 2 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 1 s |
+| fx-occlusion (not in CI) | **FAIL** — 7 effects, 1 hides the bot (QA-20) | 1 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 1 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped (QA-22) | 1 s |
+| callout-nameplate (not in CI) | **FAIL** — 32/32 special callouts cover the caster's nameplate (QA-26) | 1 s |
+| label-stack (not in CI) | **FAIL** — 12/12 same-tick label pairs overprint (QA-29) | 1 s |
+| screen-overflow (not in CI) | **FAIL** — 3 landscape-phone cases lose the title above the top edge (QA-30) | 4 s |
+| aim-readout-overlap (not in CI) | **FAIL** — readout under the action bar at 740x360 and 844x390 (QA-31) | 20 s |
+| plan-bar-fit (not in CI) | **FAIL** — 3/6 viewports cut an action button or FIRE (QA-32) | 19 s |
+| playback-framing 3 (not in CI) | **FAIL** — 578 of 23208 sampled playback frames leave a living bot off screen (QA-34) | 48 s |
+| rotate-midmatch (not in CI) | pass | 45 s |
+| quit-requeue (not in CI) | pass | 37 s |
+| rematch-record (not in CI) | pass | 115 s |
+| playback-speed 20 (not in CI) | pass | 221 s |
+| help-text (not in CI) | **FAIL** — buff durations (QA-35) | 0 s |
+| buff-duration (new, not in CI) | **FAIL** — Rally Beacon active 3 turns, defs 2 (QA-36); Toxin poison ticks 2×10, Botpedia says 3 turns (QA-37) | 0 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 221 s |
+| ringout-credit 1 (report) | 124/256 decisive winners show 0 KOs (48.4%, unchanged) — QA-27 | 220 s |
+| team-win-credit (report) | 18 of 23 team wins leave out 34 dead teammates of the winning team — QA-28 | 81 s |
+| qa-playthrough (set 1) | 5/5 reached results, 0 page errors | 306 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below. Headless 60 FFA: Skyla 0/35, Phantom 6/39.
+- **UI playthroughs** (`QA_SET=1 node test/qa-playthrough.mjs docs/alpha/qa/2026-11-10`; set 1 last ran 11-07):
+  Volt v Magmaw on Ember Pit 390x844 (VICTORY; Magmaw died T6 having taken 0 damage — QA-3; result says 7 turns —
+  QA-8), Bulwark v Phantom+Skyla on Frozen Keel 1280x720 (VICTORY, 19 turns), Ricochet v Gravitas on Canopy Ruins
+  390x844 (DEFEAT), Warden in a 6p teams game on Temple Crossing 1280x720 (DEFEAT; Skyla and Phantom died T1/T2 with
+  0 damage taken — QA-3; only Volt highlighted for the winning Orange team — QA-28), Skyla in a 4p FFA on Neon Alley
+  390x844 (DEFEAT). All five reached results with no page errors. Repeats in the screenshots: QA-4 (results Player
+  and Died columns off-screen at 390x844), QA-5 (turn label wraps every turn at 390x844), QA-6 (Gravitas off the
+  right edge in the Canopy Ruins phone plan view), QA-13 ("You (you)"), QA-15 (Neon Alley phone playback very wide).
+  No new visual bug.
+- **Exploratory:** read every Botpedia skill and power-up description against `defs.js` and `sim.js`. Skill numbers
+  (damage, radius, counts, Pinball +5/bounce, Toxic Bomb 7-tick cap, Static Field / Shockwire / Frost "next turn"
+  lengths) all match. Two power-ups do not: added `test/buff-duration.mjs` (applies each buff / contact status
+  through `World.applyPowerup` / `transferContact` and counts turns) → QA-36, QA-37.
+- **Filed:** QA-36 (P1, gameplay) Rally Beacon lasts 3 turns, defs/Botpedia say 2 (hard-coded `3` in `sim.js`);
+  QA-37 (P1, gameplay) Toxin's Poison ticks twice (20), Botpedia says 10/turn for 3 turns. Logs added to QA-1 and
+  QA-35.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
+  (H-05). No CI gate is red on main and no new crash or desync was found.

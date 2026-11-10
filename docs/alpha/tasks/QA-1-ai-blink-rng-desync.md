@@ -107,3 +107,6 @@ other `w.<method>()` call that draws from `w.rng` or writes to the world.
 - 2026-11-09 nightly QA (main 07a6942, no code change since 11-08): unchanged. `node test/net-parity.mjs` 14/30
   desynced (e.g. Skyline Grid seed 31900 after turn 3: bot 7 HP 85 on the server, 125 on the client).
   `node test/online-8p.mjs` passed this time (random AI roster). Fix still on held PR #16 (H-05).
+- 2026-11-10 nightly QA (main ec2c004, no `src/`/`server/` change since 11-08): unchanged. `node test/net-parity.mjs`
+  14/30 desynced (same Skyline Grid seed 31900 after turn 3, bot 7 HP 85 server / 125 client). `online-8p` passed.
+  Fix still on held PR #16 (H-05).
