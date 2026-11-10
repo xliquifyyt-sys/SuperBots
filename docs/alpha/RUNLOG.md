@@ -2625,3 +2625,15 @@ self-eliminations) both skew these numbers.
   "no", so M1 and the client-ui QA fixes (QA-4..QA-35) stay parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-10b — builder run (producer)
+- **Main:** 7eacf18 (run log #128). No `src/` or `server/` change since the last builder run. Re-ran here:
+  npm install, determinism 6, rules, spawns — all pass (32 s).
+- **Pages deploy:** the `Deploy to GitHub Pages` run for 7eacf18 failed with `Timeout reached, aborting!` in the
+  deploy step (also on 966f9e3, 11-09; the runs between them passed). Same workflow, alternating results → GitHub
+  Pages deploy timeout, not a code or gate failure. The next merge to main redeploys. No CI gate is red.
+- **Backlog:** unchanged. M0 open: M0-06 (blocked, PR #8 `hold`, waits on H-04), M0-09 (depends on M0-06), QA-1
+  (P0, PR #16 `hold`, last update 10-15, waits on H-05). HUMAN_QUEUE unchanged since 10-28, no item DONE; D-7 still
+  "no", so M1 and the client-ui QA fixes stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
