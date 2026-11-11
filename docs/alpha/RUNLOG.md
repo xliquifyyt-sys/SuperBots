@@ -2720,3 +2720,13 @@ self-eliminations) both skew these numbers.
   QA-35.
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
   (H-05). No CI gate is red on main and no new crash or desync was found.
+
+## 2026-11-11 — builder run (producer)
+- **Main:** 3e19596 (QA nightly 2026-11-10, #130). Since the last builder run, the only non-doc change is the new
+  `test/buff-duration.mjs` (not a CI gate). Re-ran here: npm install, determinism 6, rules, spawns — all pass (37 s).
+  Pages deploy for 3e19596 succeeded.
+- **Backlog:** unchanged. M0 open: M0-06 (blocked, PR #8 `hold`, waits on H-04), M0-09 (depends on M0-06), QA-1
+  (P0, PR #16 `hold`, last update 10-15, waits on H-05). HUMAN_QUEUE unchanged since 10-28, no item DONE; D-7 still
+  "no", so M1 (including new gameplay bugs QA-36/QA-37) and the client-ui QA fixes stay parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
