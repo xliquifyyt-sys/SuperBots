@@ -2855,3 +2855,89 @@ self-eliminations) both skew these numbers.
   since 10-30, no item DONE; D-7 still "no", so M1 stays parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-12 (night) — nightly QA (qa)
+- **Main:** 53d5bbb (run log 2026-11-12c, #137). Only run-log commits since the 2026-11-11 nightly; no `src/`,
+  `server/` or `test/` change, so every seeded suite matches last night. PR #16 (QA-1 fix) and PR #8 (M0-06) still
+  on `hold`. Chromium 1243 (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, two or three lanes in parallel, so wall times include contention):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 236 s |
+| rules | pass | 2 s |
+| spawns | pass | 0 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 1294 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 450 s |
+| features | pass (no specials, power-ups or events missing) | 666 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 195 s |
+| balance 4 | pass (report) | 227 s |
+| balance-gate 2 (CI) | pass | 114 s |
+| online | pass | 50 s |
+| online-browser | pass | 120 s |
+| online-maps | pass | 5 s |
+| online-settings-layout | pass | 11 s |
+| browser (static :8123) | pass, no page errors | 58 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | pass — 8-bot Nimbus, 10 turns, all clients on the server digest | 33 s |
+| terrain-embed (not in CI) | pass — 1104 cleanups, no bot embedded | 188 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 48 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 32 s |
+| lobby-maplist (not in CI) | **FAIL** — 45px map buttons, 10px subtitles (QA-12) | 5 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 2 s |
+| fx-occlusion (not in CI) | **FAIL** — 7 effects, 1 hides the bot (QA-20) | 2 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 3 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped (QA-22) | 2 s |
+| callout-nameplate (not in CI) | **FAIL** — 32/32 special callouts cover the caster's nameplate (QA-26) | 3 s |
+| label-stack (not in CI) | **FAIL** — 12/12 same-tick label pairs overprint (QA-29) | 2 s |
+| screen-overflow (not in CI) | **FAIL** — 3 cases lose content above the top edge (QA-30) | 7 s |
+| aim-readout-overlap (not in CI) | **FAIL** — 2/6 viewports put the readout on the action bar (QA-31) | 26 s |
+| plan-bar-fit (not in CI) | **FAIL** — 3/6 viewports cut an action button or FIRE (QA-32) | 23 s |
+| playback-framing 3 (not in CI) | **FAIL** — 578 of 23208 sampled frames leave a living bot off screen (QA-34) | 62 s |
+| rotate-midmatch (not in CI) | pass | 45 s |
+| quit-requeue (not in CI) | pass | 39 s |
+| rematch-record (not in CI) | pass | 152 s |
+| playback-speed 20 (not in CI) | pass | 262 s |
+| help-text (not in CI) | **FAIL** — buff durations (QA-35) | 0 s |
+| buff-duration (not in CI) | **FAIL** — 3 mismatches (QA-36, QA-37) | 0 s |
+| overheal-decay (not in CI) | **FAIL** — Rally overheal decay heals damaged bots (QA-38) | 0 s |
+| sd-mines (new, not in CI) | **FAIL** — 4/4: a mine planted before Sudden Death hits the bot revived on its pad (QA-39) | 0 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 228 s |
+| ringout-credit 1 (report) | 124/256 decisive winners show 0 KOs (48.4%, unchanged) — QA-27 | 232 s |
+| team-win-credit (report) | 18 of 23 team wins leave out 34 dead teammates of the winning team — QA-28 | 88 s |
+| qa-playthrough (set 3) | 5/5 reached results, 0 page errors | 290 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below.
+- **UI playthroughs** (`QA_SET=3 node test/qa-playthrough.mjs docs/alpha/qa/2026-11-12`; set 3 last ran 11-09):
+  Skyla v Phantom on Canopy Ruins 1280x720 (DEFEAT), Gravitas v Volt+Warden on Skyline Grid 390x844 (DEFEAT),
+  Ricochet in a 4p teams game on Glacier Fortress 1280x720 (VICTORY), Magmaw v Bulwark on Cloud Steps 390x844
+  (DEFEAT), Phantom in a 6p FFA on Magma Works 1280x720 (DEFEAT). All five reached results with no page errors.
+  Repeats in the screenshots: QA-3 (Kilo/Magmaw died T1 with 0 dealt, 0 taken on Glacier Fortress), QA-4 (results
+  Player/Died columns off-screen at 390x844), QA-5 (turn label wraps at 390x844), QA-9 (SKIP near-invisible on
+  Cloud Steps), QA-10 + QA-23 (your nameplate drawn through Kilo's row of the Glacier results table), QA-15 (Skyline
+  Grid phone playback: bots in the bottom 15%), QA-21 ("Repair Kit" label over Juno's nameplate), QA-25 (square smoke
+  puffs on Canopy Ruins and Cloud Steps). No new visual bug.
+- **Exploratory:** read the hazard code against spec 06. `enterSuddenDeath()` clears power-ups, walls, fields and
+  patches but not timed mines, and mine contact/projectile checks only test `settings.hazards`, so mines stay armed
+  in Sudden Death; the revive puts bots back on their pads, where a timed mine can sit (6 of 60 hard matches on
+  Canopy Ruins / Temple Crossing had a live mine within 1.2 of a pad at some turn end). Added `test/sd-mines.mjs`
+  → QA-39. Also: Molten Slam's `patch` event says `w: 3` for a 4-wide patch, and the painted `molten_patch` fx
+  expires after 6 s (dormant until the VFX sheet lands) → QA-40.
+- **Filed:** QA-39 (P1, gameplay, M1) Spike mines stay armed in Sudden Death; QA-40 (P3, gameplay, M1) Molten
+  Slam patch event width / painted patch lifetime.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
+  (H-05). No CI gate is red on main and no new crash or desync was found.
