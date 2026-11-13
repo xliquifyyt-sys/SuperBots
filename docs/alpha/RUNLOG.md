@@ -2959,3 +2959,89 @@ self-eliminations) both skew these numbers.
   M1 stays parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-13 (night) — nightly QA (qa)
+- **Main:** b3079b3 (run log 2026-11-13b, #140). Only run-log commits since the 2026-11-12 nightly; no `src/`,
+  `server/` or `test/` change, so every seeded suite matches last night. PR #16 (QA-1 fix) and PR #8 (M0-06) still
+  on `hold`. Chromium 1243 (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, two or three lanes in parallel, so wall times include contention):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 126 s |
+| rules | pass | 1 s |
+| spawns | pass | 0 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 805 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 236 s |
+| features | pass (no specials, power-ups or events missing) | 353 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 144 s |
+| balance 4 | pass (report) | 185 s |
+| balance-gate 2 (CI) | pass | 98 s |
+| online | pass | 50 s |
+| online-browser | pass | 92 s |
+| online-maps | pass | 4 s |
+| online-settings-layout | pass | 10 s |
+| browser (static :8123) | pass, no page errors | 53 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | **FAIL** — 8-bot Nimbus, 15 turns: all 4 clients leave the server digest from turn 3 (QA-1; random AI roster, passed 11-09..11-12, failed 11-08) | 108 s |
+| terrain-embed (not in CI) | pass — 1104 cleanups, no bot embedded | 135 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 43 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 26 s |
+| lobby-maplist (not in CI) | **FAIL** — 45px map buttons, 10px subtitles (QA-12) | 4 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 2 s |
+| fx-occlusion (not in CI) | **FAIL** — 7 effects, 1 hides the bot (QA-20) | 2 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 3 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped (QA-22) | 1 s |
+| callout-nameplate (not in CI) | **FAIL** — 32/32 special callouts cover the caster's nameplate (QA-26) | 3 s |
+| label-stack (not in CI) | **FAIL** — 12/12 same-tick label pairs overprint (QA-29) | 2 s |
+| screen-overflow (not in CI) | **FAIL** — 3 cases lose content above the top edge (QA-30) | 6 s |
+| aim-readout-overlap (not in CI) | **FAIL** — 2/6 viewports put the readout on the action bar (QA-31) | 23 s |
+| plan-bar-fit (not in CI) | **FAIL** — 3/6 viewports cut an action button or FIRE (QA-32) | 21 s |
+| playback-framing 3 (not in CI) | **FAIL** — 578 of 23208 sampled frames leave a living bot off screen (QA-34) | 50 s |
+| rotate-midmatch (not in CI) | pass | 48 s |
+| quit-requeue (not in CI) | pass | 37 s |
+| rematch-record (not in CI) | pass | 102 s |
+| playback-speed 20 (not in CI) | pass | 223 s |
+| help-text (not in CI) | **FAIL** — buff durations (QA-35) | 0 s |
+| buff-duration (not in CI) | **FAIL** — 3 mismatches (QA-36, QA-37) | 0 s |
+| overheal-decay (not in CI) | **FAIL** — Rally overheal decay heals damaged bots (QA-38) | 0 s |
+| sd-mines (not in CI) | **FAIL** — 4/4 (QA-39) | 0 s |
+| gale-powerup (new, not in CI) | **FAIL** — 11/144 Gale slides leave a power-up hovering over the kill floor (QA-41) | 0 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 238 s |
+| ringout-credit 1 (report) | 124/256 decisive winners show 0 KOs (48.4%, unchanged) — QA-27 | 226 s |
+| team-win-credit (report) | 18 of 23 team wins leave out 34 dead teammates of the winning team — QA-28 | 108 s |
+| qa-playthrough (set 1) | 5/5 reached results, 0 page errors | 332 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below.
+- **UI playthroughs** (`QA_SET=1 node test/qa-playthrough.mjs docs/alpha/qa/2026-11-13`; set 1 last ran 11-10):
+  Volt v Magmaw on Ember Pit 390x844 (VICTORY), Bulwark v Phantom+Skyla on Frozen Keel 1280x720 (DEFEAT), Ricochet
+  v Gravitas on Canopy Ruins 390x844 (DEFEAT), Warden in a 6p teams game on Temple Crossing 1280x720 (VICTORY),
+  Skyla in a 4p FFA on Neon Alley 390x844 (VICTORY). All five reached results with no page errors. Repeats in the
+  screenshots: QA-3 (Kilo/Skyla died T1 with 0 dealt on Temple Crossing), QA-4 (results Player/Died columns
+  off-screen at 390x844), QA-5 (turn label wraps at 390x844), QA-13 ("You (you)" in roster and results), QA-14
+  ("AIR STRIKE" text near-invisible over the Neon Alley billboard), QA-15 (Ember Pit phone playback: bots in the
+  bottom 15%, volcano painting fills the rest), QA-23 (Temple Crossing results table see-through), QA-27 (Volt wins
+  Ember Pit with 0 dealt, 0 KOs), QA-28 (team win lists dead blue teammates as 0-HP losers). No new visual bug.
+- **Exploratory:** read Skyla's Gale Shot against specs 03/04. The power-up slide calls `dropToGround`, which stops
+  0.6 above the kill floor when there is no terrain under the new x, so a power-up slid off a ledge hovers over the
+  water/void, uncollectable, holding a field slot until it expires (11 of 144 spawn x direction slides; 0 in 60
+  hard AI matches with Skyla, so mostly a human-play bug). Added `test/gale-powerup.mjs` → QA-41. Also checked
+  whether Ember Pit's rising lava drowns power-ups or spawns them under the surface: 20 seeds x 24 turns, none (the
+  low spawn points sit on the flanks at y ~8.7; lava reaches them only after turn 32).
+- **Filed:** QA-41 (P3, gameplay, M1) Gale Shot slides a power-up off a ledge to hover over the kill floor.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30, online-8p failed tonight), unchanged; waiting on
+  Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash or desync was found.
