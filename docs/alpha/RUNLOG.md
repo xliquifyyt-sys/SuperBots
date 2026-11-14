@@ -3072,3 +3072,87 @@ self-eliminations) both skew these numbers.
   still "no", so M1 stays parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-14 (night) — nightly QA (qa)
+- **Main:** af91391 (run log 2026-11-14c, #144). Only run-log commits since the 2026-11-13 nightly; no `src/`,
+  `server/` or `test/` change, so every seeded suite matches last night. PR #16 (QA-1 fix) and PR #8 (M0-06) still
+  on `hold`. Chromium 1243 (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, three lanes in parallel, so wall times include heavy contention — determinism and stress ran
+  about 2-3x slower than last night for that reason, not a perf regression):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 427 s |
+| rules | pass | 2 s |
+| spawns | pass | 1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 1732 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 597 s |
+| features | pass (no specials, power-ups or events missing) | 592 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death, avg 9.5 turns) | 174 s |
+| balance 4 | pass (report) | 201 s |
+| balance-gate 2 (CI) | pass | 99 s |
+| online | pass | 50 s |
+| online-browser | pass | 142 s |
+| online-maps | pass | 7 s |
+| online-settings-layout | pass | 12 s |
+| browser (static :8123) | pass, no page errors | 63 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | **FAIL** — 8-bot Nimbus, 9 turns: all 4 clients leave the server digest from turn 4 (QA-1) | 73 s |
+| terrain-embed (not in CI) | pass — 1104 cleanups, no bot embedded | 167 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 40 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 29 s |
+| lobby-maplist (not in CI) | **FAIL** — 45px map buttons, 10px subtitles (QA-12) | 4 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 3 s |
+| fx-occlusion (not in CI) | **FAIL** — 7 effects, 1 hides the bot (QA-20) | 3 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 3 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped (QA-22) | 3 s |
+| callout-nameplate (not in CI) | **FAIL** — 32/32 special callouts cover the caster's nameplate (QA-26) | 3 s |
+| label-stack (not in CI) | **FAIL** — 12/12 same-tick label pairs overprint (QA-29) | 2 s |
+| screen-overflow (not in CI) | **FAIL** — 3 cases lose content above the top edge (QA-30) | 6 s |
+| aim-readout-overlap (not in CI) | **FAIL** — 2/6 viewports put the readout on the action bar (QA-31) | 25 s |
+| plan-bar-fit (not in CI) | **FAIL** — 3/6 viewports cut an action button or FIRE (QA-32) | 22 s |
+| playback-framing 3 (not in CI) | **FAIL** — 578 of 23208 sampled frames leave a living bot off screen (QA-34) | 74 s |
+| rotate-midmatch (not in CI) | pass | 48 s |
+| quit-requeue (not in CI) | pass | 41 s |
+| rematch-record (not in CI) | pass | 212 s |
+| playback-speed 20 (not in CI) | pass | 468 s |
+| help-text (not in CI) | **FAIL** — buff durations (QA-35) | 0 s |
+| buff-duration (not in CI) | **FAIL** — 3 mismatches (QA-36, QA-37) | 0 s |
+| overheal-decay (not in CI) | **FAIL** — 5 checks (QA-38) | 0 s |
+| sd-mines (not in CI) | **FAIL** — 4/4 (QA-39) | 0 s |
+| gale-powerup (not in CI) | **FAIL** — 11/144 Gale slides leave a power-up over the kill floor (QA-41) | 0 s |
+| repair-overheal (new, not in CI) | **FAIL** — 2/4: Repair Kit cuts an overhealed bot to max HP (QA-42) | 0 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 249 s |
+| ringout-credit 1 (report) | 124/256 decisive winners show 0 KOs (48.4%, unchanged) — QA-27 | 246 s |
+| team-win-credit (report) | 18 of 23 team wins leave out 34 dead teammates of the winning team — QA-28 | 100 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below.
+- **UI playthroughs** (`QA_SET=2 node test/qa-playthrough.mjs docs/alpha/qa/2026-11-14`; set 2 last ran 11-11):
+  Magmaw v Ricochet on Magma Works 1280x720 (DEFEAT), Phantom v Warden+Volt on Glacier Fortress 390x844 (DEFEAT),
+  Gravitas v Skyla on Cloud Steps 1280x720 (VICTORY), Bulwark in a 4p teams game on Nimbus Reach 390x844 (DEFEAT),
+  Volt in a 5p FFA on Skyline Grid 1280x720 (DEFEAT). All five reached results with no page errors. Repeats in the
+  screenshots: QA-3 (Skyla died T1 and Gravitas T3 on Skyline Grid with 0 taken), QA-4 (results Player/Died columns
+  off-screen at 390x844), QA-5 (turn label wraps at 390x844), QA-7 (roster covers Nova's nameplate on Cloud Steps),
+  QA-9 (SKIP/FIRE washed out on Cloud Steps and Nimbus), QA-10 (Juno/You nameplates overlap on Nimbus), QA-13
+  ("You (you)"), QA-18 (callout cut at the right edge on Glacier Fortress phone). No new visual bug.
+- **Exploratory:** read `applyPowerup` against spec 04. Repair Kit does `hp = min(maxHp, hp + 40)`, so a bot still
+  carrying Rally overheal (up to max+20) that picks it up drops to max HP — a heal that takes HP away. Added
+  `test/repair-overheal.mjs` → QA-42. 0 of 19 Repair pickups in 40 hard-AI 4-bot teams matches (powerups high,
+  seeds 7000–7039) happened while overhealed, so mostly a human-play bug.
+- **Filed:** QA-42 (P3, gameplay, M1) Repair Kit cuts an overhealed bot's HP back to max.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30, online-8p failed tonight), unchanged; waiting on
+  Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash or desync was found.
