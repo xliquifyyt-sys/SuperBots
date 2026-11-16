@@ -3294,3 +3294,85 @@ self-eliminations) both skew these numbers.
   still "no", so M1 stays parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-16 (night) — nightly QA (qa)
+- **Main:** 0e69100 (run log 2026-11-16c, #152). Since the 2026-11-15 nightly only run-log commits; no `src/`,
+  `server/` or test change, so every seeded suite matches last night. PR #16 (QA-1 fix) and PR #8 (M0-06) still on
+  `hold`. Chromium 1243 (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, three lanes in parallel, so wall times include contention):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 225 s |
+| rules | pass | 1 s |
+| spawns | pass | 0 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 1210 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 361 s |
+| features | pass (no specials, power-ups or events missing) | 627 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death, avg 9.5 turns) | 210 s |
+| balance 4 | pass (report) | 194 s |
+| balance-gate 2 (CI) | pass | 92 s |
+| online | pass | 49 s |
+| online-browser | pass | 125 s |
+| online-maps | pass | 4 s |
+| online-settings-layout | pass | 10 s |
+| browser (static :8123) | pass, no page errors | 54 s |
+| mapid | pass | 2 s |
+| online-8p (not in CI) | pass tonight — 8-bot Nimbus, 13 turns, all 4 clients digest-identical (failed last night; QA-1 is intermittent) | 42 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 65 s |
+| terrain-embed (not in CI) | pass — 1104 cleanups, no bot embedded | 211 s |
+| turn-count (not in CI) | **FAIL** — 19/19 turn-cap wins off by one (QA-8) | 25 s |
+| lobby-maplist (not in CI) | **FAIL** — 45px map buttons, 10px subtitles (QA-12) | 2 s |
+| callout-fit (not in CI) | **FAIL** — 96 callouts, 160 problems (QA-19) | 1 s |
+| label-tag-overlap (not in CI) | **FAIL** — 10/10 labels cover the nameplate (QA-21, QA-16) | 2 s |
+| nameplate-edge (not in CI) | **FAIL** — 29 pad nameplates clipped (QA-22) | 1 s |
+| callout-nameplate (not in CI) | **FAIL** — 32/32 special callouts cover the caster's nameplate (QA-26) | 2 s |
+| label-stack (not in CI) | **FAIL** — 12/12 same-tick label pairs overprint (QA-29) | 1 s |
+| screen-overflow (not in CI) | **FAIL** — 3 cases lose content above the top edge (QA-30) | 4 s |
+| aim-readout-overlap (not in CI) | **FAIL** — 2/6 viewports put the readout on the action bar (QA-31) | 23 s |
+| plan-bar-fit (not in CI) | **FAIL** — 3/6 viewports cut an action button or FIRE (QA-32) | 21 s |
+| playback-framing 3 (not in CI) | **FAIL** — 578 of 23208 sampled frames leave a living bot off screen (QA-34) | 53 s |
+| rotate-midmatch (not in CI) | pass | 46 s |
+| quit-requeue (not in CI) | pass | 40 s |
+| help-text (not in CI) | **FAIL** — buff durations (QA-35) | 0 s |
+| buff-duration (not in CI) | **FAIL** — 3 mismatches (QA-36, QA-37) | 0 s |
+| overheal-decay (not in CI) | **FAIL** — 5 checks (QA-38) | 0 s |
+| sd-mines (not in CI) | **FAIL** — 4/4 (QA-39) | 0 s |
+| gale-powerup (not in CI) | **FAIL** — 11/144 Gale slides leave a power-up over the kill floor (QA-41) | 0 s |
+| repair-overheal (not in CI) | **FAIL** — 2/4 (QA-42) | 0 s |
+| magmaw-lava (not in CI) | **FAIL** — 1/6 (QA-43) | 0 s |
+| powerup-desc (new, not in CI) | **FAIL** — 3/3 statuses a power-up clears are missing from its text (QA-44) | 0 s |
+| ai-selfkill 1 (report) | 58 undamaged self-eliminations in 280 hard 1v1s (20.7%, unchanged) — QA-3 | 241 s |
+| ringout-credit 1 (report) | 124/256 decisive winners show 0 KOs (48.4%, unchanged) — QA-27 | 219 s |
+| team-win-credit (report) | 18 of 23 team wins leave out 34 dead teammates of the winning team — QA-28 | 163 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main. rematch-record and
+  playback-speed 20 were skipped tonight (no client change since they last passed on 11-15).
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below (headless 60 FFA: Skyla 0/35 wins).
+- **UI playthroughs** (`QA_SET=1 node test/qa-playthrough.mjs docs/alpha/qa/2026-11-16`; set 1 last ran 11-13):
+  Volt v Magmaw on Ember Pit 390x844 (DEFEAT), Bulwark v Phantom+Skyla on Frozen Keel 1280x720 (VICTORY), Ricochet v
+  Gravitas on Canopy Ruins 390x844 (DEFEAT), Warden in a 6p teams game on Temple Crossing 1280x720 (DEFEAT), Skyla in
+  a 4p FFA on Neon Alley 390x844 (DEFEAT). All five reached results with no page errors (298 s).
+  Repeats in the screenshots: QA-4 (results Player/Died columns off-screen at 390x844, 3/3 phone matches), QA-5 (turn
+  label wraps at 390x844), QA-13 ("You (you)" in the roster), QA-17 ("You KO"), QA-21/QA-16 ("SHOCKED -30" over
+  Mira's HP chip on Temple Crossing), QA-22 (Neon Alley plan T5: right-edge nameplate cut to "J"), QA-25 (square
+  smoke puffs on Temple Crossing). No new visual bug.
+- **Exploratory:** read `applyPowerup` against spec 04 and the in-game power-up text. Repair Kit also clears Poison
+  and Burn and Overclock also clears Shocked (both in spec 04), but `POWERUPS.*.desc` — the Botpedia and HUD text —
+  says neither. Added `test/powerup-desc.mjs` → QA-44.
+- **Filed:** QA-44 (P3, client-ui, M1) Repair Kit and Overclock text hide that they clear Poison/Burn and Shocked.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30; online-8p happened to pass tonight), unchanged;
+  waiting on Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash or desync was found.
