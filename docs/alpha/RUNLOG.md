@@ -3267,3 +3267,12 @@ self-eliminations) both skew these numbers.
 - **Filed:** QA-43 (P1, gameplay, M1) Magmaw survives lava only every other turn, but its passive says each turn.
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30, online-8p failed tonight), unchanged; waiting on
   Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash or desync was found.
+
+## 2026-11-16 — builder run (producer)
+- **Main:** 36315d7 (QA nightly 2026-11-15, #149). No `src/` or `server/` change since the last builder run.
+  npm install, determinism 6, rules, spawns — all pass (36 s).
+- **Backlog:** unchanged. M0 open: M0-06 (blocked, PR #8 `hold`, waits on H-04), M0-09 (depends on M0-06), QA-1
+  (P0, PR #16 `hold`, no activity since 10-15, waits on H-05). HUMAN_QUEUE unchanged since 11-03, no item DONE; D-7
+  still "no", so M1 (incl. QA-43 filed last night) stays parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
