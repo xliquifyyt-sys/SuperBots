@@ -3376,3 +3376,12 @@ self-eliminations) both skew these numbers.
 - **Filed:** QA-44 (P3, client-ui, M1) Repair Kit and Overclock text hide that they clear Poison/Burn and Shocked.
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30; online-8p happened to pass tonight), unchanged;
   waiting on Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash or desync was found.
+
+## 2026-11-17 — builder run (producer)
+- **Main:** 648f227 (QA nightly 2026-11-16, #153). No `src/` or `server/` change since the last builder run.
+  npm install, determinism 6, rules, spawns — all pass (36 s).
+- **Backlog:** unchanged. M0 open: M0-06 (blocked, PR #8 `hold`, waits on H-04), M0-09 (depends on M0-06), QA-1
+  (P0, PR #16 `hold`, no activity since 10-15, waits on H-05). HUMAN_QUEUE unchanged since 11-04, no item DONE; D-7
+  still "no", so M1 stays parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
