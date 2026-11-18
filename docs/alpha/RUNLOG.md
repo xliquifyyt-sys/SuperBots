@@ -3515,3 +3515,74 @@ self-eliminations) both skew these numbers.
   so M1 stays parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-18 (night) — nightly QA (qa)
+- **Main:** eed94c7 (run log 2026-11-18c, #160). Since the 2026-11-17 nightly only run-log/QA-doc commits; no `src/`,
+  `server/` or gate change, so every seeded suite matches last night. Chromium 1243
+  (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, three lanes in parallel, so wall times include contention):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 183 s |
+| rules | pass | 1 s |
+| spawns | pass | 0 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 967 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 305 s |
+| features | pass (no specials, power-ups or events missing) | 510 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 216 s |
+| balance 4 | pass (report) | 180 s |
+| balance-gate 2 (CI) | pass | 74 s |
+| online | pass | 49 s |
+| online-browser | pass | 92 s |
+| online-maps | pass | 4 s |
+| online-settings-layout | pass | 10 s |
+| browser (static :8123) | pass, no page errors | 52 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | pass — 8-bot Nimbus, 10 turns, all 4 clients digest-identical | 36 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 49 s |
+| terrain-embed (not in CI) | pass — no bot embedded | 115 s |
+| rematch-record / rotate-midmatch / quit-requeue (not in CI) | pass | 118 / 48 / 37 s |
+| turn-count (not in CI) | **FAIL** — 19/19 (QA-8) | 23 s |
+| lobby-maplist / callout-fit / label-tag-overlap / nameplate-edge / callout-nameplate / label-stack (not in CI) | **FAIL**, unchanged (QA-12, 19, 21, 22, 26, 29) | 1–2 s each |
+| screen-overflow / aim-readout-overlap / plan-bar-fit (not in CI) | **FAIL**, unchanged — 3 cases / 2 of 6 / 3 of 6 (QA-30, 31, 32) | 4 / 21 / 19 s |
+| playback-framing 3 (not in CI) | **FAIL** — 578 of 23208 frames (QA-34) | 41 s |
+| help-text / buff-duration / overheal-decay / sd-mines / gale-powerup / repair-overheal / magmaw-lava / powerup-desc / static-field-linger (not in CI) | **FAIL**, unchanged (QA-35…45) | 0–1 s each |
+| **preview-fidelity 6 (new, not in CI)** | **FAIL** — 20/330 jump guides off by > 0.6 u, 7 with the wrong fate; 0/275 missiles (QA-46) | 1 s |
+| ai-selfkill 1 (report) | 58/280 undamaged self-eliminations (20.7%, unchanged) — QA-3 | 193 s |
+| ringout-credit 1 (report) | 124/256 decisive winners show 0 KOs (48.4%, unchanged) — QA-27 | 193 s |
+| team-win-credit (report) | 18 of 23 team wins leave out 34 teammates — QA-28 | 68 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below (headless 60 FFA: Skyla 0/35 wins).
+- **UI playthroughs** (`QA_SET=3 node test/qa-playthrough.mjs docs/alpha/qa/2026-11-18`; set 3 last ran 11-15; four
+  screenshots kept as JPEG): Skyla v Phantom on Canopy Ruins 1280x720 (VICTORY), Gravitas v Volt+Warden on Skyline
+  Grid 390x844 (SHARED WIN for Nova+Juno, both dead T17), Ricochet in a 4p teams game on Glacier Fortress 1280x720
+  (DEFEAT T2), Magmaw v Bulwark on Cloud Steps 390x844 (SHARED WIN, both died T5), Phantom in a 6p FFA on Magma Works
+  1280x720 (DEFEAT). All five reached results with no page errors (262 s). Repeats in the screenshots: QA-5 (turn
+  label wraps, 2/2 phone matches), QA-4 (results Player/Died columns off-screen at 390x844), QA-13 ("You (you)"),
+  QA-24 (red SHARED WIN for the loser), QA-8 ("18 turns" when the last death was T17), QA-25 (square smoke puffs,
+  Canopy Ruins and Glacier Fortress), QA-26 (Static Field pill over the nameplate), QA-29 ("Juno KONova KO" run
+  together, Magma Works T6), QA-15 (portrait playback camera leaves the top 3/4 empty), QA-6 (Cloud Steps phone plan:
+  enemy off screen), QA-3 (Skyla and Ricochet eliminated with 0 damage taken). No new visual bug.
+- **Exploratory:** wrote `test/preview-fidelity.mjs`, comparing `World.previewAction` (the player's aim guide and the
+  AI planner's look-ahead) with the real resolve for 330 jumps and 275 missiles over every map x bot. Missiles are
+  exact; jumps diverge in three ways (early stop at speed < 3 then a slide off the ledge, no `landAfterWrap` on looped
+  maps, a different slope contact response). 7 guides show a safe landing for a bot that dies or vice versa. Traced
+  frame by frame → QA-46. This is also a root cause behind QA-3.
+- **Filed:** QA-46 (P1, gameplay, M1) Jump guide and AI look-ahead show a safe landing for jumps that end in the pit.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30; online-8p passed tonight), unchanged; waiting on
+  Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash or desync was found.
