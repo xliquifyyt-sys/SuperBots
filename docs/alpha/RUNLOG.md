@@ -3497,3 +3497,12 @@ self-eliminations) both skew these numbers.
   so M1 stays parked. QA-45 (filed last night) is M1, so it waits too.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-18b — builder run (producer)
+- **Main:** 65b5222 (run log 2026-11-18, #158). No `src/` or `server/` change since the last builder run.
+  npm install, determinism 6, rules, spawns — all pass (43 s).
+- **Backlog:** unchanged. M0 open: M0-06 (blocked, PR #8 `hold`, waits on H-04), M0-09 (depends on M0-06), QA-1
+  (P0, PR #16 `hold`, no activity since 10-15, waits on H-05). HUMAN_QUEUE unchanged, no item DONE; D-7 still "no",
+  so M1 stays parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
