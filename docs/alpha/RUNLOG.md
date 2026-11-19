@@ -3641,7 +3641,7 @@ self-eliminations) both skew these numbers.
 | online-8p (not in CI) | pass — 8-bot Nimbus, all clients digest-identical | 28 s |
 | net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 57 s |
 | terrain-embed (not in CI) | pass — no bot embedded | 221 s |
-| rematch-record / rotate-midmatch / quit-requeue (not in CI) | pass | — / 47 / 38 s |
+| rematch-record / rotate-midmatch / quit-requeue (not in CI) | pass | 175 / 47 / 38 s |
 | turn-count (not in CI) | **FAIL** — 19/19 (QA-8) | 60 s |
 | lobby-maplist / callout-fit / label-tag-overlap / nameplate-edge / callout-nameplate / label-stack (not in CI) | **FAIL**, unchanged (QA-12, 19, 21, 22, 26, 29) | 2–3 s each |
 | screen-overflow / aim-readout-overlap / plan-bar-fit (not in CI) | **FAIL**, unchanged — 3 cases / 2 of 6 / 3 of 6 (QA-30, 31, 32) | 4 / 24 / 19 s |
