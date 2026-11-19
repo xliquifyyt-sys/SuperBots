@@ -3614,3 +3614,74 @@ self-eliminations) both skew these numbers.
   so M1 stays parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-19 (night) — nightly QA (qa)
+- **Main:** 67a264a (run log 2026-11-19c, #164). Since the 2026-11-18 nightly only run-log commits; no `src/`,
+  `server/` or gate change, so every seeded suite matches last night. Chromium 1243
+  (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, three to four lanes in parallel, so wall times include contention):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 208 s |
+| rules | pass | 1 s |
+| spawns | pass | 0 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 1121 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 306 s |
+| features | pass (no specials, power-ups or events missing) | 345 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 334 s |
+| balance 4 | pass (report) | 167 s |
+| balance-gate 2 (CI) | pass | 92 s |
+| online | pass | 50 s |
+| online-browser | pass | 85 s |
+| online-maps | pass | 6 s |
+| online-settings-layout | pass | 10 s |
+| browser (static :8123) | pass, no page errors | 37 s |
+| mapid | pass | 2 s |
+| online-8p (not in CI) | pass — 8-bot Nimbus, all clients digest-identical | 28 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 57 s |
+| terrain-embed (not in CI) | pass — no bot embedded | 221 s |
+| rematch-record / rotate-midmatch / quit-requeue (not in CI) | pass | — / 47 / 38 s |
+| turn-count (not in CI) | **FAIL** — 19/19 (QA-8) | 60 s |
+| lobby-maplist / callout-fit / label-tag-overlap / nameplate-edge / callout-nameplate / label-stack (not in CI) | **FAIL**, unchanged (QA-12, 19, 21, 22, 26, 29) | 2–3 s each |
+| screen-overflow / aim-readout-overlap / plan-bar-fit (not in CI) | **FAIL**, unchanged — 3 cases / 2 of 6 / 3 of 6 (QA-30, 31, 32) | 4 / 24 / 19 s |
+| playback-framing 3 (not in CI) | **FAIL** — 578 of 23208 frames (QA-34) | 46 s |
+| fx-occlusion (not in CI) | **FAIL** — 7 effects, 1 hides the bot (QA-20) | 1 s |
+| help-text / buff-duration / overheal-decay / sd-mines / gale-powerup / repair-overheal / magmaw-lava / powerup-desc / static-field-linger (not in CI) | **FAIL**, unchanged (QA-35…45) | 0–1 s each |
+| preview-fidelity 6 (not in CI) | **FAIL** — jumps off, 0/275 missiles (QA-46), unchanged | 2 s |
+| **dead-killer-credit 1 (new, not in CI)** | **FAIL** — 7/45 named KOs missing from the killer's stats (QA-47) | 110 s |
+| ai-selfkill 1 (report) | 58/280 undamaged self-eliminations (20.7%, unchanged) — QA-3 | 263 s |
+| ringout-credit 1 (report) | 124/256 decisive winners show 0 KOs (48.4%, unchanged) — QA-27 | 215 s |
+| team-win-credit (report) | 18 of 23 team wins leave out 34 teammates — QA-28 | 79 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to last night (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below (headless 60 FFA: Skyla 0/35 wins).
+- **UI playthroughs** (`QA_SET=1 node test/qa-playthrough.mjs docs/alpha/qa/2026-11-19`; set 1 last ran 11-16; four
+  screenshots kept as JPEG): Volt v Magmaw on Ember Pit 390x844 (VICTORY), Bulwark v Phantom+Skyla on Frozen Keel
+  1280x720 (VICTORY), Ricochet v Gravitas on Canopy Ruins 390x844 (DEFEAT T17), Warden in a 6p teams game on Temple
+  Crossing 1280x720 (VICTORY), Skyla v Ricochet+Bulwark+Warden on Neon Alley 390x844 (DEFEAT). All five reached
+  results with no page errors (329 s). Repeats in the screenshots: QA-5 (turn label wraps, 3/3 phone matches),
+  QA-4 (results Player/Died columns off-screen at 390x844), QA-13 ("You (you)"), QA-8 ("9 turns" when the last death
+  was T8; "18 turns" for a T17 death), QA-23 (see-through results table), QA-6 (Canopy Ruins phone plan T5: enemy
+  off screen), QA-29 ("SHOCKED -30" overprint, Temple Crossing T6), QA-3 (Magmaw dies on Ember Pit with 20 damage
+  taken; Volt wins with 0 dealt), QA-27/QA-47 (Temple Crossing: 3 Red bots dead, 1 KO in the whole table).
+  No new visual bug.
+- **Exploratory:** wrote `test/dead-killer-credit.mjs`. `World.kill()` only credits a killer that is still alive,
+  so self-destruct chain KOs and shots that land after their owner died are named in the `eliminated` event but
+  never counted in `stats.kills` → QA-47.
+- **Filed:** QA-47 (P3, gameplay, M2) KOs scored by an already-dead bot are never credited.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30; online-8p passed tonight), unchanged; waiting on
+  Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash or desync was found.
