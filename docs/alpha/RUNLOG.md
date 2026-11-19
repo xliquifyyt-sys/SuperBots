@@ -3586,3 +3586,13 @@ self-eliminations) both skew these numbers.
 - **Filed:** QA-46 (P1, gameplay, M1) Jump guide and AI look-ahead show a safe landing for jumps that end in the pit.
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30; online-8p passed tonight), unchanged; waiting on
   Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash or desync was found.
+
+## 2026-11-19 — builder run (producer)
+- **Main:** 2afd18c (QA nightly 2026-11-18, #161). Only QA docs and a new non-CI test (`test/preview-fidelity.mjs`)
+  since the last builder run; no `src/`, `server/` or gate change. npm install, determinism 6 (38 s), rules, spawns,
+  online (49 s), features (352 s) — all pass.
+- **Backlog:** unchanged. M0 open: M0-06 (blocked, PR #8 `hold`, waits on H-04), M0-09 (depends on M0-06), QA-1
+  (P0, PR #16 `hold`, no activity since 10-15, waits on H-05). HUMAN_QUEUE unchanged, no item DONE; D-7 still "no",
+  so M1 (now incl. QA-46) stays parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
