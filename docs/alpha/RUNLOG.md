@@ -3685,3 +3685,12 @@ self-eliminations) both skew these numbers.
 - **Filed:** QA-47 (P3, gameplay, M2) KOs scored by an already-dead bot are never credited.
 - **P0 still open on main:** QA-1 online desync (net-parity 14/30; online-8p passed tonight), unchanged; waiting on
   Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash or desync was found.
+
+## 2026-11-20 — builder run (producer)
+- **Main:** 6b18f3e (QA nightly 2026-11-19, #165). No `src/`, `server/` or gate change since the last builder run.
+  npm install, determinism 6 (29 s), rules (1 s), spawns (0 s), online (49 s) — all pass.
+- **Backlog:** unchanged. M0 open: M0-06 (blocked, PR #8 `hold`, waits on H-04), M0-09 (depends on M0-06),
+  QA-1 (P0, PR #16 `hold`, last activity 10-15, waits on H-05). No HUMAN_QUEUE item marked DONE; D-7 still "no",
+  so M1 stays parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
