@@ -3712,3 +3712,68 @@ self-eliminations) both skew these numbers.
   so M1 stays parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-21 (night) — nightly QA (qa)
+- **Main:** 5cdb481 (run log 2026-11-21, #168). Since the 2026-11-19 nightly only run-log commits; no `src/`,
+  `server/` or gate change, so every seeded suite matches that night. Chromium 1243
+  (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, three lanes in parallel, so wall times include contention):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 259 s |
+| rules | pass | 1 s |
+| spawns | pass | 0 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 1129 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 351 s |
+| features | pass (no specials, power-ups or events missing) | 412 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 291 s |
+| balance 4 | pass (report) | 228 s |
+| balance-gate 2 (CI) | pass | 122 s |
+| online | pass | 50 s |
+| online-browser | pass | 118 s |
+| online-maps | pass | 5 s |
+| online-settings-layout | pass | 9 s |
+| browser (static :8123) | pass, no page errors | 49 s |
+| mapid | pass | 2 s |
+| online-8p (not in CI) | **FAIL** — 8-bot Nimbus, all 4 clients drift from the server digest at T4–T5 (QA-1, intermittent; passed 11-17…11-19) | 70 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 64 s |
+| lobby-maplist / callout-fit / label-tag-overlap / nameplate-edge / callout-nameplate / label-stack (not in CI) | **FAIL**, unchanged (QA-12, 19, 21, 22, 26, 29) | 1–3 s each |
+| screen-overflow / fx-occlusion (not in CI) | **FAIL**, unchanged — 3 cases / 1 of 7 (QA-30, QA-20) | 4 / 2 s |
+| help-text / buff-duration / overheal-decay / sd-mines / gale-powerup / repair-overheal / magmaw-lava / powerup-desc / static-field-linger (not in CI) | **FAIL**, unchanged (QA-35…45) | 0 s each |
+| **overkill-stats 1 (new, not in CI)** | pass — 10 eight-bot games, 490 of 9005 booked damage (5.4%) is overkill; no bot's Taken exceeds max HP + 60 | 72 s |
+
+  Not re-run tonight (no code change since their last run on 11-19): terrain-embed, rematch-record, rotate-midmatch,
+  quit-requeue, turn-count, aim-readout-overlap, plan-bar-fit, playback-framing, preview-fidelity,
+  dead-killer-credit and the three credit reports. No perf, swarm or ai-usage tests exist in `test/` yet.
+  Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to 11-19 (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below (headless 60 FFA: Skyla 0/35 wins).
+- **UI playthroughs** (`QA_SET=2 node test/qa-playthrough.mjs docs/alpha/qa/2026-11-21`; set 2 last ran 11-17; four
+  screenshots kept as JPEG): Magmaw v Ricochet on Magma Works 1280x720 (DEFEAT T8), Phantom v Warden+Volt on Glacier
+  Fortress 390x844 (DEFEAT T9), Gravitas v Skyla on Cloud Steps 1280x720 (DEFEAT T6), Bulwark in a 4p teams game on
+  Nimbus Reach 390x844 (DEFEAT T4), Volt v Gravitas+Warden+Skyla+Bulwark on Skyline Grid 1280x720 (DEFEAT T3). All
+  five reached results with no page errors (223 s). Repeats in the screenshots: QA-5 (turn label wraps, 2/2 phone
+  matches), QA-4 (results Player/Died columns off-screen at 390x844), QA-13 ("You (you)"), QA-8 (results say one turn
+  more than the last death, all five), QA-23 (background birds show through the Nimbus results table), QA-22 (Nova's
+  nameplate clipped at the right edge, Glacier Fortress phone T5), QA-21 (nameplates under power-up/ready tags),
+  QA-29 ("You KO" and a damage number overprint Nova's sprite, Cloud Steps T6), QA-3 (Skyline Grid: Warden dies T2
+  and Gravitas T4 with 0 damage taken). No new visual bug.
+- **Exploratory:** wrote `test/overkill-stats.mjs` (invariant: a bot's Taken never exceeds the HP it could lose).
+  `applyDamage()` books the whole hit into Taken/Dealt even past 0 HP; measured at 5.4% of booked damage, under any
+  bound a player would notice, so no task filed.
+- **Filed:** none.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30; online-8p failed tonight), unchanged; waiting on
+  Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash or desync was found.
