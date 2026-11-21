@@ -42,7 +42,6 @@ Four of eight bots are inside the 40 to 60% target band; Skyla and Phantom are f
 
 - Occasional AI-versus-AI stalemates where two bots mirror jumps until the turn cap (seen once in 300 games).
 - The vector rigs in `bots.js` are a fallback only and lag the painted designs.
-- Turn-cap HP tiebreak with `onTurnCap: hp` picks the first tied entry rather than declaring a draw.
 
 ## Suggested order of remaining work
 
