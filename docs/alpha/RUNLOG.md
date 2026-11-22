@@ -3880,3 +3880,12 @@ self-eliminations) both skew these numbers.
   no new activity. No HUMAN_QUEUE item marked DONE; D-7 still "no", so M1 stays parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-22c — builder run (producer)
+- **Main:** 0443ed1 (run log 2026-11-22b, #174). No `src/`, `server/` or gate change since the last builder run.
+  npm install, determinism 6 (30 s), rules (0 s), spawns (0 s), online (50 s) — all pass.
+- **Backlog:** unchanged. M0 open: M0-06 (blocked, PR #8 `hold`, waits on H-04), M0-09 (depends on M0-06),
+  QA-1 (P0, PR #16 `hold`, last activity 10-15, waits on H-05). PRs #8 and #16 checked on GitHub: still `hold`,
+  no new activity. No HUMAN_QUEUE item marked DONE; D-7 still "no", so M1 stays parked.
+- **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
+- **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
