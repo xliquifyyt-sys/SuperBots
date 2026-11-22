@@ -3898,3 +3898,68 @@ self-eliminations) both skew these numbers.
   no new activity. No HUMAN_QUEUE item marked DONE; D-7 still "no", so M1 stays parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-23 (night) — nightly QA (qa)
+- **Main:** c9dc771 (run log 2026-11-23, #176). Since the 2026-11-22 nightly only run-log commits; no `src/`,
+  `server/` or gate change, so every seeded suite matches last night. Chromium 1243
+  (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, three to four lanes in parallel, so wall times include contention):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 286 s |
+| rules | pass | 1 s |
+| spawns | pass | 0 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 1242 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 412 s |
+| features | pass (no specials, power-ups or events missing) | 601 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 244 s |
+| balance 4 | pass (report) | 304 s |
+| balance-gate 2 (CI) | pass | 128 s |
+| online | pass | 50 s |
+| online-browser | pass | 82 s |
+| online-maps | pass | 5 s |
+| online-settings-layout | pass | 9 s |
+| browser (static :8123) | pass, no page errors | 39 s |
+| mapid | pass | 1 s |
+| online-8p (not in CI) | **FAIL** — 8-bot Nimbus, all 4 clients drift from the server digest at T4–T5 (QA-1; third night running) | 113 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 36 s |
+| lobby-maplist / callout-fit / label-tag-overlap / nameplate-edge / callout-nameplate / label-stack (not in CI) | **FAIL**, unchanged (QA-12, 19, 21, 22, 26, 29) | 1–3 s each |
+| screen-overflow / fx-occlusion (not in CI) | **FAIL**, unchanged (QA-30, QA-20) | 4 / 1 s |
+| help-text / buff-duration / overheal-decay / sd-mines / gale-powerup / repair-overheal / magmaw-lava / powerup-desc / static-field-linger (not in CI) | **FAIL**, unchanged (QA-35…45) | 0–1 s each |
+| turn-count / aim-readout-overlap / plan-bar-fit / playback-framing / preview-fidelity (not in CI) | **FAIL**, unchanged (QA-8, 31, 32, 34, 46) | 2–28 s |
+| dead-killer-credit (not in CI) | **FAIL**, unchanged — 15 named KOs missing from the killer's stats (QA-47) | 113 s |
+| terrain-embed / rematch-record / rotate-midmatch / quit-requeue / playback-speed (not in CI) | pass | 124 / 151 / 45 / 37 / 42 s |
+| team-win-credit (report) | 18 of 23 team wins leave out 34 dead teammates (QA-28, unchanged) | 68 s |
+| ringout-credit (report) | ring-outs still give the pusher no KO (QA-27, unchanged) | 206 s |
+| ai-selfkill 1 (report) | 58/280 undamaged self-eliminations (20.7%, unchanged) — QA-3 | 189 s |
+| overkill-stats 1 / hp-bounds 1 (not in CI) | pass — 5.4% overkill; 776 bot-turn HP checks clean | 55 / 105 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to 11-22 (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below (headless 60 FFA: Skyla 0/35 wins).
+- **UI playthroughs** (`QA_SET=1 node test/qa-playthrough.mjs docs/alpha/qa/2026-11-23`; set 1 last ran 11-19; four
+  screenshots kept as JPEG): Volt v Magmaw on Ember Pit 390x844 (DEFEAT T12), Bulwark v Phantom+Skyla on Frozen Keel
+  1280x720 (VICTORY T6 with 0 damage dealt — both opponents self-eliminated or fell to hazards), Ricochet v Gravitas on
+  Canopy Ruins 390x844 (DEFEAT T13), Warden in a 6p teams game on Temple Crossing 1280x720 (DEFEAT T5), Skyla v three
+  on Neon Alley 390x844 (DEFEAT T15). All five reached results with no page errors. Repeats in the screenshots: QA-5
+  (turn label wraps, 3/3 phone matches), QA-4 (results Player/Died columns off-screen at 390x844), QA-13 ("You (you)",
+  5/5), QA-8 (results say one turn more than the last death, 5/5), QA-6 (Nova off-screen in the Ember Pit phone plan
+  view T5), QA-7 (roster panel covers the top-right of Temple Crossing), QA-23 (Temple Crossing platform shows through
+  the results table), QA-25 (square smoke puffs, Temple Crossing T2), QA-26 ("PINBALL" over Nova's nameplate, Neon Alley
+  T6), QA-3 (Skyla dies T4 on Frozen Keel and Phantom dies T1 on Temple Crossing with 0 damage taken). No new visual bug.
+- **Filed:** none.
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30; online-8p failed again), unchanged; waiting on
+  Ganesh's call on PR #16 (H-05). No CI gate is red on main and no new crash or desync was found.
