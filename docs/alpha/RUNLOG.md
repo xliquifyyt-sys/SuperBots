@@ -3990,3 +3990,68 @@ self-eliminations) both skew these numbers.
   10-14/10-15. No HUMAN_QUEUE item marked DONE; D-7 still "no", so M1 stays parked.
 - **Tasks attempted:** none. **PRs opened:** this run log only. **Newly blocked:** none.
 - **Waiting on Ganesh:** H-05 (remove `hold` on #16 + "Update branch"), H-04 (`human-approved` on #8), or D-7 → yes.
+
+## 2026-11-24 (night) — nightly QA (qa)
+- **Main:** ab6ba27 (run log 2026-11-24, #180). Since the 2026-11-23 nightly only run-log commits; no `src/`,
+  `server/` or gate change, so every seeded suite matches last night. Chromium 1243
+  (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`).
+- **Suites (2 cores, three lanes in parallel, so wall times include contention):**
+
+| Suite | Result | Wall |
+|---|---|---|
+| determinism 12 | pass | 314 s |
+| rules | pass | 1 s |
+| spawns | pass | 1 s |
+| stress 250 | pass (0 errors, 0 no-winner, 0 sudden death, avg 10.5 turns) | 1630 s |
+| bughunt 5 | pass — NO ISSUES FOUND (50 eight-bot matches) | 501 s |
+| features | pass (no specials, power-ups or events missing) | 860 s |
+| headless 60 | pass (0 errors, 4 draws, 0 sudden death) | 349 s |
+| balance 4 | pass (report) | 297 s |
+| balance-gate 2 (CI) | pass | 140 s |
+| online | pass | 50 s |
+| online-browser | pass | 160 s |
+| online-maps | pass | 5 s |
+| online-settings-layout | pass | 9 s |
+| browser (static :8123) | pass, no page errors | 56 s |
+| mapid | pass | 2 s |
+| online-8p (not in CI) | pass tonight — 8-bot Nimbus, 10 turns, all 4 clients digest-identical. Failed the previous three nights; the server seed is not fixed, so this is luck of the seed, not a fix (QA-1 still open, see net-parity) | 38 s |
+| net-parity (not in CI) | **FAIL** — 14/30 matches desync (known P0 QA-1; fix on held PR #16) | 81 s |
+| lobby-maplist / callout-fit / label-tag-overlap / nameplate-edge / callout-nameplate / label-stack (not in CI) | **FAIL**, unchanged (QA-12, 19, 21, 22, 26, 29) | 1–2 s each |
+| screen-overflow / fx-occlusion (not in CI) | **FAIL**, unchanged (QA-30, QA-20) | 4 / 1 s |
+| help-text / buff-duration / overheal-decay / sd-mines / gale-powerup / repair-overheal / magmaw-lava / powerup-desc / static-field-linger (not in CI) | **FAIL**, unchanged (QA-35…45) | 0–1 s each |
+| turn-count / aim-readout-overlap / plan-bar-fit / playback-framing / preview-fidelity (not in CI) | **FAIL**, unchanged (QA-8, 31, 32, 34, 46) | 2–43 s |
+| dead-killer-credit (not in CI) | **FAIL**, unchanged — 15 named KOs missing from the killer's stats (QA-47) | 157 s |
+| terrain-embed / rematch-record / rotate-midmatch / quit-requeue / playback-speed (not in CI) | pass | 167 / 158 / 45 / 38 / 61 s |
+| team-win-credit (report) | 18 of 23 team wins leave out 34 dead teammates (QA-28, unchanged) | 104 s |
+| ringout-credit (report) | ring-outs still give the pusher no KO (QA-27, unchanged) | 270 s |
+| ai-selfkill 1 (report) | 58/280 undamaged self-eliminations (20.7%, unchanged) — QA-3 | 278 s |
+| overkill-stats 1 / hp-bounds 1 (not in CI) | pass — 5.4% overkill; 776 bot-turn HP checks clean | 74 / 86 s |
+
+  No perf, swarm or ai-usage tests exist in `test/` yet. Every CI gate is green on main.
+- **1v1 balance (`node test/balance.mjs 4`, 224 duels, avg 7.5 turns):** identical to 11-23 (same code, same seeds).
+
+| Bot | Win % | Avg dmg |
+|---|---|---|
+| bulwark | 59% | 96 |
+| magmaw | 43% | 68 |
+| volt | 55% | 115 |
+| warden | 61% | 96 |
+| skyla | 14% | 53 |
+| phantom | 16% | 36 |
+| ricochet | 54% | 90 |
+| gravitas | 50% | 68 |
+
+  Warden 61% just above the band; Skyla 14% and Phantom 16% far below (headless 60 FFA: Skyla 0/35 wins).
+- **UI playthroughs** (`QA_SET=2 node test/qa-playthrough.mjs docs/alpha/qa/2026-11-24`; set 2 last ran 11-21; four
+  screenshots kept as JPEG): Magmaw v Ricochet on Magma Works 1280x720 (DEFEAT T9), Phantom v Warden+Volt on Glacier
+  Fortress 390x844 (DEFEAT T6), Gravitas v Skyla on Cloud Steps 1280x720 (VICTORY T7), Bulwark in a 4p teams game on
+  Nimbus Reach 390x844 (DEFEAT T10), Volt v four on Skyline Grid 1280x720 (DEFEAT T9). All five reached results with
+  no page errors. Repeats: QA-5 (turn label wraps, 2/2 phone matches), QA-4 (results Player/Died columns off-screen
+  at 390x844, 2/2), QA-13 ("You (you)", 5/5), QA-8 (results say one turn more than the last death, 5/5), QA-18 ("-40"
+  cut off at the left edge, Magma Works T6), QA-22 ("You" nameplate against the right edge, Glacier Fortress T5),
+  QA-3 (Skyla Kilo dead at T1 on Skyline Grid with 0 damage dealt).
+  **New:** QA-48 — a steep low-power aim (127°, 32%) draws its first guide dot and glow over the shooter's own HP
+  chip, so "80" reads as "30" (Cloud Steps T5, `m3-cloudsteps-1280x720-plan-T5.jpg`).
+- **Filed:** QA-48 (P2, client-ui, M1).
+- **P0 still open on main:** QA-1 online desync (net-parity 14/30), unchanged; waiting on Ganesh's call on PR #16
+  (H-05). No CI gate is red on main and no new crash or desync was found.
