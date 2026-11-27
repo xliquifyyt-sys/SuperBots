@@ -1,0 +1,65 @@
+[
+  {
+    "tag": "m1-canopyruins-1280x720",
+    "turns": 10,
+    "secs": 53,
+    "state": null,
+    "result": "DEFEAT\n\nNova · Canopy Ruins · 11 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tSkyla\t0\t0\t131\t0\t4\t10\nNova\tPhantom\t100\t131\t20\t1\t5\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  },
+  {
+    "tag": "m2-skylinegrid-390x844",
+    "turns": 3,
+    "secs": 19,
+    "state": null,
+    "result": "DEFEAT\n\nJuno · Skyline Grid · 4 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tGravitas\t0\t0\t135\t0\t0\t3\nNova\tVolt\t0\t70\t60\t0\t2\t3\nJuno\tWarden\t130\t45\t0\t0\t1\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": [
+      "T1: turn-label wraps (TURN 1 / 20)",
+      "T2: turn-label wraps (TURN 2 / 20)",
+      "T3: turn-label wraps (TURN 3 / 20)",
+      "results table cells off-screen: Player | Died | You (you) | 3 | Nova | 3"
+    ]
+  },
+  {
+    "tag": "m3-glacierfort-1280x720",
+    "turns": 5,
+    "secs": 31,
+    "state": null,
+    "result": "DEFEAT\n\nOrange team · Glacier Fortress · 6 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tRicochet\t0\t0\t135\t0\t2\t5\nNova\tBulwark\t140\t190\t0\t1\t2\t—\nJuno\tSkyla\t0\t56\t140\t0\t4\t5\nKilo\tMagmaw\t84\t0\t56\t0\t2\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  },
+  {
+    "tag": "m4-cloudsteps-390x844",
+    "turns": 11,
+    "secs": 55,
+    "state": null,
+    "result": "DEFEAT\n\nNova · Cloud Steps · 12 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tMagmaw\t0\t0\t180\t0\t3\t11\nNova\tBulwark\t140\t155\t0\t1\t3\t—\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": [
+      "T1: turn-label wraps (TURN 1 / 20)",
+      "T2: turn-label wraps (TURN 2 / 20)",
+      "T3: turn-label wraps (TURN 3 / 20)",
+      "T4: turn-label wraps (TURN 4 / 20)",
+      "T5: turn-label wraps (TURN 5 / 20)",
+      "T6: turn-label wraps (TURN 6 / 20)",
+      "T7: turn-label wraps (TURN 7 / 20)",
+      "T8: turn-label wraps (TURN 8 / 20)",
+      "T9: turn-label wraps (TURN 9 / 20)",
+      "T10: turn-label wraps (TURN 10 / 20)",
+      "T11: turn-label wraps (TURN 11 / 20)",
+      "results table cells off-screen: Player | Died | You (you) | 11 | Nova | —"
+    ]
+  },
+  {
+    "tag": "m5-magmaworks-1280x720",
+    "turns": 11,
+    "secs": 84,
+    "state": null,
+    "result": "DEFEAT\n\nJuno · Magma Works · 14 turns\n\nPlayer\tBot\tHP\tDealt\tTaken\tKOs\tSpecials\tDied\nYou (you)\tPhantom\t0\t55\t125\t0\t0\t5\nNova\tWarden\t0\t198\t206\t0\t6\t13\nJuno\tGravitas\t17\t75\t193\t1\t3\t—\nKilo\tRicochet\t0\t30\t130\t0\t2\t5\nMira\tVolt\t0\t189\t138\t1\t4\t7\nOzzy\tSkyla\t0\t93\t153\t1\t3\t6\nREMATCH\nLOBBY\nMENU",
+    "errors": [],
+    "issues": []
+  }
+]
